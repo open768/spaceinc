@@ -44,7 +44,7 @@ class cInstrument{
 				"p"=>$poCuriosityData->itemName, 
 				"data"=>$poCuriosityData
 			];
-			if (array_key_exists("pdsLabelUrl", $poCuriosityData))
+			if (isset($poCuriosityData->pdsLabelUrl))
 				$aData["l"] = $poCuriosityData->pdsLabelUrl;
 			else
 				$aData["l"] = "UNK";
