@@ -61,9 +61,9 @@ class cCuriosityLocations{
 			for ($iSol=$iStartSol; $iSol<=$iEndSol; $iSol++){
 				$sSol = strval($iSol);
 				
-				if (!array_key_exists ($iDrive, $aDrives)) $aDrives[$iDrive] = [];
-				if (!array_key_exists ($iSite, $aSites)) $aSites[$iSite] = [];
-				if (!array_key_exists ($sSol, $aSols)) $aSols[$sSol] = [];
+				if (!isset ($aDrives[$iDrive])) $aDrives[$iDrive] = [];
+				if (!isset ($aSites[$iSite])) $aSites[$iSite] = [];
+				if (!isset ($aSols[$sSol])) $aSols[$sSol] = [];
 				
 				$aDrives[$iDrive][] = $aItem;
 				$aSites[$iSite][] = $aItem;

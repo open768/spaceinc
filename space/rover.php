@@ -33,7 +33,7 @@ class cRoverSols{
 		if (!$this->aSols) $this->aSols = [];
 		
 		$sKey = (string) $piSol;
-		if (!array_key_exists($sKey, $this->aSols)) $this->aSols[$sKey] = new cRoverSol();
+		if (!isset($this->aSols[$sKey])) $this->aSols[$sKey] = new cRoverSol();
 		$oSol = $this->aSols[$sKey];
 		$oSol->add($psInstr, $piCount, $psUrl);
 	}	
@@ -45,7 +45,7 @@ class cRoverSols{
 	}
 	
 	public function get_sol($piSol){
-		if (!array_key_exists((string)$piSol, $this->aSols)) cDebug::error("Sol $piSol not found");
+		if (!isset($this->aSols[(string)$piSol])) cDebug::error("Sol $piSol not found");
 		return $this->aSols[(string)$piSol];
 	}
 }
@@ -131,7 +131,7 @@ class cRoverSol{
 	public $instruments = [];
 	
 	public function add($psInstr, $piCount, $psUrl){
-		if (!array_key_exists($psInstr, $this->instruments)) $this->instruments[$psInstr] = new cRoverInstrument();
+		if (!isset($this->instruments[$psInstr])) $this->instruments[$psInstr] = new cRoverInstrument();
 		$oEntry = $this->instruments[$psInstr];
 		$oEntry->count = $piCount;
 		$oEntry->url = $psUrl;
@@ -166,7 +166,7 @@ abstract class cRoverInstruments{
 	public  function getAbbreviation($psName){
 		cDebug::enter();
 		$this->getInstruments();
-		if (array_key_exists($psName,$this->aInstrumentMap)){
+		if (isset($this->aInstrumentMap[$psName])){
 			cDebug::leave();
 			return $this->aInstrumentMap[$psName]["abbr"];
 		}

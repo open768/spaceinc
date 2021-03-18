@@ -173,8 +173,8 @@ class cPDS_Reader{
 				$sPath = $aLine["PATH_NAME"];
 				$sFile = $aLine["FILE_NAME"];
 				
-				if (!array_key_exists ($sSol, $aData)) $aData[$sSol] = [];
-				if (!array_key_exists ($sInstr, $aData[$sSol])) $aData[$sSol][$sInstr] = [];
+				if (!isset($aData[$sSol])) $aData[$sSol] = [];
+				if (!isset($aData[$sSol][$sInstr])) $aData[$sSol][$sInstr] = [];
 				$aData[$sSol][$sInstr][$sProduct] = ["v"=>$psVolume, "p"=>$sPath, "f"=>$sFile];
 			}
 			

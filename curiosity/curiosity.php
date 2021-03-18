@@ -113,7 +113,7 @@ class cCuriosity implements iMission{
 				//should really check the type of product for the next bit - but ho-hum heres a *BODGE*
 				$sIProduct = str_replace("I1_D", "E1_D", $sTProduct);
 
-				if (array_key_exists($sIProduct, $aIProducts)){
+				if (isset($aIProducts[$sIProduct])){
 					cDebug::write("product found for $sIProduct");
 					$aTItem["p"] = $sIProduct;
 					$aTData[$i] = $aTItem;

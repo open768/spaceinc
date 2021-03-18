@@ -99,7 +99,7 @@ class cHiRisePDSIndexer{
 		
 		foreach ($paTabData as  $aRow){
 			$sID = $aRow["OBSERVATION_ID"];
-			if (!array_key_exists($sID, $aData))
+			if (!isset($aData[$sID]))
 				$aData[$sID] = new cHiRiseEDRObj($aRow);
 			else
 				$aData[$sID]->merge($aRow);

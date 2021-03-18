@@ -125,7 +125,7 @@ class cPDS_LBL{
 		}
 		
 		//if the key exists make it into an array
-		if (array_key_exists($psName, $this->aData)){
+		if (isset($this->aData[$psName])){
 			if (gettype($this->aData[$psName]) === "array"){
 				$this->aData[$psName][]= $psValue;
 			}else{
@@ -138,7 +138,7 @@ class cPDS_LBL{
 	
 	//*****************************************
 	function get($psName){
-		if (array_key_exists($psName, $this->aData))
+		if (isset($this->aData[$psName]))
 			return $this->aData[$psName];
 		else
 			return null;
