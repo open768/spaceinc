@@ -1,7 +1,5 @@
 <?php
-require_once("$phpinc/ckinc/objstore.php");
-require_once("$phpinc/ckinc/debug.php");
-require_once("$phpinc/ckinc/sqlite.php");
+require_once("$phpinc/ckinc/objstoredb.php");
 
 /**************************************************************************
 Copyright (C) Chicken Katsu 2014 -2015
