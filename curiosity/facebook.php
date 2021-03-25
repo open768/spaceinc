@@ -1,6 +1,6 @@
 <?php
 require_once("$spaceinc/curiosity/curiosity.php");
-require_once("$phpinc/ckinc/pichighlight.php");
+require_once("$spaceinc/misc/pichighlight.php");
 require_once("$phpinc/ckinc/debug.php");
 require_once("$phpinc/ckinc/common.php");
 require_once("$phpinc/ckinc/facebook.php");

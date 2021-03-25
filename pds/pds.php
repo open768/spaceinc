@@ -13,7 +13,7 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 
 require_once("$phpinc/ckinc/http.php");
 require_once("$phpinc/ckinc/objstore.php");
-require_once("$phpinc/ckinc/indexes.php");
+require_once("$spaceinc/misc/indexes.php");
 
 
 //##########################################################################
