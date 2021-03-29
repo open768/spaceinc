@@ -12,7 +12,7 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 //
 **************************************************************************/
 
-require_once("$phpinc/ckinc/objstore.php");
+require_once("$phpinc/ckinc/objstoredb.php");
 require_once("$spaceinc/misc/indexes.php");
 require_once("$phpinc/ckinc/http.php");
 require_once("$phpinc/ckinc/hash.php");
@@ -30,6 +30,16 @@ class cImageHighlight{
 	const BORDER_WIDTH = 5;
 	const THUMB_QUALITY = 90;
 	const MOSAIC_WIDTH = 8;
+	static $oObjStore = null;
+	
+	
+	//********************************************************************
+	static function pr_init_objstore(){
+		if (!self::$oObjStore){
+			self::$oObjStore = new cObjStoreDB();
+			self::$oObjStore->realm = "PICHI";
+		}
+	}
 	
 	//######################################################################
 	//# GETTERS functions
@@ -43,7 +53,7 @@ class cImageHighlight{
 	
 	static function get( $psSol, $psInstrument, $psProduct){
 		$sFolder = "$psSol/$psInstrument/$psProduct";
-		$aData = cObjStore::get_file( $sFolder, self::IMGHIGH_FILENAME);
+		$aData = self::$oObjStore->get_oldstyle( $sFolder, self::IMGHIGH_FILENAME);
 		$aOut = ["s"=>$psSol, "i"=>$psInstrument, "p"=>$psProduct , "d"=>$aData];
 		return $aOut;
 	}
@@ -198,13 +208,14 @@ class cImageHighlight{
 	//# MOSAIC functions
 	//######################################################################
 	static private function pr_get_mosaic_count($psSol){
-		$iCount = cObjStore::get_file( "$psSol", self::MOSAIC_COUNT_FILENAME);
+		$iCount = self::$oObjStore->get_oldstyle( "$psSol", self::MOSAIC_COUNT_FILENAME);
+
 		if ($iCount == null) $iCount = 0;
 		return $iCount;
 	}
 	//**********************************************************************
 	static private function pr_put_mosaic_count($psSol, $piCount){
-		cObjStore::put_file( "$psSol", self::MOSAIC_COUNT_FILENAME, $piCount);
+		self::$oObjStore->put_oldstyle( "$psSol", self::MOSAIC_COUNT_FILENAME, $piCount);		
 	}
 	
 	//**********************************************************************
@@ -324,7 +335,7 @@ class cImageHighlight{
 		//get the file from the object store to get the latest version
 		$sFolder = "$psSol/$psInstrument/$psProduct";
 		$aData = ["t"=>$psTop, "l"=>$psLeft, "u"=>$psUser];
-		cObjStore::push_to_array( $sFolder, self::IMGHIGH_FILENAME, $aData); //store highlight
+		self::$oObjStore->put_array_oldstyle( $sFolder, self::IMGHIGH_FILENAME, $aData); //store highlight
 		cIndexes::update_indexes( $psSol, $psInstrument, $psProduct, 1, self::INDEX_SUFFIX);
 		return "ok";
 	}
@@ -338,10 +349,12 @@ class cImageHighlight{
 	
 	static function kill_highlites( $psSol, $psInstr, $psProduct, $psWhich){
 		$sFolder="$psSol/$psInstr/$psProduct";
-		cObjStore::kill_file( $sFolder, self::IMGHIGH_FILENAME);
+		self::$oObjStore->kill_oldstyle( $sFolder, self::IMGHIGH_FILENAME);
 		cDebug::write("now reindex the image highlihgts");
 	}
 
 	
 }
+cImageHighlight::pr_init_objstore();
+
 ?>
