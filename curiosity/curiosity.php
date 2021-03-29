@@ -271,7 +271,7 @@ class cCuriosity implements iMission{
 		foreach ($aSols as $oSol){
 			$iSol = $oSol->sol;
 			$sDate = $oSol->last_updated;
-			array_push( $aData, ["sol"=>$iSol, "date"=>$sDate]);
+			$aData[] = ["sol"=>$iSol, "date"=>$sDate];
 		}
 		
 		cDebug::leave();
@@ -309,7 +309,7 @@ class cCuriosity implements iMission{
 		foreach ($aImages as $oItem)
 			if ($oItem->sampleType !== "thumbnail")
 				if (!in_array($oItem->instrument, $aResults))
-					array_push($aResults, $oItem->instrument);
+					$aResults[] = $oItem->instrument;
 		
 		cDebug::leave();
 		return $aResults;
