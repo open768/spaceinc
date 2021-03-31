@@ -15,7 +15,7 @@ uses phpQuery https://code.google.com/archive/p/phpquery/ which is Licensed unde
 **************************************************************************/
 require_once("$phpinc/ckinc/debug.php");
 require_once("$phpinc/ckinc/http.php");
-require_once("$phpinc/ckinc/objstore.php");
+require_once("$phpinc/ckinc/objstoredb.php");
 
 class cRoverConstants{
 	const MANIFEST_PATH = "[manifest]";
@@ -53,6 +53,9 @@ class cRoverSols{
 //#####################################################################
 //#####################################################################
 abstract class cRoverManifest{
+	static $oObjStore = null;
+	
+	
 	public static $BASE_URL = null;
 	public $MISSION = null;
 	const USE_CURL = false;
@@ -61,14 +64,21 @@ abstract class cRoverManifest{
 	//#####################################################################
 	//# constructor
 	//#####################################################################
+	//********************************************************************
+	static function pr_init_objstore(){
+		if (!self::$oObjStore){
+			self::$oObjStore = new cObjStoreDB();
+			self::$oObjStore->realm = "ROVMA";
+		}
+	}
 	function __construct() {
 		if (!$this->MISSION) cDebug::error("MISSION not set");
-		$sPath = $this->MISSION."/".cRoverConstants::MANIFEST_PATH;
-		$this->oSols = cObjStore::get_file( $sPath, cRoverConstants::MANIFEST_FILE);
+		$sPath = $this->MISSION."/".cRoverConstants::MANIFEST_PATH."/".cRoverConstants::MANIFEST_FILE;
+		$this->oSols = self::$oObjStore->get( $sPath);
 		if (!$this->oSols){
 			cDebug::write("generating manifest");
 			$this->pr_generate_manifest();
-			cObjStore::put_file( $sPath, cRoverConstants::MANIFEST_FILE, $this->oSols);
+			self::$oObjStore->put( $sPath, $this->oSols, true);
 		}
 	}
 		
@@ -82,14 +92,14 @@ abstract class cRoverManifest{
 	//# PUBLIC functions
 	//#####################################################################
 	public function get_details($psSol, $psInstr){
-		$sPath  = $this->MISSION."/".cRoverConstants::DETAILS_PATH."/$psSol";
-		$oDetails =  cObjStore::get_file( $sPath, $psInstr);
+		$sPath  = $this->MISSION."/".cRoverConstants::DETAILS_PATH."/$psSol/$psInstr";
+		$oDetails =  self::$oObjStore->get($sPath);
 		if ($oDetails) return $oDetails;
 		
 		//------------------------------------------------------
 		cDebug::write("generating details");
 		$oDetails = $this->pr_generate_details($psSol, $psInstr);
-		cObjStore::put_file( $sPath, $psInstr, $oDetails);
+		self::$oObjStore->put( $sPath, $oDetails, true);
 		return $oDetails;
 	}
 	
@@ -124,6 +134,8 @@ abstract class cRoverManifest{
 	}
 
 }
+cRoverManifest::pr_init_objstore();
+
 
 //#####################################################################
 //#####################################################################
