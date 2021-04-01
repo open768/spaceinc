@@ -28,8 +28,9 @@ class cRoverConstants{
 //#####################################################################
 class cRoverSols{
 	private $aSols = null;
+	private $iExpires = null;
 	
-	public function add($piSol, $psInstr, $piCount, $psUrl){
+	public function add($piSol, $psInstr=null, $piCount=null, $psUrl=null){
 		if (!$this->aSols) $this->aSols = [];
 		
 		$sKey = (string) $piSol;
@@ -53,13 +54,10 @@ class cRoverSols{
 //#####################################################################
 //#####################################################################
 abstract class cRoverManifest{
-	static $oObjStore = null;
-	
-	
-	public static $BASE_URL = null;
+	const EXPIRY_TIME = 3600; //hourly expiry
+	protected static $oObjStore = null;
 	public $MISSION = null;
-	const USE_CURL = false;
-	private $oSols = null;
+	protected $oSols = null;
 
 	//#####################################################################
 	//# constructor
@@ -67,26 +65,51 @@ abstract class cRoverManifest{
 	//********************************************************************
 	static function pr_init_objstore(){
 		if (!self::$oObjStore){
-			self::$oObjStore = new cObjStoreDB();
-			self::$oObjStore->realm = "ROVMA";
+			$oStore = new cObjStoreDB();
+			$oStore->realm = "ROVMA";
+			$oStore->check_expiry = true;
+			$oStore->expire_time = self::EXPIRY_TIME;
+			$oStore->set_table("ROVER");
+			self::$oObjStore = $oStore;
 		}
 	}
+	
 	function __construct() {
 		if (!$this->MISSION) cDebug::error("MISSION not set");
-		$sPath = $this->MISSION."/".cRoverConstants::MANIFEST_PATH."/".cRoverConstants::MANIFEST_FILE;
+		$sPath = $this->pr__get_manifest_path();
 		$this->oSols = self::$oObjStore->get( $sPath);
-		if (!$this->oSols){
+		if (!$this->oSols or cDebug::$IGNORE_CACHE){
 			cDebug::write("generating manifest");
-			$this->pr_generate_manifest();
-			self::$oObjStore->put( $sPath, $this->oSols, true);
+			$this->pr__get_manifest(); 
 		}
 	}
 		
 	//#####################################################################
 	//# abstract functions
 	//#####################################################################
-	protected abstract function pr_generate_manifest();
+	
+	//must return an array of cRoverSol
+	protected abstract function pr_build_manifest();
+	
 	protected abstract function pr_generate_details($psSol, $psInstr);
+	
+	//#####################################################################
+	//# private class functions
+	//#####################################################################
+	private function pr__get_manifest_path(){
+		return  $this->MISSION."/".cRoverConstants::MANIFEST_PATH."/".cRoverConstants::MANIFEST_FILE;
+	}
+	private function pr__get_manifest(){
+
+		$sPath = $this->pr__get_manifest_path();
+		$oSols = $this->pr_build_manifest(); 
+		
+		//check return type 
+		if (! $oSols instanceof  cRoverSols) cDebug::error("return from pr_build_manifest must be cRoverSols");
+		
+		self::$oObjStore->put( $sPath, $oSols, true);
+		$this->oSols = $oSols;
+	}
 	
 	//#####################################################################
 	//# PUBLIC functions
@@ -104,12 +127,6 @@ abstract class cRoverManifest{
 	}
 	
 	//*************************************************************************************************
-	public function add(  $piSol, $psInstr, $piCount, $psUrl){
-		if (!$this->oSols) $this->oSols = new cRoverSols();
-		$this->oSols->add(  $piSol, $psInstr, $piCount, $psUrl);
-	}
-	
-	//*************************************************************************************************
 	public function get_sol_numbers(){
 		cDebug::enter();
 		if (!$this->oSols) cDebug::error("no sols");
@@ -122,15 +139,6 @@ abstract class cRoverManifest{
 	public function get_sol($piSol){
 		if (!$this->oSols) cDebug::error("no sols");
 		return $this->oSols->get_sol($piSol);
-	}
-
-	//#####################################################################
-	//# PRIVATE functions
-	//#####################################################################
-	protected static function pr__get_url( $psUrl){
-		$oHttp = new cHttp();
-		$oHttp->USE_CURL = self::USE_CURL;
-		return  $oHttp->fetch_url($psUrl);
 	}
 
 }
