@@ -22,7 +22,7 @@ require_once("$phpinc/ckinc/objstoredb.php");
 class cComments{
 	const COMMENT_FILENAME = "[comment].txt";
 	const STRIP_HTML = false;
-	static $oObjStore = null;
+	private static $oObjStore = null;
 	
 	
 	//********************************************************************

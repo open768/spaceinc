@@ -30,7 +30,7 @@ class cImageHighlight{
 	const BORDER_WIDTH = 5;
 	const THUMB_QUALITY = 90;
 	const MOSAIC_WIDTH = 8;
-	static $oObjStore = null;
+	private static $oObjStore = null;
 	
 	
 	//********************************************************************

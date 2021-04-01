@@ -22,7 +22,7 @@ class cTags{
 	const PROD_TAG_FILE = "[tag].txt";
 	const TAG_FOLDER = "[tags]";
 	const RECENT_TAG = "TAG";
-	static $oObjStore = null;
+	private static $oObjStore = null;
 	
 	
 	//********************************************************************

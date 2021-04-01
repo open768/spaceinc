@@ -20,7 +20,7 @@ require_once("$spaceinc/misc/indexes.php");
 class cPDS{
 	const OBJDATA_TOP_FOLDER = "[pds]";
 	const PDS_SUFFIX = "PDS";
-	static $oObjStore = null;
+	private static $oObjStore = null;
 		
 	//********************************************************************
 	static function pr_init_objstore(){
