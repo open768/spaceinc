@@ -62,10 +62,11 @@ class cImageHighlight{
 	private static function pr_get_image($psSol, $psInstrument, $psProduct){
 		//get the original image once 
 		$oInstrumentData = cCuriosity::getProductDetails($psSol, $psInstrument, $psProduct);
-		$sImageUrl = $oInstrumentData["d"]["i"];
+		$sImageUrl = null;
 		
-		//get the  image
-		if (!$sImageUrl){
+		if (isset($oInstrumentData["d"]["i"]))
+			$sImageUrl = $oInstrumentData["d"]["i"];
+		else{	
 			cDebug::write("no image found");
 			return null;
 		}
