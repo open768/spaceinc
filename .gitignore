@@ -1,0 +1,11 @@
+# Windows files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+test/
+*.orig
+*.lnk
+
+# project files
+curiosity/secret.php
