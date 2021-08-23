@@ -336,7 +336,7 @@ class cImageHighlight{
 		//get the file from the object store to get the latest version
 		$sFolder = "$psSol/$psInstrument/$psProduct";
 		$aData = ["t"=>$psTop, "l"=>$psLeft, "u"=>$psUser];
-		self::$oObjStore->put_array_oldstyle( $sFolder, self::IMGHIGH_FILENAME, $aData); //store highlight
+		self::$oObjStore->add_to_array_oldstyle( $sFolder, self::IMGHIGH_FILENAME, $aData); //store highlight
 		cIndexes::update_indexes( $psSol, $psInstrument, $psProduct, 1, self::INDEX_SUFFIX);
 		return "ok";
 	}

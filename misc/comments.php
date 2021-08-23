@@ -47,7 +47,7 @@ class cComments{
 		cDebug::write("comment: $psComment");
 
 		$aData = ["c"=>$psComment, "u"=>$psUser];
-		$aData = self::$oObjStore->put_array_oldstyle( $sFolder, self::COMMENT_FILENAME, $aData);
+		$aData = self::$oObjStore->add_to_array_oldstyle( $sFolder, self::COMMENT_FILENAME, $aData);
 		
 		
 		// update SOL
