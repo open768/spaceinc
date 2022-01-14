@@ -15,7 +15,7 @@ uses phpQuery https://code.google.com/archive/p/phpquery/ which is Licensed unde
 **************************************************************************/
 require_once("$phpinc/ckinc/debug.php");
 require_once("$phpinc/ckinc/http.php");
-require_once("$phpinc/phpquery/phpQuery-onefile.php");
+require_once("$phpinc/extra/phpquery/phpQuery-onefile.php");
 require_once("$spaceinc/space/rover.php");
 
 //#####################################################################

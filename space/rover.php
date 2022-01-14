@@ -10,8 +10,6 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 
 // USE AT YOUR OWN RISK - NO GUARANTEES OR ANY FORM ARE EITHER EXPRESSED OR IMPLIED
 
-uses phpQuery https://code.google.com/archive/p/phpquery/ which is Licensed under the MIT license
-
 **************************************************************************/
 require_once("$phpinc/ckinc/debug.php");
 require_once("$phpinc/ckinc/http.php");
