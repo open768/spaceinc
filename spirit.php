@@ -14,8 +14,8 @@ uses phpQuery https://code.google.com/archive/p/phpquery/ which is Licensed unde
 **************************************************************************/
 require_once("$phpInc/ckinc/debug.php");
 require_once("$phpInc/ckinc/http.php");
-require_once("$phpInc/extra/phpquery/phpQuery-onefile.php");
-require_once("$spaceInc/space/rover.php");
+require_once("$phpInc/phpquery/phpQuery-onefile.php");
+require_once("$spaceInc/rover.php");
 
 //#####################################################################
 //#####################################################################
@@ -56,7 +56,7 @@ class cSpiritRover extends cRoverManifest{
 		//find the url where to get the instrument details from
 		$oSol = $this->get_sol($psSol);
 		$aInstruments = $oSol->instruments;
-		if (!isset($aInstruments[$psInstr])) cDebug::error("instrument $psInstr doesnt exist for sol $psSol");
+		if (!array_key_exists( $psInstr, $aInstruments)) cDebug::error("instrument $psInstr doesnt exist for sol $psSol");
 		$oInstr = $aInstruments[$psInstr];
 		$sFragment = $oInstr->url;
 		cDebug::extra_debug("url is $sFragment");

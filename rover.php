@@ -9,10 +9,12 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 
 // USE AT YOUR OWN RISK - NO GUARANTEES OR ANY FORM ARE EITHER EXPRESSED OR IMPLIED
 
+uses phpQuery https://code.google.com/archive/p/phpquery/ which is Licensed under the MIT license
+
 **************************************************************************/
 require_once("$phpInc/ckinc/debug.php");
 require_once("$phpInc/ckinc/http.php");
-require_once("$phpInc/ckinc/objstoredb.php");
+require_once("$phpInc/ckinc/objstore.php");
 
 class cRoverConstants{
 	const MANIFEST_PATH = "[manifest]";
@@ -25,13 +27,12 @@ class cRoverConstants{
 //#####################################################################
 class cRoverSols{
 	private $aSols = null;
-	private $iExpires = null;
 	
-	public function add($piSol, $psInstr=null, $piCount=null, $psUrl=null){
+	public function add($piSol, $psInstr, $piCount, $psUrl){
 		if (!$this->aSols) $this->aSols = [];
 		
 		$sKey = (string) $piSol;
-		if (!isset($this->aSols[$sKey])) $this->aSols[$sKey] = new cRoverSol();
+		if (!array_key_exists($sKey, $this->aSols)) $this->aSols[$sKey] = new cRoverSol();
 		$oSol = $this->aSols[$sKey];
 		$oSol->add($psInstr, $piCount, $psUrl);
 	}	
@@ -43,7 +44,7 @@ class cRoverSols{
 	}
 	
 	public function get_sol($piSol){
-		if (!isset($this->aSols[(string)$piSol])) cDebug::error("Sol $piSol not found");
+		if (!array_key_exists((string)$piSol, $this->aSols)) cDebug::error("Sol $piSol not found");
 		return $this->aSols[(string)$piSol];
 	}
 }
@@ -51,76 +52,50 @@ class cRoverSols{
 //#####################################################################
 //#####################################################################
 abstract class cRoverManifest{
-	const EXPIRY_TIME = 3600; //hourly expiry
-	protected static $oObjStore = null;
+	public static $BASE_URL = null;
 	public $MISSION = null;
-	protected $oSols = null;
+	const USE_CURL = false;
+	private $oSols = null;
 
 	//#####################################################################
 	//# constructor
 	//#####################################################################
-	//********************************************************************
-	static function pr_init_objstore(){
-		if (!self::$oObjStore){
-			$oStore = new cObjStoreDB();
-			$oStore->realm = "ROVMA";
-			$oStore->check_expiry = true;
-			$oStore->expire_time = self::EXPIRY_TIME;
-			$oStore->set_table("ROVER");
-			self::$oObjStore = $oStore;
-		}
-	}
-	
 	function __construct() {
 		if (!$this->MISSION) cDebug::error("MISSION not set");
-		$sPath = $this->pr__get_manifest_path();
-		$this->oSols = self::$oObjStore->get( $sPath);
-		if (!$this->oSols or cDebug::$IGNORE_CACHE){
+		$sPath = $this->MISSION."/".cRoverConstants::MANIFEST_PATH;
+		$this->oSols = cObjStore::get_file( $sPath, cRoverConstants::MANIFEST_FILE);
+		if (!$this->oSols){
 			cDebug::write("generating manifest");
-			$this->pr__get_manifest(); 
+			$this->pr_generate_manifest();
+			cObjStore::put_file( $sPath, cRoverConstants::MANIFEST_FILE, $this->oSols);
 		}
 	}
 		
 	//#####################################################################
 	//# abstract functions
 	//#####################################################################
-	
-	//must return an array of cRoverSol
-	protected abstract function pr_build_manifest();
-	
+	protected abstract function pr_generate_manifest();
 	protected abstract function pr_generate_details($psSol, $psInstr);
-	
-	//#####################################################################
-	//# private class functions
-	//#####################################################################
-	private function pr__get_manifest_path(){
-		return  $this->MISSION."/".cRoverConstants::MANIFEST_PATH."/".cRoverConstants::MANIFEST_FILE;
-	}
-	private function pr__get_manifest(){
-
-		$sPath = $this->pr__get_manifest_path();
-		$oSols = $this->pr_build_manifest(); 
-		
-		//check return type 
-		if (! $oSols instanceof  cRoverSols) cDebug::error("return from pr_build_manifest must be cRoverSols");
-		
-		self::$oObjStore->put( $sPath, $oSols, true);
-		$this->oSols = $oSols;
-	}
 	
 	//#####################################################################
 	//# PUBLIC functions
 	//#####################################################################
 	public function get_details($psSol, $psInstr){
-		$sPath  = $this->MISSION."/".cRoverConstants::DETAILS_PATH."/$psSol/$psInstr";
-		$oDetails =  self::$oObjStore->get($sPath);
+		$sPath  = $this->MISSION."/".cRoverConstants::DETAILS_PATH."/$psSol";
+		$oDetails =  cObjStore::get_file( $sPath, $psInstr);
 		if ($oDetails) return $oDetails;
 		
 		//------------------------------------------------------
 		cDebug::write("generating details");
 		$oDetails = $this->pr_generate_details($psSol, $psInstr);
-		self::$oObjStore->put( $sPath, $oDetails, true);
+		cObjStore::put_file( $sPath, $psInstr, $oDetails);
 		return $oDetails;
+	}
+	
+	//*************************************************************************************************
+	public function add(  $piSol, $psInstr, $piCount, $psUrl){
+		if (!$this->oSols) $this->oSols = new cRoverSols();
+		$this->oSols->add(  $piSol, $psInstr, $piCount, $psUrl);
 	}
 	
 	//*************************************************************************************************
@@ -138,9 +113,16 @@ abstract class cRoverManifest{
 		return $this->oSols->get_sol($piSol);
 	}
 
-}
-cRoverManifest::pr_init_objstore();
+	//#####################################################################
+	//# PRIVATE functions
+	//#####################################################################
+	protected static function pr__get_url( $psUrl){
+		$oHttp = new cHttp();
+		$oHttp->USE_CURL = self::USE_CURL;
+		return  $oHttp->fetch_url($psUrl);
+	}
 
+}
 
 //#####################################################################
 //#####################################################################
@@ -148,7 +130,7 @@ class cRoverSol{
 	public $instruments = [];
 	
 	public function add($psInstr, $piCount, $psUrl){
-		if (!isset($this->instruments[$psInstr])) $this->instruments[$psInstr] = new cRoverInstrument();
+		if (!array_key_exists($psInstr, $this->instruments)) $this->instruments[$psInstr] = new cRoverInstrument();
 		$oEntry = $this->instruments[$psInstr];
 		$oEntry->count = $piCount;
 		$oEntry->url = $psUrl;
@@ -183,7 +165,7 @@ abstract class cRoverInstruments{
 	public  function getAbbreviation($psName){
 		cDebug::enter();
 		$this->getInstruments();
-		if (isset($this->aInstrumentMap[$psName])){
+		if (array_key_exists($psName,$this->aInstrumentMap)){
 			cDebug::leave();
 			return $this->aInstrumentMap[$psName]["abbr"];
 		}

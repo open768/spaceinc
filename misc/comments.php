@@ -1,7 +1,6 @@
 <?php
 /**************************************************************************
-	Copyright (C) Chicken Katsu 2021
-
+	Copyright (C) Chicken Katsu 2013 - 2024
 This code is protected by copyright under the terms of the 
 Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License
 http://creativecommons.org/licenses/by-nc-nd/4.0/legalcode
@@ -18,7 +17,7 @@ or leave a message on github
 **************************************************************************/
 
 
-require_once("$phpinc/ckinc/objstoredb.php");
+require_once("$phpInc/ckinc/objstoredb.php");
 class cComments{
 	const COMMENT_FILENAME = "[comment].txt";
 	const STRIP_HTML = false;

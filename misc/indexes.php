@@ -1,5 +1,5 @@
 <?php
-require_once("$phpinc/ckinc/objstore.php");
+require_once("$phpInc/ckinc/objstore.php");
 
 
 class cIndexes{
@@ -8,7 +8,7 @@ class cIndexes{
 	const INSTR_PREFIX = "i";
 	
 	public static function get_filename( $psPrefix, $psSuffix){
-		return "[${psPrefix}${psSuffix}].txt";
+		return "[{$psPrefix}{$psSuffix}].txt";
 	}
 	
 	//********************************************************************
@@ -24,7 +24,7 @@ class cIndexes{
 	}
 	
 	//********************************************************************
-	static function get_instr_data( $psSol, $psInstrument, $psFile){
+	static function get_instr_data( $psSol, $psInstrument, $psSuffix){
 		$sFile = self::get_filename(self::INSTR_PREFIX, $psSuffix);
 		return cObjStore::get_file( "$psSol/$psInstrument", $sFile);
 	}
@@ -92,7 +92,7 @@ class cIndexes{
 	static function reindex( $poInstrData, $psSuffix, $psProdFile){
 		$aData = [];
 
-		$toppath = cObjStore::$rootFolder."/".OBJDATA_REALM;
+		$toppath = cObjStore::$rootFolder."/".cObjStore::$OBJDATA_REALM;
 		
 		//find the highlight files - tried to do this cleverly, but was more lines of code - so brute force it is
 		$aSols = scandir($toppath);

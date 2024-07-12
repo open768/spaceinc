@@ -1,7 +1,6 @@
 <?php
 /**************************************************************************
-Copyright (C) Chicken Katsu 2015
-
+Copyright (C) Chicken Katsu 2013 - 2024
 This code is protected by copyright under the terms of the 
 Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License
 http://creativecommons.org/licenses/by-nc-nd/4.0/legalcode
@@ -12,11 +11,11 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 //
 **************************************************************************/
 
-require_once("$phpinc/ckinc/objstoredb.php");
-require_once("$spaceinc/misc/indexes.php");
-require_once("$phpinc/ckinc/http.php");
-require_once("$phpinc/ckinc/hash.php");
-require_once("$spaceinc/curiosity/curiosity.php");
+require_once("$phpInc/ckinc/objstoredb.php");
+require_once("$spaceInc/misc/indexes.php");
+require_once("$phpInc/ckinc/http.php");
+require_once("$phpInc/ckinc/hash.php");
+require_once("$spaceInc/curiosity/curiosity.php");
 
 class cImageHighlight{
 	const INDEX_SUFFIX = "Highlite";

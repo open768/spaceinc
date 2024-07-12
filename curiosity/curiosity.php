@@ -1,6 +1,6 @@
 <?php
 /**************************************************************************
-Copyright (C) Chicken Katsu 2014 -2015
+Copyright (C) Chicken Katsu 2013 -2024
 
 This code is protected by copyright under the terms of the 
 Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License
@@ -11,12 +11,12 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 // USE AT YOUR OWN RISK - NO GUARANTEES OR ANY FORM ARE EITHER EXPRESSED OR IMPLIED
 **************************************************************************/
 
-require_once("$phpinc/ckinc/common.php");
-require_once("$phpinc/ckinc/cached_http.php");
-require_once("$spaceinc/space/mission.php");
-require_once("$spaceinc/curiosity/instrument.php");
-require_once("$spaceinc/curiosity/static.php");
-require_once("$spaceinc/curiosity/curiositypds.php");
+require_once("$phpInc/ckinc/common.php");
+require_once("$phpInc/ckinc/cached_http.php");
+require_once("$spaceInc/space/mission.php");
+require_once("$spaceInc/curiosity/instrument.php");
+require_once("$spaceInc/curiosity/static.php");
+require_once("$spaceInc/curiosity/curiositypds.php");
 
 
 //##########################################################################
@@ -186,7 +186,7 @@ class cCuriosity implements iMission{
 	public static function getAllSolData($psSol){
 		cDebug::enter();
 		
-		$sUrl=self::SOL_URL."${psSol}.json";
+		$sUrl=self::SOL_URL."{$psSol}.json";
 		cDebug::write("Getting all sol data from: ".$sUrl);
 		$oCache = new cCachedHttp();
 		$oCache->CACHE_EXPIRY=self::SOL_CACHE;
@@ -202,7 +202,7 @@ class cCuriosity implements iMission{
 		
 		cDebug::write("clearing sol cache : ".$psSol);
 		$oCache = new cCachedHttp();
-		$sUrl=self::SOL_URL."${psSol}.json";
+		$sUrl=self::SOL_URL."{$psSol}.json";
 		$oCache->deleteCachedURL($sUrl);
 
 		cDebug::leave();

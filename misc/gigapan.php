@@ -4,8 +4,8 @@
 	// to go to a gigapan http://www.gigapan.com/gigapans/157774
 	// browse image : http://static.gigapan.org/gigapans0/158338/images/158338-500x279.jpg
 	
-	require_once("$phpinc/ckinc/debug.php");
-	require_once("$phpinc/ckinc/cached_http.php");
+	require_once("$phpInc/ckinc/debug.php");
+	require_once("$phpInc/ckinc/cached_http.php");
 
 	class cGigapan{
 		const USER_EXPR = "http://api.gigapan.org/beta/gigapans/page/%d/per_page/60/username/%s/most_recent.json";
