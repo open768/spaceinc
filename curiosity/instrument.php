@@ -29,6 +29,7 @@ class cInstrument{
 	//*************************************************************************
 	public function add($poCuriosityData, $pbThumbs=false){
 		//dont add thumbnail products if not wanted
+
 		$bProceed = false;
 		if ($poCuriosityData->sampleType === "thumbnail")
 			$bProceed = $pbThumbs;
