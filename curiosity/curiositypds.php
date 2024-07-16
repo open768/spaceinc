@@ -65,7 +65,7 @@ class cCuriosityPDS{
 				"processing code" => $aMatches[9],
 			];
 		}else{
-			cDebug::error("not a valid MSL product: '$psProduct'");
+			cDebug::error("not a valid MSL product: '$psProduct'", true);
 		}
 		return $aResult;
 	}
