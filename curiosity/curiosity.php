@@ -81,6 +81,7 @@ class cCuriosity implements iMission{
 	}
 		
 	
+	//*****************************************************************************
 	private static function pr_match_thumbs($psSol, $psInstrument, $poThumbs){
 		cDebug::enter();
 		
@@ -124,7 +125,7 @@ class cCuriosity implements iMission{
 				$aKeys = array_keys($aIProducts);
 				$aMatches = preg_grep("/".$sRegex."/", $aKeys);
 				if ( $aMatches ){
-					$sMatch = array_values($aMatches)[0];;
+					$sMatch = array_values($aMatches)[0];
 					$aTItem["p"] = $sMatch;
 					$aTData[$i] = $aTItem;
 					continue;
@@ -135,7 +136,9 @@ class cCuriosity implements iMission{
 				try{
 				$aParts = cCuriosityPDS::explode_productID($sTProduct);
 				}
-				catch (Exception $e){					continue;				}
+				catch (Exception $e){					
+                    continue;				
+                }
 				
 				
 				$sPartial = sprintf( "/%04d%s%06d%03d/", $aParts["sol"],	$aParts["instrument"] , $aParts["seqid"] ,$aParts["seq line"], $aParts["CDPID"]);
