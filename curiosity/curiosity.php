@@ -92,7 +92,7 @@ class cCuriosity implements iMission{
 		}else{
 			// read the img files for the products
 			cDebug::write("Found $iTCount thumbnails: ");
-			$oImg = self::getSolData($psSol, $psInstrument);
+			$oImg = self::getSolRawData($psSol, $psInstrument);
 			$aIData = $oImg->data;
 			$iICount = count($aIData);
 			
@@ -214,7 +214,7 @@ class cCuriosity implements iMission{
 	//*****************************************************************************
 	public static function getAllSolThumbs($psSol){
 		cDebug::enter();
-		$oResult= self::getSolData($psSol, null,true);
+		$oResult= self::getSolRawData($psSol, null,true);
 		cDebug::leave();
 		return $oResult;
 	}
@@ -222,29 +222,31 @@ class cCuriosity implements iMission{
 	//*****************************************************************************
 	public static function getSolThumbs($psSol, $psInstrument){
 		cDebug::enter();
-		$oResult = self::getSolData($psSol, $psInstrument,true);
+		$oResult = self::getSolRawData($psSol, $psInstrument,true);
 		
 		cDebug::leave();
 		return $oResult;
 	}
 	
 	//*****************************************************************************
-	public static function getSolData($psSol, $psInstrument=null, $pbThumbs=false){
+	public static function getSolRawData($psSol, $psInstrument=null, $pbThumbs=false){
 		cDebug::enter();
 		$oJson = self::getAllSolData($psSol);
-		$oInstrument = new cInstrument($psInstrument);
+		$oData = new cInstrument($psInstrument);  //put all images under a single instrument
 		
-		$aImages = $oJson->images;
+		//get the images from the json response
+        $aImages = $oJson->images;
 		
-		//---build a list of data
+		//---work through list of images
 		foreach ($aImages as $oItem){
 			$sInstrument = $oItem->instrument;
+            //add item to response either if no instrument was supplied, or the item is of the requested instrument 
 			if (( !$psInstrument) || ($sInstrument === $psInstrument))
-				$oInstrument->add($oItem, $pbThumbs);
+				$oData->add($oItem, $pbThumbs);
 		}
 		
 		cDebug::leave();
-		return $oInstrument;
+		return $oData;
 	}
 	
 	//*****************************************************************************
@@ -404,7 +406,7 @@ class cCuriosity implements iMission{
 		$aOutput = ["s"=>$psSol, "i"=>$sInstr, "p"=>$psProduct, "d"=>null, "max"=>null, "item"=>null, "migrate"=>null];
 
 		//get the data
-		$oInstrumentData = self::getSolData($psSol, $sInstr);
+		$oInstrumentData = self::getSolRawData($psSol, $sInstr);
 		$aInstrumentImages=$oInstrumentData->data;
 		$oDetails = self::pr__GetInstrumentImageDetails($aInstrumentImages, $psProduct);
 		
