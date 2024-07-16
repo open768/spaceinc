@@ -14,6 +14,11 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 require_once("$phpInc/ckinc/cached_http.php");
 
 //##########################################################################
+class cInstrumentData{
+    public $du, $dm, $i, $p, $data;
+}
+
+//##########################################################################
 class cInstrument{
 	public $instrument;
 	public $data;

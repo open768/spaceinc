@@ -73,11 +73,11 @@ class cCuriosity implements iMission
 
         //get the thumbnails and the non thumbnails
         if ($psInstrument == self::ALL_INSTRUMENTS) {
-            $oThumbs = self::getAllSolThumbs($psSol);
-            $oResult = self::pr_match_thumbs($psSol, null, $oThumbs);
+            $oAllSolThumbs = self::getAllSolThumbs($psSol);
+            $oResult = self::pr_match_thumbs($psSol, null, $oAllSolThumbs);
         } else {
-            $oThumbs = self::getSolThumbs($psSol, $psInstrument);
-            $oResult = self::pr_match_thumbs($psSol, $psInstrument, $oThumbs);
+            $oAllSolThumbs = self::getSolThumbs($psSol, $psInstrument);
+            $oResult = self::pr_match_thumbs($psSol, $psInstrument, $oAllSolThumbs);
         }
 
         cDebug::leave();
@@ -86,23 +86,23 @@ class cCuriosity implements iMission
 
 
     //*****************************************************************************
-    private static function pr_match_thumbs($psSol, $psInstrument, $poThumbs)
+    private static function pr_match_thumbs($psSol, $psInstrument, $poAllSolThumbs)
     {
         cDebug::enter();
 
-        $aThumbData = $poThumbs->data;
+        $aThumbData = $poAllSolThumbs->data;
         $iThumbCount = count($aThumbData);
         if ($iThumbCount == 0)
             cDebug::write("no thumbnails found");
         else {
             // read the img files for the products
             cDebug::write("Found $iThumbCount thumbnails: ");
-            $oImg = self::getSolRawData($psSol, $psInstrument);
-            $aIData = $oImg->data;
+            $oRawData = self::getSolRawData($psSol, $psInstrument);
+            $aIData = $oRawData->data;
             $iICount = count($aIData);
 
             // create a list of product Ids
-            $aIProducts = [];
+            $aProducts = [];
             foreach ($aIData as $oIItem) {
                 $sProduct = $oIItem["p"];
                 $aIProducts[$sProduct] = 1;
@@ -115,62 +115,68 @@ class cCuriosity implements iMission
             for ($i = $iThumbCount - 1; $i >= 0; $i--) {
                 $aTItem = $aThumbData[$i];
                 $sTProduct = $aTItem["p"];
+                cDebug::write("0.. product id from Json: $sTProduct");
 
-                //should really check the type of product for the next bit - but ho-hum heres a *BODGE*
+                //this is a bodge to correct an unrecognised product id 
                 $sIProduct = str_replace("I1_D", "E1_D", $sTProduct);
 
+                //check if this product is in  $aIProducts
                 if (isset($aIProducts[$sIProduct])) {
-                    cDebug::write("product found for $sIProduct");
+                    cDebug::write("1.. product found for $sIProduct");
                     $aTItem["p"] = $sIProduct;
                     $aThumbData[$i] = $aTItem;
                     continue;
                 }
 
+                //this is a bodge to correct an unrecognised product id 
                 $sRegex = str_replace("EDR_T", "EDR_.", $sTProduct);
-                $aKeys = array_keys($aIProducts);
-                $aMatches = preg_grep("/" . $sRegex . "/", $aKeys);
+                $sRegex  = "/" . $sRegex . "/";
+                $aMatches = preg_grep($sRegex, $aIProductKeys); //search array for a match
                 if ($aMatches) {
                     $sMatch = array_values($aMatches)[0];
                     $aTItem["p"] = $sMatch;
                     $aThumbData[$i] = $aTItem;
+                    cDebug::write("2.. product found for $sIProduct");
                     continue;
                 }
 
-                //if all else fails: NB this'll only work for mastcam or mahli - otherwise you get a big fat exception
-                cDebug::write("pr_match_thumbs product not found for ".$sIProduct);
+                //break the productID into its parts
                 try {
-                    $aParts = cCuriosityPDS::explode_productID($sTProduct);
+                    $aProduct = cCuriosityPDS::explode_productID($sTProduct);
                 } catch (Exception $e) {
+                    cDebug::write("3.. product not found for " . $sIProduct);
                     continue;
                 }
 
-                //I really dont know whats happening here
-                $sPartial = sprintf("/%04d%s%06d%03d/", $aParts["sol"],    $aParts["instrument"], $aParts["seqid"], $aParts["seq line"], $aParts["CDPID"]);
+                //one last throw of the dice, create a product string and look for it again
+                $sPartial = sprintf("/%04d%s%06d%03d/", $aProduct["sol"], $aProduct["instrument"], $aProduct["seqid"], $aProduct["seq line"], $aProduct["CDPID"]);
                 $aMatches = preg_grep($sPartial, $aIProductKeys);
                 if (count($aMatches) > 0) {
                     $aValues = array_values($aMatches);
-                    cDebug::write("thumbnail $sTProduct matches " . $aValues[0]);
+                    cDebug::write("4.. thumbnail $sTProduct matches " . $aValues[0]);
                     $aTItem["p"] = $aValues[0];
                     $aThumbData[$i] = $aTItem;
-                } else {
-                    cDebug::write("Thumbnail didnt match $sPartial");
-                    unset($aThumbData[$i]);
-                }
+                    continue;
+                } 
+                
+                //give up
+                cDebug::write("5.. Thumbnail didnt match $sPartial");
+                unset($aThumbData[$i]); //delete the thumbnail
             }
 
             if (count($aThumbData) == 0) {
-                cDebug::write("no thumbnails matched");
+                cDebug::write("5.. no thumbnails matched");
                 cDebug::vardump($aIProducts);
             }
 
             //TBD
             //store the final version of the data			
             $aValues = array_values($aThumbData);
-            $poThumbs->data = $aValues;
+            $poAllSolThumbs->data = $aValues;
         }
 
         cDebug::leave();
-        return ["s" => $psSol, "i" => $psInstrument, "d" => $poThumbs];
+        return ["s" => $psSol, "i" => $psInstrument, "d" => $poAllSolThumbs];
     }
 
     //*****************************************************************************
