@@ -13,6 +13,7 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 require_once("$phpInc/ckinc/debug.php");
 require_once("$phpInc/ckinc/http.php");
 require_once("$phpInc/ckinc/objstoredb.php");
+require_once("$spaceInc/misc/realms.php");
 
 class cRoverConstants{
 	const MANIFEST_PATH = "[manifest]";
@@ -63,7 +64,7 @@ abstract class cRoverManifest{
 	static function pr_init_objstore(){
 		if (!self::$oObjStore){
 			$oStore = new cObjStoreDB();
-			$oStore->realm = "ROVMA";
+			$oStore->realm = cSpaceRealms::ROVER_MANIFEST;
 			$oStore->check_expiry = true;
 			$oStore->expire_time = self::EXPIRY_TIME;
 			$oStore->set_table("ROVER");

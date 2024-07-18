@@ -12,6 +12,7 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 
 // USE AT YOUR OWN RISK - NO GUARANTEES OR ANY FORM ARE EITHER EXPRESSED OR IMPLIED
 **************************************************************************/
+require_once("$spaceInc/misc/realms.php");
 
 
 class cTags{
@@ -29,7 +30,7 @@ class cTags{
 	static function pr_init_objstore(){
 		if (!self::$oObjStore){
 			self::$oObjStore = new cObjStoreDB();
-			self::$oObjStore->realm = "TAGS";
+			self::$oObjStore->realm = cSpaceRealms::TAGS
 		}
 	}
 	

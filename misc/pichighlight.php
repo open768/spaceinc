@@ -13,6 +13,7 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 
 require_once("$phpInc/ckinc/objstoredb.php");
 require_once("$spaceInc/misc/indexes.php");
+require_once("$spaceInc/misc/realms.php");
 require_once("$phpInc/ckinc/http.php");
 require_once("$phpInc/ckinc/hash.php");
 require_once("$spaceInc/curiosity/curiosity.php");
@@ -36,7 +37,7 @@ class cImageHighlight{
 	static function pr_init_objstore(){
 		if (!self::$oObjStore){
 			self::$oObjStore = new cObjStoreDB();
-			self::$oObjStore->realm = "PICHI";
+			self::$oObjStore->realm = cSpaceRealms::IMAGE_HIGHLIGHT;
 		}
 	}
 	
