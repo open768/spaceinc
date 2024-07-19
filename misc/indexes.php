@@ -13,24 +13,37 @@ class cIndexes{
 	
 	//********************************************************************
 	static function get_top_sol_data( $psSuffix){
+        cDebug::enter();
 		$sFile = self::get_filename(self::TOP_PREFIX, $psSuffix);
-		return cObjStore::get_file( "", $sFile);
+        $oData = cObjStore::get_file( "", $sFile);
+        cDebug::leave();
+
+		return $oData ;
 	}
 	
 	//********************************************************************
 	static function get_sol_data( $psSol, $psSuffix){
+        cDebug::enter();
 		$sFile = self::get_filename(self::SOL_PREFIX, $psSuffix);
-		return cObjStore::get_file( $psSol, $sFile);
+		$oData = cObjStore::get_file( $psSol, $sFile);
+        cDebug::leave();
+
+		return $oData ;
 	}
 	
 	//********************************************************************
 	static function get_instr_data( $psSol, $psInstrument, $psSuffix){
+        cDebug::enter();
 		$sFile = self::get_filename(self::INSTR_PREFIX, $psSuffix);
-		return cObjStore::get_file( "$psSol/$psInstrument", $sFile);
+		$oData = cObjStore::get_file( "$psSol/$psInstrument", $sFile);
+        cDebug::leave();
+
+		return $oData ;
 	}
 	
 	//********************************************************************
 	static function get_solcount( $psSol, $psFile){
+        cDebug::enter();
 		$iCount = 0;
 		$aData = self::get_sol_data( $psSol, $psFile);
 		if ($aData){
@@ -39,7 +52,8 @@ class cIndexes{
 					$iCount++;
 			}
 		}
-			
+        cDebug::leave();
+
 		return $iCount;
 	}
 
@@ -47,13 +61,16 @@ class cIndexes{
 	//# UPDATE functions
 	//######################################################################
 	static function update_indexes( $psSol, $psInstrument, $psProduct, $poData, $psSuffix){
+        cDebug::enter();
 		self::update_instr_index( $psSol, $psInstrument, $psProduct, $poData, $psSuffix);
 		self::update_sol_index( $psSol, $psInstrument, $psProduct, $psSuffix);
 		self::update_top_sol_index( $psSol, $psSuffix);		
+        cDebug::leave();
 	}
 	
 	//********************************************************************
 	static function update_top_sol_index( $psSol, $psSuffix){
+        cDebug::enter();
 		$sFile = self::get_filename(self::TOP_PREFIX, $psSuffix);
 		$aData = cObjStore::get_file( "", $sFile);
 		
@@ -63,10 +80,12 @@ class cIndexes{
 		$aData[$psSol] = $aData[$psSol] +1;
 		cDebug::write("updating top sol index for sol $psSol");
 		cObjStore::put_file( "", $sFile, $aData);
+        cDebug::leave();
 	}
 		
 	//********************************************************************
 	static function update_sol_index( $psSol, $psInstrument, $psProduct, $psSuffix){
+        cDebug::enter();
 		$sFile = self::get_filename(self::SOL_PREFIX, $psSuffix);
 		$aData = cObjStore::get_file( $psSol, $sFile);
 		if (!$aData) $aData=[];
@@ -74,22 +93,26 @@ class cIndexes{
 		if (!isset($aData[$psInstrument])) $aData[$psInstrument][$psProduct] = 0;
 		$aData[$psInstrument][$psProduct] = $aData[$psInstrument][$psProduct] + 1;
 		cObjStore::put_file( $psSol, $sFile, $aData);
+        cDebug::leave();
 	}
 		
 	//********************************************************************
 	static function update_instr_index( $psSol, $psInstrument, $psProduct, $poData, $psSuffix ){
+        cDebug::enter();
 		$sFile = self::get_filename(self::INSTR_PREFIX, $psSuffix);
 		$sFolder="$psSol/$psInstrument";
 		$aData = cObjStore::get_file( $sFolder, $sFile);
 		if (!$aData) $aData=[];
 		$aData[$psProduct] = $poData;
 		cObjStore::put_file( $sFolder, $sFile, $aData);
+        cDebug::leave();
 	}
 
 	//######################################################################
 	//# reindex functions
 	//######################################################################
 	static function reindex( $poInstrData, $psSuffix, $psProdFile){
+        cDebug::enter();
 		$aData = [];
 
 		$toppath = cObjStore::$rootFolder."/".cObjStore::$OBJDATA_REALM;
@@ -119,10 +142,12 @@ class cIndexes{
 			}
 			
 		self::write_index_files( $aData,$psSuffix);
+        cDebug::leave();
 	}
 	
 	//***********************************************************************************************************
 	public static function write_index_files($paData, $psSuffix){
+        cDebug::enter();
 		$aTopSols = [];
 		foreach ($paData as  $sSol=>$aSolData)	{
 			$aTopSols[$sSol] = 1;
@@ -131,6 +156,7 @@ class cIndexes{
 			cObjStore::put_file( $sSol, self::get_filename(self::SOL_PREFIX, $psSuffix), $aSolData);				
 		}
 		cObjStore::put_file( "", self::get_filename(self::TOP_PREFIX, $psSuffix), $aTopSols);
+        cDebug::leave();
 	}
 }
 ?>
