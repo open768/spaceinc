@@ -26,7 +26,7 @@ example of RSS requests reverse engineered from
 #		https://mars.nasa.gov/mars2020/multimedia/raw-images/EUF_0001_0667022672_630ECV_N0010052EDLC00001_0010LUJ01
 **************************************************************************/
 
-require_once("$spaceInc/space/rover.php");
+require_once("$spaceInc/missions/rover.php");
 require_once("$phpInc/ckinc/cached_http.php");
 
 class cPerseverance extends cRoverManifest{

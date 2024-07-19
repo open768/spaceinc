@@ -14,7 +14,7 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 require_once("$phpInc/ckinc/debug.php");
 require_once("$phpInc/ckinc/http.php");
 require_once("$phpInc/ckinc/objstore.php");
-require_once("$spaceInc/space/rover.php");
+require_once("$spaceInc/missions/rover.php");
 
 //################################################################################
 //################################################################################

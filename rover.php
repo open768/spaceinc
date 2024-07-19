@@ -15,6 +15,7 @@ uses phpQuery https://code.google.com/archive/p/phpquery/ which is Licensed unde
 require_once("$phpInc/ckinc/debug.php");
 require_once("$phpInc/ckinc/http.php");
 require_once("$phpInc/ckinc/objstore.php");
+require_once("$phpInc/ckinc/objstoredb.php");
 
 class cRoverConstants{
 	const MANIFEST_PATH = "[manifest]";
