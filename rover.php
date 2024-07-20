@@ -57,8 +57,18 @@ abstract class cRoverManifest{
 	public $MISSION = null;
 	const USE_CURL = false;
 	private $oSols = null;
+    const OBJDB_TABLE = "ROVERMAN";
 
-	//#####################################################################
+	private static $objstoreDB = null;
+	
+	
+	//********************************************************************
+	static function init_obj_store_db(){
+		if (!self::$objstoreDB)
+			self::$objstoreDB = new cObjStoreDB(cSpaceRealms::ROVER_MANIFEST, self::OBJDB_TABLE);
+	}
+
+    //#####################################################################
 	//# constructor
 	//#####################################################################
 	function __construct() {
@@ -124,6 +134,7 @@ abstract class cRoverManifest{
 	}
 
 }
+cRoverManifest::init_obj_store_db();
 
 //#####################################################################
 //#####################################################################

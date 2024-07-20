@@ -21,12 +21,12 @@ require_once("$spaceInc/misc/realms.php");
 class cPDS{
 	const OBJDATA_TOP_FOLDER = "[pds]";
 	const PDS_SUFFIX = "PDS";
-	private static $oObjStore = null;
+	private static $objstoreDB = null;
 		
 	//********************************************************************
-	static function pr_init_objstore(){
-		if (!self::$oObjStore){
-			self::$oObjStore = new cObjStoreDB(cSpaceRealms::PDS);
+	static function init_obj_store_db(){
+		if (!self::$objstoreDB){
+			self::$objstoreDB = new cObjStoreDB(cSpaceRealms::PDS);
 		}
 	}
 	
@@ -42,7 +42,7 @@ class cPDS{
 	public static function get_pds_data($psSol, $psInstrument){
 		cDebug::enter();
 		$sFolder = self::pr__get_objstore_Folder($psSol,$psInstrument);
-		$oData = self::$oObjStore->get_oldstyle($sFolder, cIndexes::get_filename(cIndexes::INSTR_PREFIX, self::PDS_SUFFIX));
+		$oData = self::$objstoreDB->get_oldstyle($sFolder, cIndexes::get_filename(cIndexes::INSTR_PREFIX, self::PDS_SUFFIX));
 		cDebug::leave();
 
 		return $oData; 
@@ -53,14 +53,14 @@ class cPDS{
 		foreach ($paData as  $sSol=>$aSolData)	
 			foreach ($aSolData as $sInstr=>$aInstrData){
 				$sFilename = cIndexes::get_filename(cIndexes::INSTR_PREFIX, self::PDS_SUFFIX);
-				$aPDSData = self::$oObjStore->get_oldstyle(self::OBJDATA_TOP_FOLDER."/$sSol/$sInstr", $sFilename);				
+				$aPDSData = self::$objstoreDB->get_oldstyle(self::OBJDATA_TOP_FOLDER."/$sSol/$sInstr", $sFilename);				
 				if ($aPDSData){  
 					//update existing with new data
 					foreach ($aInstrData as $sNewKey=>$aNewData)
 						$aPDSData[$sNewKey] = $aNewData;
 				}else
 					$aPDSData = $aInstrData;
-				self::$oObjStore->put_oldstyle( self::OBJDATA_TOP_FOLDER."/$sSol/$sInstr", $sFilename, $aPDSData);
+				self::$objstoreDB->put_oldstyle( self::OBJDATA_TOP_FOLDER."/$sSol/$sInstr", $sFilename, $aPDSData);
 				cDebug::extra_debug("$sSol/$sInstr lines:".count($aPDSData));			
 			}
 	}
@@ -70,5 +70,5 @@ class cPDS{
 		cObjStore::kill_folder(self::OBJDATA_TOP_FOLDER);
 	}
 }
-cPDS::pr_init_objstore();
+cPDS::init_obj_store_db();
 ?>

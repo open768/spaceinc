@@ -25,21 +25,21 @@ class cComments
 {
     const COMMENT_FILENAME = "[comment].txt";
     const STRIP_HTML = false;
-    private static $oObjStore = null;
+    private static $objstoreDB = null;
 
 
     //********************************************************************
-    static function pr_init_objstore()
+    static function init_obj_store_db()
     {
-        if (!self::$oObjStore)
-            self::$oObjStore = new cObjStoreDB(cSpaceRealms::COMMENTS);
+        if (!self::$objstoreDB)
+            self::$objstoreDB = new cObjStoreDB(cSpaceRealms::COMMENTS);
     }
 
     //********************************************************************
     static function get($psSol, $psInstrument, $psProduct)
     {
         $sFolder = "$psSol/$psInstrument/$psProduct";
-        $aTags = self::$oObjStore->get_oldstyle($sFolder, self::COMMENT_FILENAME);
+        $aTags = self::$objstoreDB->get_oldstyle($sFolder, self::COMMENT_FILENAME);
         return $aTags;
     }
 
@@ -51,7 +51,7 @@ class cComments
         cDebug::write("comment: $psComment");
 
         $aData = ["c" => $psComment, "u" => $psUser];
-        $aData = self::$oObjStore->add_to_array_oldstyle($sFolder, self::COMMENT_FILENAME, $aData);
+        $aData = self::$objstoreDB->add_to_array_oldstyle($sFolder, self::COMMENT_FILENAME, $aData);
 
 
         // update SOL
@@ -62,4 +62,4 @@ class cComments
     //
 }
 
-cComments::pr_init_objstore();
+cComments::init_obj_store_db();

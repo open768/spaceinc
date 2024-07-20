@@ -53,7 +53,7 @@ class cRoverSols{
 //#####################################################################
 abstract class cRoverManifest{
 	const EXPIRY_TIME = 3600; //hourly expiry
-	protected static $oObjStore = null;
+	protected static $objstoreDB = null;
 	public $MISSION = null;
 	protected $oSols = null;
     const OBJDB_TABLE = "ROVER";
@@ -62,19 +62,19 @@ abstract class cRoverManifest{
 	//# constructor
 	//#####################################################################
 	//********************************************************************
-	static function pr_init_objstore(){
-		if (!self::$oObjStore){
+	static function init_obj_store_db(){
+		if (!self::$objstoreDB){
 			$oStore = new cObjStoreDB(cSpaceRealms::ROVER_MANIFEST, self::OBJDB_TABLE);
 			$oStore->check_expiry = true;
 			$oStore->expire_time = self::EXPIRY_TIME;
-			self::$oObjStore = $oStore;
+			self::$objstoreDB = $oStore;
 		}
 	}
 	
 	function __construct() {
 		if (!$this->MISSION) cDebug::error("MISSION not set");
 		$sPath = $this->pr__get_manifest_path();
-		$this->oSols = self::$oObjStore->get( $sPath);
+		$this->oSols = self::$objstoreDB->get( $sPath);
 		if (!$this->oSols or cDebug::$IGNORE_CACHE){
 			cDebug::write("generating manifest");
 			$this->pr__get_manifest(); 
@@ -104,7 +104,7 @@ abstract class cRoverManifest{
 		//check return type 
 		if (! $oSols instanceof  cRoverSols) cDebug::error("return from pr_build_manifest must be cRoverSols");
 		
-		self::$oObjStore->put( $sPath, $oSols, true);
+		self::$objstoreDB->put( $sPath, $oSols, true);
 		$this->oSols = $oSols;
 	}
 	
@@ -113,13 +113,13 @@ abstract class cRoverManifest{
 	//#####################################################################
 	public function get_details($psSol, $psInstr){
 		$sPath  = $this->MISSION."/".cRoverConstants::DETAILS_PATH."/$psSol/$psInstr";
-		$oDetails =  self::$oObjStore->get($sPath);
+		$oDetails =  self::$objstoreDB->get($sPath);
 		if ($oDetails) return $oDetails;
 		
 		//------------------------------------------------------
 		cDebug::write("generating details");
 		$oDetails = $this->pr_generate_details($psSol, $psInstr);
-		self::$oObjStore->put( $sPath, $oDetails, true);
+		self::$objstoreDB->put( $sPath, $oDetails, true);
 		return $oDetails;
 	}
 	
@@ -139,7 +139,7 @@ abstract class cRoverManifest{
 	}
 
 }
-cRoverManifest::pr_init_objstore();
+cRoverManifest::init_obj_store_db();
 
 
 //#####################################################################
