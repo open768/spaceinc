@@ -26,8 +26,7 @@ class cPDS{
 	//********************************************************************
 	static function pr_init_objstore(){
 		if (!self::$oObjStore){
-			self::$oObjStore = new cObjStoreDB();
-			self::$oObjStore->realm = cSpaceRealms::PDS;
+			self::$oObjStore = new cObjStoreDB(cSpaceRealms::PDS);
 		}
 	}
 	

@@ -56,6 +56,7 @@ abstract class cRoverManifest{
 	protected static $oObjStore = null;
 	public $MISSION = null;
 	protected $oSols = null;
+    const OBJDB_TABLE = "ROVER";
 
 	//#####################################################################
 	//# constructor
@@ -63,11 +64,9 @@ abstract class cRoverManifest{
 	//********************************************************************
 	static function pr_init_objstore(){
 		if (!self::$oObjStore){
-			$oStore = new cObjStoreDB();
-			$oStore->realm = cSpaceRealms::ROVER_MANIFEST;
+			$oStore = new cObjStoreDB(cSpaceRealms::ROVER_MANIFEST, self::OBJDB_TABLE);
 			$oStore->check_expiry = true;
 			$oStore->expire_time = self::EXPIRY_TIME;
-			$oStore->set_table("ROVER");
 			self::$oObjStore = $oStore;
 		}
 	}
@@ -176,17 +175,17 @@ abstract class cRoverInstruments{
 	protected function pr_add($psName, $psAbbreviation ,$psCaption ,$psColour){
 		$aInstr = ["name"=>$psName,"colour"=>$psColour, "abbr"=>$psAbbreviation,	"caption"=>$psCaption];
 		$this->aInstruments[] = $aInstr;
-		$this->aInstrumentMap[$psName] = $aInstr;
-		$this->aInstrumentMap[$psAbbreviation] = $aInstr;
+		$this->aInstrument_map[$psName] = $aInstr;
+		$this->aInstrument_map[$psAbbreviation] = $aInstr;
 	}
 
 	//*****************************************************************************
 	public  function getAbbreviation($psName){
 		cDebug::enter();
 		$this->getInstruments();
-		if (isset($this->aInstrumentMap[$psName])){
+		if (isset($this->aInstrument_map[$psName])){
 			cDebug::leave();
-			return $this->aInstrumentMap[$psName]["abbr"];
+			return $this->aInstrument_map[$psName]["abbr"];
 		}
 		
 		foreach ($this->aInstruments as $aInstrument)
@@ -203,7 +202,7 @@ abstract class cRoverInstruments{
 		cDebug::enter();
 		$this->getInstruments();
 		cDebug::leave();
-		return  $this->aInstrumentMap[$psAbbr]["name"];
+		return  $this->aInstrument_map[$psAbbr]["name"];
 	}
 
 	//*****************************************************************************
@@ -211,7 +210,7 @@ abstract class cRoverInstruments{
 		cDebug::enter();
 		$this->getInstruments();
 		cDebug::leave();
-		return  $this->aInstrumentMap[$psAbbr];
+		return  $this->aInstrument_map[$psAbbr];
 	}
 }
 

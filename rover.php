@@ -158,17 +158,17 @@ abstract class cRoverInstruments{
 	protected function pr_add($psName, $psAbbreviation ,$psCaption ,$psColour){
 		$aInstr = ["name"=>$psName,"colour"=>$psColour, "abbr"=>$psAbbreviation,	"caption"=>$psCaption];
 		$this->aInstruments[] = $aInstr;
-		$this->aInstrumentMap[$psName] = $aInstr;
-		$this->aInstrumentMap[$psAbbreviation] = $aInstr;
+		$this->aInstrument_map[$psName] = $aInstr;
+		$this->aInstrument_map[$psAbbreviation] = $aInstr;
 	}
 
 	//*****************************************************************************
 	public  function getAbbreviation($psName){
 		cDebug::enter();
 		$this->getInstruments();
-		if (array_key_exists($psName,$this->aInstrumentMap)){
+		if (array_key_exists($psName,$this->aInstrument_map)){
 			cDebug::leave();
-			return $this->aInstrumentMap[$psName]["abbr"];
+			return $this->aInstrument_map[$psName]["abbr"];
 		}
 		
 		foreach ($this->aInstruments as $aInstrument)
@@ -185,7 +185,7 @@ abstract class cRoverInstruments{
 		cDebug::enter();
 		$this->getInstruments();
 		cDebug::leave();
-		return  $this->aInstrumentMap[$psAbbr]["name"];
+		return  $this->aInstrument_map[$psAbbr]["name"];
 	}
 
 	//*****************************************************************************
@@ -193,7 +193,7 @@ abstract class cRoverInstruments{
 		cDebug::enter();
 		$this->getInstruments();
 		cDebug::leave();
-		return  $this->aInstrumentMap[$psAbbr];
+		return  $this->aInstrument_map[$psAbbr];
 	}
 }
 

@@ -1,4 +1,5 @@
 <?php
+
 /**************************************************************************
 	Copyright (C) Chicken Katsu 2013 - 2024
 This code is protected by copyright under the terms of the 
@@ -14,52 +15,51 @@ or leave a message on github
 //%
 //% solves Problem -  thousands files on busy websites that exceed inode quotas.
 //%
-**************************************************************************/
+ **************************************************************************/
 
 
 require_once("$phpInc/ckinc/objstoredb.php");
 require_once("$spaceInc/misc/realms.php");
 
-class cComments{
-	const COMMENT_FILENAME = "[comment].txt";
-	const STRIP_HTML = false;
-	private static $oObjStore = null;
-	
-	
-	//********************************************************************
-	static function pr_init_objstore(){
-		if (!self::$oObjStore){
-			self::$oObjStore = new cObjStoreDB();
-			self::$oObjStore->realm = cSpaceRealms::COMMENTS;
-		}
-	}
-	
-	//********************************************************************
-	static function get( $psSol, $psInstrument, $psProduct){
-		$sFolder = "$psSol/$psInstrument/$psProduct";
-		$aTags = self::$oObjStore->get_oldstyle( $sFolder, self::COMMENT_FILENAME);
-		return $aTags;
-	}
+class cComments
+{
+    const COMMENT_FILENAME = "[comment].txt";
+    const STRIP_HTML = false;
+    private static $oObjStore = null;
 
-	//********************************************************************
-	static function set( $psSol, $psInstrument, $psProduct, $psComment, $psUser){
-		$sFolder = "$psSol/$psInstrument/$psProduct";
-		if (self::STRIP_HTML) $psComment = strip_tags($psComment);
-		cDebug::write("comment: $psComment");
 
-		$aData = ["c"=>$psComment, "u"=>$psUser];
-		$aData = self::$oObjStore->add_to_array_oldstyle( $sFolder, self::COMMENT_FILENAME, $aData);
-		
-		
-		// update SOL
-		// update SOL/Instrument
-		// update recent
-		return $aData;
-	}
-	//
+    //********************************************************************
+    static function pr_init_objstore()
+    {
+        if (!self::$oObjStore)
+            self::$oObjStore = new cObjStoreDB(cSpaceRealms::COMMENTS);
+    }
+
+    //********************************************************************
+    static function get($psSol, $psInstrument, $psProduct)
+    {
+        $sFolder = "$psSol/$psInstrument/$psProduct";
+        $aTags = self::$oObjStore->get_oldstyle($sFolder, self::COMMENT_FILENAME);
+        return $aTags;
+    }
+
+    //********************************************************************
+    static function set($psSol, $psInstrument, $psProduct, $psComment, $psUser)
+    {
+        $sFolder = "$psSol/$psInstrument/$psProduct";
+        if (self::STRIP_HTML) $psComment = strip_tags($psComment);
+        cDebug::write("comment: $psComment");
+
+        $aData = ["c" => $psComment, "u" => $psUser];
+        $aData = self::$oObjStore->add_to_array_oldstyle($sFolder, self::COMMENT_FILENAME, $aData);
+
+
+        // update SOL
+        // update SOL/Instrument
+        // update recent
+        return $aData;
+    }
+    //
 }
 
 cComments::pr_init_objstore();
-
-
-?>

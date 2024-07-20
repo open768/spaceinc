@@ -35,10 +35,8 @@ class cImageHighlight{
 	
 	//********************************************************************
 	static function pr_init_objstore(){
-		if (!self::$oObjStore){
-			self::$oObjStore = new cObjStoreDB();
-			self::$oObjStore->realm = cSpaceRealms::IMAGE_HIGHLIGHT;
-		}
+		if (!self::$oObjStore)
+			self::$oObjStore = new cObjStoreDB(cSpaceRealms::IMAGE_HIGHLIGHT);
 	}
 	
 	//######################################################################

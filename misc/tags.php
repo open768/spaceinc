@@ -28,10 +28,8 @@ class cTags{
 	
 	//********************************************************************
 	static function pr_init_objstore(){
-		if (!self::$oObjStore){
-			self::$oObjStore = new cObjStoreDB();
-			self::$oObjStore->realm = cSpaceRealms::TAGS
-		}
+		if (!self::$oObjStore)
+			self::$oObjStore = new cObjStoreDB(cSpaceRealms::TAGS);
 	}
 	
 	//********************************************************************
