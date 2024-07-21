@@ -17,6 +17,8 @@ class cSpaceRealms {
     const TAGS = "TAGS";
     const PDS = "PDS";
     const ROVER_MANIFEST = "ROVMA";
+    const INDEXES = "INDEX";
+    const NEVILLE = "PENCILNEV";
 }
 
 ?>

@@ -1,12 +1,27 @@
 <?php
 require_once("$phpInc/ckinc/objstore.php");
+require_once("$spaceInc/misc/realms.php");
+require_once("$phpInc/ckinc/objstoredb.php");
 
 
 class cIndexes{
 	const TOP_PREFIX = "t";
 	const SOL_PREFIX = "s";
 	const INSTR_PREFIX = "i";
+	static $objstoreDB = null;
+
+	//********************************************************************
+	//********************************************************************
+	static function init_obj_store_db(){
+		cDebug::enter();
+		if (self::$objstoreDB == null){
+			self::$objstoreDB = new cObjStoreDB(cSpaceRealms::INDEXES);
+		}
+		cDebug::leave();
+	}
 	
+	//********************************************************************
+	//********************************************************************
 	public static function get_filename( $psPrefix, $psSuffix){
 		return "[{$psPrefix}{$psSuffix}].txt";
 	}
@@ -159,4 +174,6 @@ class cIndexes{
         cDebug::leave();
 	}
 }
+
+cIndexes::init_obj_store_db();
 ?>

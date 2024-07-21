@@ -1,6 +1,4 @@
 <?php
-require_once("$phpInc/ckinc/objstoredb.php");
-
 /**************************************************************************
 Copyright (C) Chicken Katsu 2013 -2024
 
@@ -12,6 +10,7 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 
 // USE AT YOUR OWN RISK - NO GUARANTEES OR ANY FORM ARE EITHER EXPRESSED OR IMPLIED
 **************************************************************************/
+require_once("$phpInc/ckinc/objstoredb.php");
 require_once("$spaceInc/misc/realms.php");
 
 
