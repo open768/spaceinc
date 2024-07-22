@@ -11,7 +11,6 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 // USE AT YOUR OWN RISK - NO GUARANTEES OR ANY FORM ARE EITHER EXPRESSED OR IMPLIED
 **************************************************************************/
 
-require_once("$phpInc/ckinc/objstore.php");
 require_once("$spaceInc/misc/indexes.php");
 require_once("$phpInc/ckinc/gz.php");
 require_once("$spaceInc/pds/pdsreader.php");
@@ -39,7 +38,7 @@ class cCuriosityPdsIndexer{
 		//-------------------------------------------------------------------------------
 		//get the LBL file to understand how to parse the file 
 		$oLBL = $oPDSReader->fetch_volume_lbl($psVolume, $psIndex);
-		if (cDebug::$EXTRA_DEBUGGING) $oLBL->__dump();
+		if (cDebug::is_extra_debugging()) $oLBL->__dump();
 		
 		//-------------------------------------------------------------------------------
 		//get the TAB file

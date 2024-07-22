@@ -39,7 +39,9 @@ class cComments
     static function get($psSol, $psInstrument, $psProduct)
     {
         $sFolder = "$psSol/$psInstrument/$psProduct";
-        $aTags = self::$objstoreDB->get_oldstyle($sFolder, self::COMMENT_FILENAME);
+        /** @var cObjStoreDB **/
+        $oDB = self::$objstoreDB;
+        $aTags = $oDB->get_oldstyle($sFolder, self::COMMENT_FILENAME);
         return $aTags;
     }
 
@@ -50,8 +52,10 @@ class cComments
         if (self::STRIP_HTML) $psComment = strip_tags($psComment);
         cDebug::write("comment: $psComment");
 
+        /** @var cObjStoreDB **/
+        $oDB = self::$objstoreDB;
         $aData = ["c" => $psComment, "u" => $psUser];
-        $aData = self::$objstoreDB->add_to_array_oldstyle($sFolder, self::COMMENT_FILENAME, $aData);
+        $aData = $oDB->add_to_array_oldstyle($sFolder, self::COMMENT_FILENAME, $aData);
 
 
         // update SOL

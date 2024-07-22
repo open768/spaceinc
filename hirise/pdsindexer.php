@@ -10,14 +10,28 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 // USE AT YOUR OWN RISK - NO GUARANTEES OR ANY FORM ARE EITHER EXPRESSED OR IMPLIED
 **************************************************************************/
 
-require_once("$phpInc/ckinc/objstore.php");
+require_once("$phpInc/ckinc/objstoredb.php");
 require_once("$spaceInc/pds/pdsreader.php");
 
 class cHiRise{
 	const OBJDATA_TOP_FOLDER = "[hirise]";
+    const OBJDATA_REALM = "HIRISE";
 	
+    public static $objstoreDB = null;
+
+
+    //********************************************************************
+    public static function init_obj_store_db()
+    {
+        if (!self::$objstoreDB)
+            self::$objstoreDB = new cObjStoreDB(self::OBJDATA_REALM);
+    }
+
+    //********************************************************************
 	public static function getIntersections($pfLat1, $pfLong1, $pfLat2, $pfLong2){
-		$aHirise = cObjStore::get_file(self::OBJDATA_TOP_FOLDER, cHiRisePDSIndexer::OBSERVATION_FILE);
+        /** @var cObjStoreDB **/
+        $oDB = self::$objstoreDB;
+		$aHirise = $oDB->get_oldstyle(self::OBJDATA_TOP_FOLDER, cHiRisePDSIndexer::OBSERVATION_FILE);
 		if (!$aHirise) cDebug::error("no hirise index found");
 		
 		$aOut = [];
@@ -48,6 +62,7 @@ class cHiRiseEDRObj{
 		$this->oRect->merge($oNewObj->oRect);
 	}
 }
+cHiRise::init_obj_store_db();
 
 //##########################################################################
 class cHiRisePDSIndexer{
@@ -104,7 +119,9 @@ class cHiRisePDSIndexer{
 				$aData[$sID]->merge($aRow);
 		}
 		
-		cObjStore::put_file(cHiRise::OBJDATA_TOP_FOLDER, self::OBSERVATION_FILE, $aData);
+        /** @var cObjStoreDB **/
+        $oDB = cHiRise::$objstoreDB;
+		$oDB->put_oldstyle(cHiRise::OBJDATA_TOP_FOLDER, self::OBSERVATION_FILE, $aData);
 	}
 }
 ?>

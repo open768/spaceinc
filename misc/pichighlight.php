@@ -50,8 +50,10 @@ class cImageHighlight{
 	// #######################################################################
 	
 	static function get( $psSol, $psInstrument, $psProduct){
+        /** @var cObjStoreDB **/
+        $oDB = self::$objstoreDB;
 		$sFolder = "$psSol/$psInstrument/$psProduct";
-		$aData = self::$objstoreDB->get_oldstyle( $sFolder, self::IMGHIGH_FILENAME);
+		$aData = $oDB->get_oldstyle( $sFolder, self::IMGHIGH_FILENAME);
 		$aOut = ["s"=>$psSol, "i"=>$psInstrument, "p"=>$psProduct , "d"=>$aData];
 		return $aOut;
 	}
@@ -207,14 +209,18 @@ class cImageHighlight{
 	//# MOSAIC functions
 	//######################################################################
 	static private function pr_get_mosaic_count($psSol){
-		$iCount = self::$objstoreDB->get_oldstyle( "$psSol", self::MOSAIC_COUNT_FILENAME);
+        /** @var cObjStoreDB **/
+        $oDB = self::$objstoreDB;
+		$iCount = $oDB->get_oldstyle( "$psSol", self::MOSAIC_COUNT_FILENAME);
 
 		if ($iCount == null) $iCount = 0;
 		return $iCount;
 	}
 	//**********************************************************************
 	static private function pr_put_mosaic_count($psSol, $piCount){
-		self::$objstoreDB->put_oldstyle( "$psSol", self::MOSAIC_COUNT_FILENAME, $piCount);		
+        /** @var cObjStoreDB **/
+		$oDB = self::$objstoreDB;
+		$oDB->put_oldstyle( "$psSol", self::MOSAIC_COUNT_FILENAME, $piCount);		
 	}
 	
 	//**********************************************************************
@@ -331,10 +337,12 @@ class cImageHighlight{
 	//# UPDATE functions
 	//######################################################################
 	static function set( $psSol, $psInstrument, $psProduct, $psTop, $psLeft, $psUser){
+        /** @var cObjStoreDB **/
+        $oDB = self::$objstoreDB;
 		//get the file from the object store to get the latest version
 		$sFolder = "$psSol/$psInstrument/$psProduct";
 		$aData = ["t"=>$psTop, "l"=>$psLeft, "u"=>$psUser];
-		self::$objstoreDB->add_to_array_oldstyle( $sFolder, self::IMGHIGH_FILENAME, $aData); //store highlight
+		$oDB->add_to_array_oldstyle( $sFolder, self::IMGHIGH_FILENAME, $aData); //store highlight
 		cIndexes::update_indexes( $psSol, $psInstrument, $psProduct, 1, self::INDEX_SUFFIX);
 		return "ok";
 	}
@@ -347,8 +355,10 @@ class cImageHighlight{
 	}
 	
 	static function kill_highlites( $psSol, $psInstr, $psProduct, $psWhich){
+        /** @var cObjStoreDB **/
+        $oDB = self::$objstoreDB;
 		$sFolder="$psSol/$psInstr/$psProduct";
-		self::$objstoreDB->kill_oldstyle( $sFolder, self::IMGHIGH_FILENAME);
+		$oDB->kill_oldstyle( $sFolder, self::IMGHIGH_FILENAME);
 		cDebug::write("now reindex the image highlihgts");
 	}
 

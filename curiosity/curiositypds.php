@@ -12,7 +12,6 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 **************************************************************************/
 
 require_once("$phpInc/ckinc/http.php");
-require_once("$phpInc/ckinc/objstore.php");
 require_once("$spaceInc/misc/indexes.php");
 require_once("$spaceInc/curiosity/curiosity.php");
 require_once("$spaceInc/curiosity/instrument.php");
@@ -87,7 +86,7 @@ class cCuriosityPDS{
 	
 	//**********************************************************************
 	private static function get_MSL_ProductID($psSearch){
-		$aExplode = self::explode_productID($psProduct);
+		$aExplode = self::explode_productID($psSearch);
 		##TBD;
 	}
 	

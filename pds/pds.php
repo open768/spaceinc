@@ -41,8 +41,11 @@ class cPDS{
 	//**********************************************************************
 	public static function get_pds_data($psSol, $psInstrument){
 		cDebug::enter();
+                /** @var cObjStoreDB **/
+                $oDB = self::$objstoreDB;
+
 		$sFolder = self::pr__get_objstore_Folder($psSol,$psInstrument);
-		$oData = self::$objstoreDB->get_oldstyle($sFolder, cIndexes::get_filename(cIndexes::INSTR_PREFIX, self::PDS_SUFFIX));
+		$oData = $oDB->get_oldstyle($sFolder, cIndexes::get_filename(cIndexes::INSTR_PREFIX, self::PDS_SUFFIX));
 		cDebug::leave();
 
 		return $oData; 
@@ -50,24 +53,31 @@ class cPDS{
 	
 	//**********************************************************************
 	public static function write_index_data($paData){
+        /** @var cObjStoreDB **/
+        $oDB = self::$objstoreDB;
 		foreach ($paData as  $sSol=>$aSolData)	
 			foreach ($aSolData as $sInstr=>$aInstrData){
 				$sFilename = cIndexes::get_filename(cIndexes::INSTR_PREFIX, self::PDS_SUFFIX);
-				$aPDSData = self::$objstoreDB->get_oldstyle(self::OBJDATA_TOP_FOLDER."/$sSol/$sInstr", $sFilename);				
+				$aPDSData = $oDB->get_oldstyle(self::OBJDATA_TOP_FOLDER."/$sSol/$sInstr", $sFilename);				
 				if ($aPDSData){  
 					//update existing with new data
 					foreach ($aInstrData as $sNewKey=>$aNewData)
 						$aPDSData[$sNewKey] = $aNewData;
 				}else
 					$aPDSData = $aInstrData;
-				self::$objstoreDB->put_oldstyle( self::OBJDATA_TOP_FOLDER."/$sSol/$sInstr", $sFilename, $aPDSData);
+
+                /** @var cObjStoreDB **/
+                $oDB = self::$objstoreDB;
+				$oDB->put_oldstyle( self::OBJDATA_TOP_FOLDER."/$sSol/$sInstr", $sFilename, $aPDSData);
 				cDebug::extra_debug("$sSol/$sInstr lines:".count($aPDSData));			
 			}
 	}
 	
 	//**********************************************************************
 	public static function kill_index_files(){
-		cObjStore::kill_folder(self::OBJDATA_TOP_FOLDER);
+        /** @var cObjStoreDB **/
+        $oDB = self::$objstoreDB;
+		$oDB->kill_folder_oldstyle(self::OBJDATA_TOP_FOLDER);
 	}
 }
 cPDS::init_obj_store_db();
