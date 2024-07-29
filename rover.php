@@ -13,10 +13,10 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 uses phpQuery https://code.google.com/archive/p/phpquery/ which is Licensed under the MIT license
 
  **************************************************************************/
-require_once("$phpInc/ckinc/debug.php");
-require_once("$phpInc/ckinc/http.php");
-require_once("$spaceInc/misc/realms.php");
-require_once("$phpInc/ckinc/objstoredb.php");
+require_once  "$phpInc/ckinc/debug.php";
+require_once  "$phpInc/ckinc/http.php";
+require_once  "$spaceInc/misc/realms.php";
+require_once  "$phpInc/ckinc/objstoredb.php";
 
 class cRoverConstants
 {

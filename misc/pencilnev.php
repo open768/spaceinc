@@ -1,16 +1,16 @@
 <?php
 //panorama data form the marvellous work of Nev Thompson http://www.gigapan.com/profiles/pencilnev
 
-require_once("$phpInc/ckinc/debug.php");
-require_once("$phpInc/ckinc/objstoredb.php");
-require_once("$spaceInc/misc/realms.php");
+require_once  "$phpInc/ckinc/debug.php";
+require_once  "$phpInc/ckinc/objstoredb.php";
+require_once  "$spaceInc/misc/realms.php";
 static $objstoreDB = null;
 
 class cPencilNev
 {
     const NEVILLE_FILENAME = "[nevgig].txt";
     const TOP_NEVILLE_FILENAME = "[topnevgig].txt";
-	static $objstoreDB = null;
+    static $objstoreDB = null;
 
     //********************************************************************
     //********************************************************************
@@ -56,7 +56,7 @@ class cPencilNev
 
         /** @var cObjStoreDB **/
         $oDB = self::$objstoreDB;
-        
+
         //build up the list
         foreach ($paData as $aItem) {
             $sDescr = $aItem["D"];

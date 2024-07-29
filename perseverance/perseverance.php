@@ -1,4 +1,5 @@
 <?php
+
 /**************************************************************************
 Copyright (C) Chicken Katsu 2013 - 2024
 This code is protected by copyright under the terms of the 
@@ -24,52 +25,53 @@ example of RSS requests reverse engineered from
 
 # full caption example
 #		https://mars.nasa.gov/mars2020/multimedia/raw-images/EUF_0001_0667022672_630ECV_N0010052EDLC00001_0010LUJ01
-**************************************************************************/
+ **************************************************************************/
 
-require_once("$spaceInc/missions/rover.php");
-require_once("$phpInc/ckinc/cached_http.php");
+require_once  "$spaceInc/missions/rover.php";
+require_once  "$phpInc/ckinc/cached_http.php";
 
-class cPerseverance extends cRoverManifest{
-	
-	function __construct(){
-		//self::$BASE_URL = "http://mars.nasa.gov/mer/gallery/all/";
-		$this->MISSION = "Perseverance";
-		parent::__construct();
-	}
-	
-	//*******************************************************************************
-	protected  function pr_build_manifest(){
-		cDebug::enter();
-		$oSols = $this->pr__do_build_manifest();
-		cDebug::leave();
-		return $oSols;
-	}
-	
-	//*******************************************************************************
-	protected  function pr_generate_details($psSol, $psInstr){
-		cDebug::enter();
-		cDebug::leave();
-	}
-	
-	//#####################################################################
-	//# PRIVATES
-	//#####################################################################
-	private function pr__do_build_manifest(){
-		cDebug::enter();
-		
-		//get the total number of sols from the RSS feed
-		$oHttp = new cCachedHttp;
-		$oHttp->CACHE_EXPIRY = self::EXPIRY_TIME;
-		$oJson = $oHttp->getCachedJson("https://mars.nasa.gov/rss/api/?feed=raw_images&category=mars2020&feedtype=json&latest=true");
-		if (!isset($oJson->sol_count)) cDebug::error("unable to get sol count");
+class cPerseverance extends cRoverManifest
+{
 
-		//build the sols object with blanks
-		$oSols = new cRoverSols;
-		cDebug::leave();
-		return $oSols;
-	}
-	
-	
+    function __construct()
+    {
+        //self::$BASE_URL = "http://mars.nasa.gov/mer/gallery/all/";
+        $this->MISSION = "Perseverance";
+        parent::__construct();
+    }
+
+    //*******************************************************************************
+    protected  function pr_build_manifest()
+    {
+        cDebug::enter();
+        $oSols = $this->pr__do_build_manifest();
+        cDebug::leave();
+        return $oSols;
+    }
+
+    //*******************************************************************************
+    protected  function pr_generate_details($psSol, $psInstr)
+    {
+        cDebug::enter();
+        cDebug::leave();
+    }
+
+    //#####################################################################
+    //# PRIVATES
+    //#####################################################################
+    private function pr__do_build_manifest()
+    {
+        cDebug::enter();
+
+        //get the total number of sols from the RSS feed
+        $oHttp = new cCachedHttp;
+        $oHttp->CACHE_EXPIRY = self::EXPIRY_TIME;
+        $oJson = $oHttp->getCachedJson("https://mars.nasa.gov/rss/api/?feed=raw_images&category=mars2020&feedtype=json&latest=true");
+        if (!isset($oJson->sol_count)) cDebug::error("unable to get sol count");
+
+        //build the sols object with blanks
+        $oSols = new cRoverSols;
+        cDebug::leave();
+        return $oSols;
+    }
 }
-
-?>

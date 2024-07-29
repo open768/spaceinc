@@ -12,12 +12,12 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 // USE AT YOUR OWN RISK - NO GUARANTEES OR ANY FORM ARE EITHER EXPRESSED OR IMPLIED
  **************************************************************************/
 
-require_once("$phpInc/ckinc/debug.php");
-require_once("$phpInc/ckinc/http.php");
-require_once("$phpInc/ckinc/gz.php");
-require_once("$phpInc/ckinc/common.php");
-require_once("$phpInc/ckinc/hash.php");
-require_once("$spaceInc/pds/lbl.php");
+require_once  "$phpInc/ckinc/debug.php";
+require_once  "$phpInc/ckinc/http.php";
+require_once  "$phpInc/ckinc/gz.php";
+require_once  "$phpInc/ckinc/common.php";
+require_once  "$phpInc/ckinc/hash.php";
+require_once  "$spaceInc/pds/lbl.php";
 
 
 class cPDS_Reader

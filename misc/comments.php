@@ -18,8 +18,8 @@ or leave a message on github
  **************************************************************************/
 
 
-require_once("$phpInc/ckinc/objstoredb.php");
-require_once("$spaceInc/misc/realms.php");
+require_once  "$phpInc/ckinc/objstoredb.php";
+require_once  "$spaceInc/misc/realms.php";
 
 class cComments
 {

@@ -12,12 +12,12 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 // USE AT YOUR OWN RISK - NO GUARANTEES OR ANY FORM ARE EITHER EXPRESSED OR IMPLIED
  **************************************************************************/
 
-require_once("$phpInc/ckinc/common.php");
-require_once("$phpInc/ckinc/cached_http.php");
-require_once("$spaceInc/missions/mission.php");
-require_once("$spaceInc/curiosity/instrument.php");
-require_once("$spaceInc/curiosity/static.php");
-require_once("$spaceInc/curiosity/curiositypds.php");
+require_once  "$phpInc/ckinc/common.php";
+require_once  "$phpInc/ckinc/cached_http.php";
+require_once  "$spaceInc/missions/mission.php";
+require_once  "$spaceInc/curiosity/instrument.php";
+require_once  "$spaceInc/curiosity/static.php";
+require_once  "$spaceInc/curiosity/curiositypds.php";
 
 
 //##########################################################################
@@ -157,8 +157,8 @@ class cCuriosity implements iMission
                     $aTItem["p"] = $aValues[0];
                     $aThumbData[$i] = $aTItem;
                     continue;
-                } 
-                
+                }
+
                 //give up
                 cDebug::write("5.. Thumbnail didnt match $sPartial");
                 unset($aThumbData[$i]); //delete the thumbnail

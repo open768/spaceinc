@@ -1,6 +1,6 @@
 <?php
-require_once("$spaceInc/misc/realms.php");
-require_once("$phpInc/ckinc/objstoredb.php");
+require_once  "$spaceInc/misc/realms.php";
+require_once  "$phpInc/ckinc/objstoredb.php";
 
 
 class cIndexes
@@ -146,15 +146,15 @@ class cIndexes
     }
 
     //######################################################################
-   /**
-    * reindexes everything based on whats on disk
-    * @deprecated 
-    * @param mixed $poInstrData
-    * @param string $psSuffix
-    * @param string $psProdFile
-    * 
-    * @return [type]
-    */
+    /**
+     * reindexes everything based on whats on disk
+     * @deprecated 
+     * @param mixed $poInstrData
+     * @param string $psSuffix
+     * @param string $psProdFile
+     * 
+     * @return [type]
+     */
     static function reindex($poInstrData, $psSuffix, $psProdFile)
     {
         cDebug::enter();
@@ -201,7 +201,7 @@ class cIndexes
             $aTopSols[$sSol] = 1;
             foreach ($aSolData as $sInstr => $aInstrData)
                 $oDB->put_oldstyle("$sSol/$sInstr", self::get_filename(self::INSTR_PREFIX, $psSuffix), $aInstrData);
-                $oDB->put_oldstyle($sSol, self::get_filename(self::SOL_PREFIX, $psSuffix), $aSolData);
+            $oDB->put_oldstyle($sSol, self::get_filename(self::SOL_PREFIX, $psSuffix), $aSolData);
         }
         $oDB->put_oldstyle("", self::get_filename(self::TOP_PREFIX, $psSuffix), $aTopSols);
         cDebug::leave();
