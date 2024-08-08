@@ -21,10 +21,10 @@ require_once  "$spaceInc/curiosity/curiositypds.php";
 
 
 //##########################################################################
-class cCuriosity implements iMission
-{
+class cCuriosity implements iMission {
     const SOL_URL = "https://mars.jpl.nasa.gov/msl-raw-images/image/images_sol";
     const FEED_URL = "https://mars.jpl.nasa.gov/msl-raw-images/image/image_manifest.json";
+    const PDS_VOLUMES = "http://pds-imaging.jpl.nasa.gov/volumes/msl.html";
     const SOL_CACHE = 604800;    //1 week
     const ALL_INSTRUMENTS = "All";
     const MANIFEST_CACHE = 3600;    //1 hour
@@ -36,8 +36,7 @@ class cCuriosity implements iMission
 
 
     //*****************************************************************************
-    public static function search_product($psSearch)
-    {
+    public static function search_product($psSearch) {
         //split parts into var iables using regular expressions
         //locate the product, make sure its not a thumbnail
         $oData = null;
@@ -66,8 +65,7 @@ class cCuriosity implements iMission
     }
 
     //*****************************************************************************
-    public static function getThumbnails($psSol, $psInstrument)
-    {
+    public static function getThumbnails($psSol, $psInstrument) {
         cDebug::enter();
         $oResult = null;
 
@@ -86,8 +84,7 @@ class cCuriosity implements iMission
 
 
     //*****************************************************************************
-    private static function pr_match_thumbs($psSol, $psInstrument, $poAllSolThumbs)
-    {
+    private static function pr_match_thumbs($psSol, $psInstrument, $poAllSolThumbs) {
         cDebug::enter();
 
         $aThumbData = $poAllSolThumbs->data;
@@ -180,8 +177,7 @@ class cCuriosity implements iMission
     }
 
     //*****************************************************************************
-    public static function getNoThumbnails($psSol)
-    {
+    public static function getNoThumbnails($psSol) {
         cDebug::enter();
 
         $aData = [];
@@ -197,8 +193,7 @@ class cCuriosity implements iMission
     }
 
     //*****************************************************************************
-    public static function getAllSolData($psSol)
-    {
+    public static function getAllSolData($psSol) {
         cDebug::enter();
 
         $sUrl = self::SOL_URL . "{$psSol}.json";
@@ -212,8 +207,7 @@ class cCuriosity implements iMission
     }
 
     //*****************************************************************************
-    public static function clearSolDataCache($psSol)
-    {
+    public static function clearSolDataCache($psSol) {
         cDebug::enter();
 
         cDebug::write("clearing sol cache : " . $psSol);
@@ -225,8 +219,7 @@ class cCuriosity implements iMission
     }
 
     //*****************************************************************************
-    public static function getAllSolThumbs($psSol)
-    {
+    public static function getAllSolThumbs($psSol) {
         cDebug::enter();
         $oResult = self::getSolRawData($psSol, null, true);
         cDebug::leave();
@@ -234,8 +227,7 @@ class cCuriosity implements iMission
     }
 
     //*****************************************************************************
-    public static function getSolThumbs($psSol, $psInstrument)
-    {
+    public static function getSolThumbs($psSol, $psInstrument) {
         cDebug::enter();
         $oResult = self::getSolRawData($psSol, $psInstrument, true);
 
@@ -244,8 +236,7 @@ class cCuriosity implements iMission
     }
 
     //*****************************************************************************
-    public static function getSolRawData($psSol, $psInstrument = null, $pbThumbs = false)
-    {
+    public static function getSolRawData($psSol, $psInstrument = null, $pbThumbs = false) {
         cDebug::enter();
         $oJson = self::getAllSolData($psSol);
         $oData = new cInstrument($psInstrument);  //put all images under a single instrument
@@ -266,8 +257,7 @@ class cCuriosity implements iMission
     }
 
     //*****************************************************************************
-    private static function pr_getManifest()
-    {
+    private static function pr_getManifest() {
         $oResult = null;
         cDebug::enter();
 
@@ -281,8 +271,7 @@ class cCuriosity implements iMission
     }
 
     //*****************************************************************************
-    public static function getSolList()
-    {
+    public static function getSolList() {
         cDebug::enter();
 
         //get the manifest
@@ -302,8 +291,7 @@ class cCuriosity implements iMission
     }
 
     //*****************************************************************************
-    public static function nextSol($piSol, $piIncrement)
-    {
+    public static function nextSol($piSol, $piIncrement) {
         cDebug::enter();
 
         $aSols = self::getSolList();
@@ -321,8 +309,7 @@ class cCuriosity implements iMission
     }
 
     //*****************************************************************************
-    public static function getSolInstrumentList($piSol)
-    {
+    public static function getSolInstrumentList($piSol) {
         $aResults = [];
         cDebug::enter();
 
@@ -341,8 +328,7 @@ class cCuriosity implements iMission
     }
 
     //*****************************************************************************
-    public static function getLocalThumbnail($psSol, $psInstrument, $psProduct)
-    {
+    public static function getLocalThumbnail($psSol, $psInstrument, $psProduct) {
         global $root;
         cDebug::enter();
 
@@ -391,8 +377,7 @@ class cCuriosity implements iMission
     }
 
     //*****************************************************************************
-    private static function pr__GetInstrumentImageDetails($paInstrumentImages, $psProduct)
-    {
+    private static function pr__GetInstrumentImageDetails($paInstrumentImages, $psProduct) {
         $oDetails = null;
         $oResult = null;
         cDebug::enter();
@@ -419,8 +404,7 @@ class cCuriosity implements iMission
     }
 
     //*****************************************************************************
-    public static function getProductDetails($psSol, $psInstrument, $psProduct)
-    {
+    public static function getProductDetails($psSol, $psInstrument, $psProduct) {
         cDebug::enter();
 
         //check if the instrument might be an abbreviation
