@@ -3,8 +3,7 @@ require_once  "$spaceInc/misc/realms.php";
 require_once  "$phpInc/ckinc/objstoredb.php";
 
 
-class cIndexes
-{
+class cIndexes {
     const TOP_PREFIX = "t";
     const SOL_PREFIX = "s";
     const INSTR_PREFIX = "i";
@@ -12,25 +11,22 @@ class cIndexes
 
     //********************************************************************
     //********************************************************************
-    static function init_obj_store_db()
-    {
+    static function init_obj_store_db() {
         cDebug::enter();
         if (self::$objstoreDB == null) {
-            self::$objstoreDB = new cObjStoreDB(cSpaceRealms::INDEXES);
+            self::$objstoreDB = new cObjStoreDB(cSpaceRealms::INDEXES, cSpaceTables::INDEX);
         }
         cDebug::leave();
     }
 
     //********************************************************************
     //********************************************************************
-    public static function get_filename($psPrefix, $psSuffix)
-    {
+    public static function get_filename($psPrefix, $psSuffix) {
         return "[{$psPrefix}{$psSuffix}].txt";
     }
 
     //********************************************************************
-    static function get_top_sol_data($psSuffix)
-    {
+    static function get_top_sol_data($psSuffix) {
         cDebug::enter();
         $sFile = self::get_filename(self::TOP_PREFIX, $psSuffix);
         /** @var cObjStoreDB **/
@@ -42,8 +38,7 @@ class cIndexes
     }
 
     //********************************************************************
-    static function get_sol_data($psSol, $psSuffix)
-    {
+    static function get_sol_data($psSol, $psSuffix) {
         cDebug::enter();
         $sFile = self::get_filename(self::SOL_PREFIX, $psSuffix);
         /** @var cObjStoreDB **/
@@ -55,8 +50,7 @@ class cIndexes
     }
 
     //********************************************************************
-    static function get_instr_data($psSol, $psInstrument, $psSuffix)
-    {
+    static function get_instr_data($psSol, $psInstrument, $psSuffix) {
         cDebug::enter();
         $sFile = self::get_filename(self::INSTR_PREFIX, $psSuffix);
         /** @var cObjStoreDB **/
@@ -68,8 +62,7 @@ class cIndexes
     }
 
     //********************************************************************
-    static function get_solcount($psSol, $psFile)
-    {
+    static function get_solcount($psSol, $psFile) {
         cDebug::enter();
         $iCount = 0;
         $aData = self::get_sol_data($psSol, $psFile);
@@ -87,8 +80,7 @@ class cIndexes
     //######################################################################
     //# UPDATE functions
     //######################################################################
-    static function update_indexes($psSol, $psInstrument, $psProduct, $poData, $psSuffix)
-    {
+    static function update_indexes($psSol, $psInstrument, $psProduct, $poData, $psSuffix) {
         cDebug::enter();
         self::update_instr_index($psSol, $psInstrument, $psProduct, $poData, $psSuffix);
         self::update_sol_index($psSol, $psInstrument, $psProduct, $psSuffix);
@@ -97,8 +89,7 @@ class cIndexes
     }
 
     //********************************************************************
-    static function update_top_sol_index($psSol, $psSuffix)
-    {
+    static function update_top_sol_index($psSol, $psSuffix) {
         cDebug::enter();
         $sFile = self::get_filename(self::TOP_PREFIX, $psSuffix);
         /** @var cObjStoreDB **/
@@ -115,8 +106,7 @@ class cIndexes
     }
 
     //********************************************************************
-    static function update_sol_index($psSol, $psInstrument, $psProduct, $psSuffix)
-    {
+    static function update_sol_index($psSol, $psInstrument, $psProduct, $psSuffix) {
         cDebug::enter();
         $sFile = self::get_filename(self::SOL_PREFIX, $psSuffix);
         /** @var cObjStoreDB **/
@@ -131,8 +121,7 @@ class cIndexes
     }
 
     //********************************************************************
-    static function update_instr_index($psSol, $psInstrument, $psProduct, $poData, $psSuffix)
-    {
+    static function update_instr_index($psSol, $psInstrument, $psProduct, $poData, $psSuffix) {
         cDebug::enter();
         $sFile = self::get_filename(self::INSTR_PREFIX, $psSuffix);
         $sFolder = "$psSol/$psInstrument";
@@ -155,8 +144,7 @@ class cIndexes
      * 
      * @return [type]
      */
-    static function reindex($poInstrData, $psSuffix, $psProdFile)
-    {
+    static function reindex($poInstrData, $psSuffix, $psProdFile) {
         cDebug::enter();
         $aData = [];
 
@@ -191,8 +179,7 @@ class cIndexes
     }
 
     //***********************************************************************************************************
-    public static function write_index_files($paData, $psSuffix)
-    {
+    public static function write_index_files($paData, $psSuffix) {
         cDebug::enter();
         $aTopSols = [];
         /** @var cObjStoreDB **/

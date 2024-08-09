@@ -17,8 +17,7 @@ require_once  "$phpInc/ckinc/objstoredb.php";
 require_once  "$phpInc/ckinc/geometry.php";
 
 //##########################################################################
-class cCuriosityLocations
-{
+class cCuriosityLocations {
     const LOCATIONS_XML = "http://mars.jpl.nasa.gov/msl-raw-images/locations.xml";
     const LOCATIONS_CACHE = 3600;    //1 hour
     const TOP_FOLDER = "[locations]";
@@ -28,21 +27,18 @@ class cCuriosityLocations
     const BOUNDS_INDEX_FILE = "[bounds]";
     const DRIVE_INDEX_FILE = "[dindex].txt";
     const SITES_INDEX_FILE = "[sindex].txt";
-    const OBJDB_TABLE = "Locations";
 
     private static $objstoreDB = null;
 
 
     //********************************************************************
-    static function init_obj_store_db()
-    {
+    static function init_obj_store_db() {
         if (!self::$objstoreDB)
-            self::$objstoreDB = new cObjStoreDB(cSpaceRealms::LOCATIONS, self::OBJDB_TABLE);
+            self::$objstoreDB = new cObjStoreDB(cSpaceRealms::LOCATIONS, cSpaceTables::LOCATIONS);
     }
 
     //*****************************************************************************
-    public static function parseLocations()
-    {
+    public static function parseLocations() {
         $bFirst = true;
         $iCount = 0;
 
@@ -118,30 +114,26 @@ class cCuriosityLocations
     }
 
     //***********************************************************************
-    public static function getSiteIndex()
-    {
+    public static function getSiteIndex() {
         /** @var cObjStoreDB **/
         $oDB = self::$objstoreDB;
         return $oDB->get_oldstyle(self::TOP_FOLDER, self::SITES_INDEX_FILE);
     }
     //***********************************************************************
-    public static function getAllSiteBounds()
-    {
+    public static function getAllSiteBounds() {
         /** @var cObjStoreDB **/
         $oDB = self::$objstoreDB;
         return $oDB->get_oldstyle(self::TOP_FOLDER . "/" . self::SITES_FOLDER, self::BOUNDS_INDEX_FILE);
     }
 
     //***********************************************************************
-    public static function getSite($piSite)
-    {
+    public static function getSite($piSite) {
         /** @var cObjStoreDB **/
         $oDB = self::$objstoreDB;
         return $oDB->get_oldstyle(self::TOP_FOLDER . "/" . self::SITES_FOLDER, $piSite);
     }
     //***********************************************************************
-    public static function getSiteBounds($psSite)
-    {
+    public static function getSiteBounds($psSite) {
         $piSite = (int) $psSite;
         /** @var cObjStoreDB **/
         $oDB = self::$objstoreDB;
@@ -150,16 +142,14 @@ class cCuriosityLocations
     }
 
     //***********************************************************************
-    public static function getSol($psSol)
-    {
+    public static function getSol($psSol) {
         /** @var cObjStoreDB **/
         $oDB = self::$objstoreDB;
         return $oDB->get_oldstyle(self::TOP_FOLDER . "/" . self::SOLS_FOLDER, $psSol);
     }
 
     //***********************************************************************
-    public static function getSolBounds($psSol)
-    {
+    public static function getSolBounds($psSol) {
         /** @var cObjStoreDB **/
         $oDB = self::$objstoreDB;
         $aIndex = $oDB->get_oldstyle(self::TOP_FOLDER . "/" . self::SOLS_FOLDER, self::BOUNDS_INDEX_FILE);
@@ -167,16 +157,14 @@ class cCuriosityLocations
     }
 
     //***********************************************************************
-    public static function getDrive($psDrive)
-    {
+    public static function getDrive($psDrive) {
         /** @var cObjStoreDB **/
         $oDB = self::$objstoreDB;
         return $oDB->get_oldstyle(self::TOP_FOLDER . "/" . self::DRIVES_FOLDER, $psDrive);
     }
 
     //***********************************************************************
-    public static function getDriveBounds($psDrive)
-    {
+    public static function getDriveBounds($psDrive) {
         $piDrive = (int) $psDrive;
         /** @var cObjStoreDB **/
         $oDB = self::$objstoreDB;
@@ -185,8 +173,7 @@ class cCuriosityLocations
     }
 
     //***********************************************************************
-    private static function pr__GetBoundingBox($paItems)
-    {
+    private static function pr__GetBoundingBox($paItems) {
         $bFirst = true;
         /**  @var cRect */
         $oBox = null;
@@ -202,14 +189,15 @@ class cCuriosityLocations
         }
 
         return [
-            "lat1" => $oBox->P1->x, "long1" => $oBox->P1->y,
-            "lat2" => $oBox->P2->x, "long2" => $oBox->P2->y
+            "lat1" => $oBox->P1->x,
+            "long1" => $oBox->P1->y,
+            "lat2" => $oBox->P2->x,
+            "long2" => $oBox->P2->y
         ];
     }
 
     //***********************************************************************
-    private static function pr__WriteFiles($psFolder, $paData, $pbStrval = true)
-    {
+    private static function pr__WriteFiles($psFolder, $paData, $pbStrval = true) {
         $aBoundIndex = [];
         /** @var cObjStoreDB **/
         $oDB = self::$objstoreDB;

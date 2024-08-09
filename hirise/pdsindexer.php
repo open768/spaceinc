@@ -14,24 +14,21 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 require_once  "$phpInc/ckinc/objstoredb.php";
 require_once  "$spaceInc/pds/pdsreader.php";
 
-class cHiRise
-{
+class cHiRise {
     const OBJDATA_TOP_FOLDER = "[hirise]";
-    const OBJDATA_REALM = "HIRISE";
+    const OBJDATA_TABLE = "HIRISE";
 
     public static $objstoreDB = null;
 
 
     //********************************************************************
-    public static function init_obj_store_db()
-    {
+    public static function init_obj_store_db() {
         if (!self::$objstoreDB)
-            self::$objstoreDB = new cObjStoreDB(self::OBJDATA_REALM);
+            self::$objstoreDB = new cObjStoreDB(cSpaceRealms::ROVER_MISSION, "HIRISE");
     }
 
     //********************************************************************
-    public static function getIntersections($pfLat1, $pfLong1, $pfLat2, $pfLong2)
-    {
+    public static function getIntersections($pfLat1, $pfLong1, $pfLat2, $pfLong2) {
         /** @var cObjStoreDB **/
         $oDB = self::$objstoreDB;
         $aHirise = $oDB->get_oldstyle(self::OBJDATA_TOP_FOLDER, cHiRisePDSIndexer::OBSERVATION_FILE);
@@ -48,11 +45,9 @@ class cHiRise
     }
 }
 
-class cHiRiseEDRObj
-{
+class cHiRiseEDRObj {
     public $oRect, $sID, $sTime;
-    public function __construct($paData)
-    {
+    public function __construct($paData) {
         $this->oRect = new cRect(
             (float) $paData["MINIMUM_LATITUDE"],
             (float) $paData["MINIMUM_LONGITUDE"],
@@ -63,8 +58,7 @@ class cHiRiseEDRObj
         $this->sTime = $paData["START_TIME"];
     }
 
-    public function merge($paData)
-    {
+    public function merge($paData) {
         $oNewObj = new cHiRiseEDRObj($paData);
         $this->oRect->merge($oNewObj->oRect);
     }
@@ -72,8 +66,7 @@ class cHiRiseEDRObj
 cHiRise::init_obj_store_db();
 
 //##########################################################################
-class cHiRisePDSIndexer
-{
+class cHiRisePDSIndexer {
     const PDS_PATH = "http://hirise-pds.lpl.arizona.edu/PDS/INDEX/";
     const PDS_LBL = "EDRINDEX.LBL";
     const OBSERVATION_FILE = "obs.txt.gz";
@@ -81,8 +74,7 @@ class cHiRisePDSIndexer
     private static $PDS_COL_NAMES = ["OBSERVATION_ID", "START_TIME", "MINIMUM_LATITUDE", "MAXIMUM_LATITUDE", "MINIMUM_LONGITUDE", "MAXIMUM_LONGITUDE"];
 
     //**********************************************************************
-    public static function run_indexer()
-    {
+    public static function run_indexer() {
         //-------------------------------------------------------------------------------
         //get the LBL file to understand how to parse the file 
         //cPDS_Reader::$force_delete = true;
@@ -117,8 +109,7 @@ class cHiRisePDSIndexer
     }
 
     //**********************************************************************
-    private static function pr__create_index_files($paTabData)
-    {
+    private static function pr__create_index_files($paTabData) {
         $aData = [];
 
         foreach ($paTabData as  $aRow) {

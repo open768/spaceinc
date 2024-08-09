@@ -1,4 +1,5 @@
 <?php
+
 /**************************************************************************
 Copyright (C) Chicken Katsu 2013 - 2024
 This code is protected by copyright under the terms of the 
@@ -9,10 +10,10 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 
 // USE AT YOUR OWN RISK - NO GUARANTEES OR ANY FORM ARE EITHER EXPRESSED OR IMPLIED
 //
-**************************************************************************/
+ **************************************************************************/
 
 class cSpaceRealms {
-    const IMAGE_HIGHLIGHT ="PICHI";
+    const IMAGE_HIGHLIGHT = "PICHI";
     const COMMENTS = "COMMENTS";
     const TAGS = "TAGS";
     const PDS = "PDS";
@@ -20,6 +21,13 @@ class cSpaceRealms {
     const INDEXES = "INDEX";
     const NEVILLE = "PENCILNEV";
     const LOCATIONS = "ROVERLOC";
+    const ROVER_MISSION = "ROVERMIS";
 }
 
-?>
+class cSpaceTables {
+    const LOCATIONS = "Locations";
+    const ROVER_MANIFEST = "ROVERMAN";
+    const ROVER = "ROVER";
+    const PDS = "PDS";
+    const INDEX = "INDEX";
+}

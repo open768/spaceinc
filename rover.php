@@ -18,8 +18,7 @@ require_once  "$phpInc/ckinc/http.php";
 require_once  "$spaceInc/misc/realms.php";
 require_once  "$phpInc/ckinc/objstoredb.php";
 
-class cRoverConstants
-{
+class cRoverConstants {
     const MANIFEST_PATH = "[manifest]";
     const DETAILS_PATH = "[details]";
     const MANIFEST_FILE = "manifest";
@@ -28,12 +27,10 @@ class cRoverConstants
 
 //#####################################################################
 //#####################################################################
-class cRoverSols
-{
+class cRoverSols {
     private $aSols = null;
 
-    public function add($piSol, $psInstr, $piCount, $psUrl)
-    {
+    public function add($piSol, $psInstr, $piCount, $psUrl) {
         if (!$this->aSols) $this->aSols = [];
 
         $sKey = (string) $piSol;
@@ -42,15 +39,13 @@ class cRoverSols
         $oSol->add($psInstr, $piCount, $psUrl);
     }
 
-    public function get_sol_numbers()
-    {
+    public function get_sol_numbers() {
         if (!$this->aSols) cDebug::error("no sols loaded");
         ksort($this->aSols);
         return array_keys($this->aSols);
     }
 
-    public function get_sol($piSol)
-    {
+    public function get_sol($piSol) {
         if (!array_key_exists((string)$piSol, $this->aSols)) cDebug::error("Sol $piSol not found");
         return $this->aSols[(string)$piSol];
     }
@@ -58,29 +53,25 @@ class cRoverSols
 
 //#####################################################################
 //#####################################################################
-abstract class cRoverManifest
-{
+abstract class cRoverManifest {
     public static $BASE_URL = null;
     public $MISSION = null;
     const USE_CURL = false;
     private $oSols = null;
-    const OBJDB_TABLE = "ROVERMAN";
 
     private static $objstoreDB = null;
 
 
     //********************************************************************
-    static function init_obj_store_db()
-    {
+    static function init_obj_store_db() {
         if (!self::$objstoreDB)
-            self::$objstoreDB = new cObjStoreDB(cSpaceRealms::ROVER_MANIFEST, self::OBJDB_TABLE);
+            self::$objstoreDB = new cObjStoreDB(cSpaceRealms::ROVER_MANIFEST, cSpaceTables::ROVER_MANIFEST);
     }
 
     //#####################################################################
     //# constructor
     //#####################################################################
-    function __construct()
-    {
+    function __construct() {
         if (!$this->MISSION) cDebug::error("MISSION not set");
         $sPath = $this->MISSION . "/" . cRoverConstants::MANIFEST_PATH;
 
@@ -103,8 +94,7 @@ abstract class cRoverManifest
     //#####################################################################
     //# PUBLIC functions
     //#####################################################################
-    public function get_details($psSol, $psInstr)
-    {
+    public function get_details($psSol, $psInstr) {
         $sPath  = $this->MISSION . "/" . cRoverConstants::DETAILS_PATH . "/$psSol";
 
         /** @var cObjStoreDB **/
@@ -122,15 +112,13 @@ abstract class cRoverManifest
     }
 
     //*************************************************************************************************
-    public function add($piSol, $psInstr, $piCount, $psUrl)
-    {
+    public function add($piSol, $psInstr, $piCount, $psUrl) {
         if (!$this->oSols) $this->oSols = new cRoverSols();
         $this->oSols->add($piSol, $psInstr, $piCount, $psUrl);
     }
 
     //*************************************************************************************************
-    public function get_sol_numbers()
-    {
+    public function get_sol_numbers() {
         cDebug::enter();
         if (!$this->oSols) cDebug::error("no sols");
         $aSols = $this->oSols->get_sol_numbers();
@@ -139,8 +127,7 @@ abstract class cRoverManifest
     }
 
     //*************************************************************************************************
-    public function get_sol($piSol)
-    {
+    public function get_sol($piSol) {
         if (!$this->oSols) cDebug::error("no sols");
         return $this->oSols->get_sol($piSol);
     }
@@ -148,8 +135,7 @@ abstract class cRoverManifest
     //#####################################################################
     //# PRIVATE functions
     //#####################################################################
-    protected static function pr__get_url($psUrl)
-    {
+    protected static function pr__get_url($psUrl) {
         $oHttp = new cHttp();
         $oHttp->USE_CURL = self::USE_CURL;
         return  $oHttp->fetch_url($psUrl);
@@ -159,12 +145,10 @@ cRoverManifest::init_obj_store_db();
 
 //#####################################################################
 //#####################################################################
-class cRoverSol
-{
+class cRoverSol {
     public $instruments = [];
 
-    public function add($psInstr, $piCount, $psUrl)
-    {
+    public function add($psInstr, $piCount, $psUrl) {
         if (!array_key_exists($psInstr, $this->instruments)) $this->instruments[$psInstr] = new cRoverInstrument();
         $oEntry = $this->instruments[$psInstr];
         $oEntry->count = $piCount;
@@ -174,16 +158,14 @@ class cRoverSol
 
 //#####################################################################
 //#####################################################################
-abstract class cRoverInstruments
-{
+abstract class cRoverInstruments {
     private $aInstruments = [];
     private $aInstrument_map = [];
 
     protected abstract function prAddInstruments();
 
     //********************************************************************
-    public  function getInstruments()
-    {
+    public  function getInstruments() {
         cDebug::enter();
         if (count($this->aInstruments) == 0)     $this->prAddInstruments();
         cDebug::leave();
@@ -191,8 +173,7 @@ abstract class cRoverInstruments
     }
 
     //*****************************************************************************
-    protected function pr_add($psName, $psAbbreviation, $psCaption, $psColour)
-    {
+    protected function pr_add($psName, $psAbbreviation, $psCaption, $psColour) {
         $aInstr = ["name" => $psName, "colour" => $psColour, "abbr" => $psAbbreviation,    "caption" => $psCaption];
         $this->aInstruments[] = $aInstr;
         $this->aInstrument_map[$psName] = $aInstr;
@@ -200,8 +181,7 @@ abstract class cRoverInstruments
     }
 
     //*****************************************************************************
-    public  function getAbbreviation($psName)
-    {
+    public  function getAbbreviation($psName) {
         cDebug::enter();
         $this->getInstruments();
         if (array_key_exists($psName, $this->aInstrument_map)) {
@@ -219,8 +199,7 @@ abstract class cRoverInstruments
     }
 
     //*****************************************************************************
-    public  function getInstrumentName($psAbbr)
-    {
+    public  function getInstrumentName($psAbbr) {
         cDebug::enter();
         $this->getInstruments();
         cDebug::leave();
@@ -228,8 +207,7 @@ abstract class cRoverInstruments
     }
 
     //*****************************************************************************
-    public  function getDetails($psAbbr)
-    {
+    public  function getDetails($psAbbr) {
         cDebug::enter();
         $this->getInstruments();
         cDebug::leave();
@@ -237,16 +215,14 @@ abstract class cRoverInstruments
     }
 }
 
-class cRoverInstrument
-{
+class cRoverInstrument {
     public $count = -1;
     public $url = null;
 }
 
 //#####################################################################
 //#####################################################################
-class cRoverImage
-{
+class cRoverImage {
     public $source = null;
     public $thumbnail = null;
     public $image = null;

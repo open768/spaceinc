@@ -20,8 +20,7 @@ require_once  "$phpInc/ckinc/hash.php";
 require_once  "$spaceInc/pds/lbl.php";
 
 
-class cPDS_Reader
-{
+class cPDS_Reader {
     public static $force_delete = false;
     public $columns_object_name = "INDEX_TABLE";
     public $TAB_INDEX_ENTRY = "^INDEX_TABLE";
@@ -32,21 +31,18 @@ class cPDS_Reader
     const MAX_TAB_LINES = "10000";
     const TAB_FOLDER = "[PDSTAB]";
     const TAB_ID = "[PDSTAB]"; #
-    const OBJDB_TABLE = "PDS";
 
     private static $objstoreDB = null;
 
 
     //********************************************************************
-    static function init_obj_store_db()
-    {
+    static function init_obj_store_db() {
         if (!self::$objstoreDB)
-            self::$objstoreDB = new cObjStoreDB(cSpaceRealms::PDS, self::OBJDB_TABLE);
+            self::$objstoreDB = new cObjStoreDB(cSpaceRealms::PDS, cSpaceTables::PDS);
     }
 
     //**********************************************************************
-    public  function fetch_volume_lbl($psVolume, $psIndex)
-    {
+    public  function fetch_volume_lbl($psVolume, $psIndex) {
         $sLBLUrl = $this->PDS_URL . "/$psVolume/INDEX/$psIndex.LBL";
         $sOutFile = "$psVolume.LBL";
 
@@ -70,8 +66,7 @@ class cPDS_Reader
     }
 
     //**********************************************************************
-    public static function fetch_lbl($psUrl)
-    {
+    public static function fetch_lbl($psUrl) {
         global $root;
         //create a unique hash for the 
         cHash::$CACHE_EXPIRY = cHash::FOREVER;        //cache forever
@@ -113,8 +108,7 @@ class cPDS_Reader
     }
 
     //**********************************************************************
-    public  function parse_LBL($psFilename)
-    {
+    public  function parse_LBL($psFilename) {
         $oLBL = new cPDS_LBL();
         $oLBL->parseFile($psFilename);
         cDebug::write("parse file OK");
@@ -124,15 +118,13 @@ class cPDS_Reader
     //**********************************************************************
     //* TAB functions
     //**********************************************************************
-    public function set_product_column($psCol)
-    {
+    public function set_product_column($psCol) {
         $this->TAB_PRODUCT_COLUMN = $psCol;
         $this->COLUMN_NAMES[] = $psCol;
     }
 
     //**********************************************************************
-    public  function fetch_tab($poLbl, $psVolume)
-    {
+    public  function fetch_tab($poLbl, $psVolume) {
         //--------error checking------------------------------------
         if ($poLbl == null)    cDebug::error("must supply a LBL file");
         if ($psVolume == null)    cDebug::error("must supply a volume identifier");
@@ -157,8 +149,7 @@ class cPDS_Reader
 
 
     //**********************************************************************
-    public  function delete_tab_col_files($psInstr)
-    {
+    public  function delete_tab_col_files($psInstr) {
         $iCount = self::pr__get_tab_data_count($psInstr);
         if ($iCount == null) return;
 
@@ -173,8 +164,7 @@ class cPDS_Reader
     }
 
     //**********************************************************************
-    private  function pr__create_tab_index_files($psVolume)
-    {
+    private  function pr__create_tab_index_files($psVolume) {
 
         $iCount = self::pr__get_tab_data_count($psVolume);
 
@@ -206,8 +196,7 @@ class cPDS_Reader
     //######################################################################
     //# PRIVATES
     //######################################################################
-    private  function pr__do_fetch_tab($psUrl, $psOutFile)
-    {
+    private  function pr__do_fetch_tab($psUrl, $psOutFile) {
         //get the file
         cDebug::write("fetching TAB $psUrl");
         $oHttp = new cHttp();
@@ -222,8 +211,7 @@ class cPDS_Reader
     }
 
     //**********************************************************************
-    private  function pr__write_TAB_columns($psVolume, $piTabIndex, $paData)
-    {
+    private  function pr__write_TAB_columns($psVolume, $piTabIndex, $paData) {
         $sFolder = self::TAB_ID . $psVolume . $piTabIndex;
         cDebug::write("writing out tab file $sFolder");
         $sHash = cHash::hash($sFolder);
@@ -234,8 +222,7 @@ class cPDS_Reader
     // parse the column data from the TAB files into output files
     // cant return  an array as these are HUGE files that eat up all available memory
     // so chunks the data into files
-    private  function pr__parse_tab($poLBL, $psTabFile, $psVolume)
-    {
+    private  function pr__parse_tab($poLBL, $psTabFile, $psVolume) {
         $iTabIndex = 0;
         $iTabLine = 0;
 
@@ -283,8 +270,7 @@ class cPDS_Reader
     }
 
     //**********************************************************************
-    private  function pr__get_tab_columns($poLBL)
-    {
+    private  function pr__get_tab_columns($poLBL) {
         $aResult = [];
         //get the column names of interest
         $oINDEXLBL = $poLBL->get($this->columns_object_name);
@@ -309,8 +295,7 @@ class cPDS_Reader
     }
 
     //**********************************************************************
-    private  function pr__extract_tab_line($psLine, $paCols)
-    {
+    private  function pr__extract_tab_line($psLine, $paCols) {
         $aOut = [];
         foreach ($paCols as $sName => $oColLBL) {
             $iStart = $oColLBL->get("START_BYTE");
@@ -322,16 +307,14 @@ class cPDS_Reader
         return $aOut;
     }
     //**********************************************************************
-    private  static function pr__get_tab_data_count($psInstr)
-    {
+    private  static function pr__get_tab_data_count($psInstr) {
         /** @var cObjStoreDB **/
         $oDB = self::$objstoreDB;
         $oData = $oDB->get_oldstyle(self::TAB_FOLDER, $psInstr);
         return $oData;
     }
     //**********************************************************************
-    private  static function pr__get_tab_col_file($psInstr, $piIndex)
-    {
+    private  static function pr__get_tab_col_file($psInstr, $piIndex) {
         $sFolder = self::TAB_ID . $psInstr . $piIndex;
         $sHash = cHash::hash($sFolder);
         return cHash::pr__get_obj($sHash);
