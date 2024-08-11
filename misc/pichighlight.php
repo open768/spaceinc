@@ -19,8 +19,7 @@ require_once  "$phpInc/ckinc/http.php";
 require_once  "$phpInc/ckinc/hash.php";
 require_once  "$spaceInc/curiosity/curiosity.php";
 
-class cImageHighlight
-{
+class cImageHighlight {
     const INDEX_SUFFIX = "Highlite";
     const IMGHIGH_FILENAME = "[imgbox].txt";
     const MOSAIC_COUNT_FILENAME = "[moscount].txt";
@@ -36,8 +35,7 @@ class cImageHighlight
 
 
     //********************************************************************
-    static function init_obj_store_db()
-    {
+    static function init_obj_store_db() {
         if (!self::$objstoreDB)
             self::$objstoreDB = new cObjStoreDB(cSpaceRealms::IMAGE_HIGHLIGHT);
     }
@@ -52,8 +50,7 @@ class cImageHighlight
     // #	shouldnt be tied to curiosity
     // #######################################################################
 
-    static function get($psSol, $psInstrument, $psProduct)
-    {
+    static function get($psSol, $psInstrument, $psProduct) {
         /** @var cObjStoreDB **/
         $oDB = self::$objstoreDB;
         $sFolder = "$psSol/$psInstrument/$psProduct";
@@ -63,8 +60,7 @@ class cImageHighlight
     }
 
     //**********************************************************************
-    private static function pr_get_image($psSol, $psInstrument, $psProduct)
-    {
+    private static function pr_get_image($psSol, $psInstrument, $psProduct) {
         //get the original image once 
         $oInstrumentData = cCuriosity::getProductDetails($psSol, $psInstrument, $psProduct);
         $sImageUrl = null;
@@ -83,8 +79,7 @@ class cImageHighlight
     }
 
     //**********************************************************************
-    private static function pr_perform_crop($poImg, $piX, $piY, $psOutfile)
-    {
+    private static function pr_perform_crop($poImg, $piX, $piY, $psOutfile) {
         global $root;
         cDebug::write("cropping to $piX, $piY");
 
@@ -107,8 +102,7 @@ class cImageHighlight
 
     //**********************************************************************
     // this function should be multithreaded when the software becomes a #product# #TBD#
-    static function get_thumbs($psSol, $psInstrument, $psProduct)
-    {
+    static function get_thumbs($psSol, $psInstrument, $psProduct) {
         global $root;
 
         $bUpdated = false;
@@ -174,15 +168,9 @@ class cImageHighlight
         return $aData;
     }
 
-    //**********************************************************************
-    static function get_sol_highlighted_products($psSol)
-    {
-        return     cIndexes::get_sol_data($psSol, self::INDEX_SUFFIX);
-    }
 
     //**********************************************************************
-    static function get_all_highlights($psSol)
-    {
+    static function get_all_highlights($psSol) {
         //get which products have highlights
         cDebug::write("getting highlights for sol $psSol");
         $aData = self::get_sol_highlighted_products($psSol);
@@ -202,8 +190,7 @@ class cImageHighlight
     }
 
     //**********************************************************************
-    static private function pr_count_highlights($paData)
-    {
+    static private function pr_count_highlights($paData) {
         $iCount = 0;
 
         if ($paData == null)     return 0;
@@ -215,10 +202,26 @@ class cImageHighlight
     }
 
     //######################################################################
+    //# INDEX functions
+    //######################################################################
+    static function get_sol_highlighted_products($psSol) {
+        $oResult = cSpaceIndex::get_sol_data($psSol, self::INDEX_SUFFIX);
+        return $oResult;
+    }
+
+    //********************************************************************
+    static function get_top_index() {
+        cDebug::enter();
+        $aResult = cSpaceIndex::get_top_sol_data(self::INDEX_SUFFIX);
+        if ($aResult) ksort($aResult, SORT_NUMERIC);
+        cDebug::leave();
+        return $aResult;
+    }
+
+    //######################################################################
     //# MOSAIC functions
     //######################################################################
-    static private function pr_get_mosaic_count($psSol)
-    {
+    static private function pr_get_mosaic_count($psSol) {
         /** @var cObjStoreDB **/
         $oDB = self::$objstoreDB;
         $iCount = $oDB->get_oldstyle("$psSol", self::MOSAIC_COUNT_FILENAME);
@@ -227,16 +230,14 @@ class cImageHighlight
         return $iCount;
     }
     //**********************************************************************
-    static private function pr_put_mosaic_count($psSol, $piCount)
-    {
+    static private function pr_put_mosaic_count($psSol, $piCount) {
         /** @var cObjStoreDB **/
         $oDB = self::$objstoreDB;
         $oDB->put_oldstyle("$psSol", self::MOSAIC_COUNT_FILENAME, $piCount);
     }
 
     //**********************************************************************
-    static private function pr_generate_mosaic($psSol, $paData)
-    {
+    static private function pr_generate_mosaic($psSol, $paData) {
         global $root;
         $aImgList = [];
 
@@ -309,8 +310,7 @@ class cImageHighlight
     }
 
     //**********************************************************************
-    static function get_sol_high_mosaic($psSol)
-    {
+    static function get_sol_high_mosaic($psSol) {
         global $root;
 
         $oData = self::get_all_highlights($psSol);
@@ -348,28 +348,25 @@ class cImageHighlight
     //######################################################################
     //# UPDATE functions
     //######################################################################
-    static function set($psSol, $psInstrument, $psProduct, $psTop, $psLeft, $psUser)
-    {
+    static function set($psSol, $psInstrument, $psProduct, $psTop, $psLeft, $psUser) {
         /** @var cObjStoreDB **/
         $oDB = self::$objstoreDB;
         //get the file from the object store to get the latest version
         $sFolder = "$psSol/$psInstrument/$psProduct";
         $aData = ["t" => $psTop, "l" => $psLeft, "u" => $psUser];
         $oDB->add_to_array_oldstyle($sFolder, self::IMGHIGH_FILENAME, $aData); //store highlight
-        cIndexes::update_indexes($psSol, $psInstrument, $psProduct, 1, self::INDEX_SUFFIX);
+        cSpaceIndex::update_indexes($psSol, $psInstrument, $psProduct, 1, self::INDEX_SUFFIX);
         return "ok";
     }
 
     //######################################################################
     //# ADMIN functions
     //######################################################################
-    static function reindex()
-    {
-        cIndexes::reindex(1, self::INDEX_SUFFIX, self::IMGHIGH_FILENAME);
+    static function reindex() {
+        cSpaceIndex::reindex(1, self::INDEX_SUFFIX, self::IMGHIGH_FILENAME);
     }
 
-    static function kill_highlites($psSol, $psInstr, $psProduct, $psWhich)
-    {
+    static function kill_highlites($psSol, $psInstr, $psProduct, $psWhich) {
         /** @var cObjStoreDB **/
         $oDB = self::$objstoreDB;
         $sFolder = "$psSol/$psInstr/$psProduct";

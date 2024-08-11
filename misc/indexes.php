@@ -3,7 +3,7 @@ require_once  "$spaceInc/misc/realms.php";
 require_once  "$phpInc/ckinc/objstoredb.php";
 
 
-class cIndexes {
+class cSpaceIndex {
     const TOP_PREFIX = "t";
     const SOL_PREFIX = "s";
     const INSTR_PREFIX = "i";
@@ -28,9 +28,10 @@ class cIndexes {
     //********************************************************************
     static function get_top_sol_data($psSuffix) {
         cDebug::enter();
-        $sFile = self::get_filename(self::TOP_PREFIX, $psSuffix);
         /** @var cObjStoreDB **/
         $oDB = self::$objstoreDB;
+
+        $sFile = self::get_filename(self::TOP_PREFIX, $psSuffix);
         $oData = $oDB->get_oldstyle("", $sFile);
         cDebug::leave();
 
@@ -195,4 +196,4 @@ class cIndexes {
     }
 }
 
-cIndexes::init_obj_store_db();
+cSpaceIndex::init_obj_store_db();
