@@ -21,23 +21,20 @@ or leave a message on github
 require_once  "$phpInc/ckinc/objstoredb.php";
 require_once  "$spaceInc/misc/realms.php";
 
-class cComments
-{
+class cSpaceComments {
     const COMMENT_FILENAME = "[comment].txt";
     const STRIP_HTML = false;
     private static $objstoreDB = null;
 
 
     //********************************************************************
-    static function init_obj_store_db()
-    {
+    static function init_obj_store_db() {
         if (!self::$objstoreDB)
             self::$objstoreDB = new cObjStoreDB(cSpaceRealms::COMMENTS);
     }
 
     //********************************************************************
-    static function get($psSol, $psInstrument, $psProduct)
-    {
+    static function get($psSol, $psInstrument, $psProduct) {
         $sFolder = "$psSol/$psInstrument/$psProduct";
         /** @var cObjStoreDB **/
         $oDB = self::$objstoreDB;
@@ -46,8 +43,7 @@ class cComments
     }
 
     //********************************************************************
-    static function set($psSol, $psInstrument, $psProduct, $psComment, $psUser)
-    {
+    static function set($psSol, $psInstrument, $psProduct, $psComment, $psUser) {
         $sFolder = "$psSol/$psInstrument/$psProduct";
         if (self::STRIP_HTML) $psComment = strip_tags($psComment);
         cDebug::write("comment: $psComment");
@@ -66,4 +62,4 @@ class cComments
     //
 }
 
-cComments::init_obj_store_db();
+cSpaceComments::init_obj_store_db();

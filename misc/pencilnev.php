@@ -6,16 +6,14 @@ require_once  "$phpInc/ckinc/objstoredb.php";
 require_once  "$spaceInc/misc/realms.php";
 static $objstoreDB = null;
 
-class cPencilNev
-{
+class cPencilNev {
     const NEVILLE_FILENAME = "[nevgig].txt";
     const TOP_NEVILLE_FILENAME = "[topnevgig].txt";
     static $objstoreDB = null;
 
     //********************************************************************
     //********************************************************************
-    static function init_obj_store_db()
-    {
+    static function init_obj_store_db() {
         cDebug::enter();
         if (self::$objstoreDB == null) {
             self::$objstoreDB = new cObjStoreDB(cSpaceRealms::NEVILLE);
@@ -24,20 +22,19 @@ class cPencilNev
     }
 
     //***********************************************************************************************
-    public static function get_top_gigas()
-    {
+    public static function get_top_gigas() {
         cDebug::enter();
         /** @var cObjStoreDB **/
         $oDB = self::$objstoreDB;
-        $oData =  $oDB->get_oldstyle("", self::TOP_NEVILLE_FILENAME);
+        $aData =  $oDB->get_oldstyle("", self::TOP_NEVILLE_FILENAME);
+        ksort($aData);
         cDebug::leave();
 
-        return $oData;
+        return $aData;
     }
 
     //***********************************************************************************************
-    public static function get_sol_gigas($psSol)
-    {
+    public static function get_sol_gigas($psSol) {
         cDebug::enter();
         /** @var cObjStoreDB **/
         $oDB = self::$objstoreDB;
@@ -47,8 +44,7 @@ class cPencilNev
     }
 
     //***********************************************************************************************
-    public static function index_gigapans($paData)
-    {
+    public static function index_gigapans($paData) {
         cDebug::enter();
         $aData = [];
         $aTop = [];
@@ -83,8 +79,7 @@ class cPencilNev
     }
 
     //***********************************************************************************************
-    public static function get_gigas($psSol)
-    {
+    public static function get_gigas($psSol) {
         cDebug::enter();
         /** @var cObjStoreDB **/
         $oDB = self::$objstoreDB;

@@ -15,8 +15,7 @@ require_once  "$phpInc/ckinc/objstoredb.php";
 require_once  "$spaceInc/misc/realms.php";
 
 
-class cTags
-{
+class cSpaceTags {
     const TOP_TAG_FILE = "[top].txt";
     const TOP_SOL_TAG_FILE = "[solstag].txt";
     const SOL_TAG_FILE = "[soltag].txt";
@@ -28,15 +27,16 @@ class cTags
 
 
     //********************************************************************
-    static function init_obj_store_db()
-    {
+    //* objdb stuff
+    //********************************************************************
+    static function init_obj_store_db() {
         if (!self::$objstoreDB)
             self::$objstoreDB = new cObjStoreDB(cSpaceRealms::TAGS);
     }
 
     //********************************************************************
-    static function get_tag_names($psSol, $psInstrument, $psProduct)
-    {
+    //********************************************************************
+    static function get_tag_names($psSol, $psInstrument, $psProduct) {
         cDebug::enter();
 
         /** @var cObjStoreDB **/
@@ -54,8 +54,7 @@ class cTags
     }
 
     //********************************************************************
-    static function set_tag($psSol, $psInstrument, $psProduct, $psTag, $psUser)
-    {
+    static function set_tag($psSol, $psInstrument, $psProduct, $psTag, $psUser) {
         cDebug::enter();
 
         $sFolder = "$psSol/$psInstrument/$psProduct";
@@ -102,8 +101,7 @@ class cTags
     }
 
     //********************************************************************
-    static function get_top_tags()
-    {
+    static function get_top_tags() {
         cDebug::enter();
         /** @var cObjStoreDB **/
         $oDB = self::$objstoreDB;
@@ -116,8 +114,7 @@ class cTags
     }
 
     //********************************************************************
-    static function get_tag_index($psTag)
-    {
+    static function get_tag_index($psTag) {
         cDebug::enter();
 
         $filename = $psTag . ".txt";
@@ -131,8 +128,7 @@ class cTags
     }
 
     //********************************************************************
-    static function get_sol_tags($psSol)
-    {
+    static function get_sol_tags($psSol) {
         cDebug::enter();
         /** @var cObjStoreDB **/
         $oDB = self::$objstoreDB;
@@ -143,20 +139,20 @@ class cTags
     }
 
     //********************************************************************
-    static function get_top_sol_index()
-    {
+    static function get_top_sol_index() {
         cDebug::enter();
         /** @var cObjStoreDB **/
         $oDB = self::$objstoreDB;
 
         $aData = $oDB->get_oldstyle("", self::TOP_SOL_TAG_FILE);
+        if ($aData !== null) ksort($aData);
         cDebug::leave();
         return $aData;
     }
 
+
     //********************************************************************
-    static function get_sol_tag_count($psSol)
-    {
+    static function get_sol_tag_count($psSol) {
         cDebug::enter();
         /** @var cObjStoreDB **/
         $oDB = self::$objstoreDB;
@@ -174,8 +170,7 @@ class cTags
     //######################################################################
     //# UPDATE functions
     //######################################################################
-    static function update_top_sol_index($psSol)
-    {
+    static function update_top_sol_index($psSol) {
         cDebug::enter();
 
         /** @var cObjStoreDB **/
@@ -191,8 +186,7 @@ class cTags
     }
 
     //********************************************************************
-    static function update_sol_index($psSol, $psInstrument, $psProduct, $psTag)
-    {
+    static function update_sol_index($psSol, $psInstrument, $psProduct, $psTag) {
         cDebug::enter();
 
         /** @var cObjStoreDB **/
@@ -206,8 +200,7 @@ class cTags
     }
 
     //********************************************************************
-    static function update_instr_index($psSol, $psInstrument, $psProduct, $psTag)
-    {
+    static function update_instr_index($psSol, $psInstrument, $psProduct, $psTag) {
         cDebug::enter();
 
         /** @var cObjStoreDB **/
@@ -222,8 +215,7 @@ class cTags
     }
 
     //********************************************************************
-    static function update_tag_index($psTag, $psValue)
-    {
+    static function update_tag_index($psTag, $psValue) {
         cDebug::enter();
 
         $filename = $psTag . ".txt";
@@ -234,8 +226,7 @@ class cTags
     }
 
     //********************************************************************
-    static function update_top_index($psTag)
-    {
+    static function update_top_index($psTag) {
         cDebug::enter();
 
         cDebug::write("updating index for tag : $psTag");
@@ -261,8 +252,7 @@ class cTags
     //######################################################################
     //# admin functions
     //######################################################################
-    static function reindex()
-    {
+    static function reindex() {
         cDebug::enter();
 
         $aAllTags = [];
@@ -317,8 +307,7 @@ class cTags
     }
 
     //********************************************************************
-    static function kill_tag($psTag)
-    {
+    static function kill_tag($psTag) {
         cDebug::enter();
 
         /** @var cObjStoreDB **/
@@ -351,4 +340,4 @@ class cTags
         cDebug::leave();
     }
 }
-cTags::init_obj_store_db();
+cSpaceTags::init_obj_store_db();
