@@ -33,9 +33,7 @@ class cPDS {
 
     //**********************************************************************
     private static function pr__get_objstore_Folder($psSol, $psInstrument) {
-        cDebug::enter();
         $sFolder = self::OBJDATA_TOP_FOLDER . "/$psSol/$psInstrument";
-        cDebug::leave();
         return $sFolder;
     }
 

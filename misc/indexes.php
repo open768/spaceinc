@@ -7,6 +7,10 @@ class cSpaceIndex {
     const TOP_PREFIX = "t";
     const SOL_PREFIX = "s";
     const INSTR_PREFIX = "i";
+    const PDS_PREFIX = "p";
+
+    const HILITE_SUFFIX = "Highlite";
+
     static $objstoreDB = null;
 
     //********************************************************************

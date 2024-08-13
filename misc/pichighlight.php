@@ -20,7 +20,6 @@ require_once  "$phpInc/ckinc/hash.php";
 require_once  "$spaceInc/curiosity/curiosity.php";
 
 class cImageHighlight {
-    const INDEX_SUFFIX = "Highlite";
     const IMGHIGH_FILENAME = "[imgbox].txt";
     const MOSAIC_COUNT_FILENAME = "[moscount].txt";
     const THUMBS_FILENAME = "[thumbs].txt";
@@ -205,14 +204,14 @@ class cImageHighlight {
     //# INDEX functions
     //######################################################################
     static function get_sol_highlighted_products($psSol) {
-        $oResult = cSpaceIndex::get_sol_data($psSol, self::INDEX_SUFFIX);
+        $oResult = cSpaceIndex::get_sol_data($psSol, cSpaceIndex::HILITE_SUFFIX);
         return $oResult;
     }
 
     //********************************************************************
     static function get_top_index() {
         cDebug::enter();
-        $aResult = cSpaceIndex::get_top_sol_data(self::INDEX_SUFFIX);
+        $aResult = cSpaceIndex::get_top_sol_data(cSpaceIndex::HILITE_SUFFIX);
         if ($aResult) ksort($aResult, SORT_NUMERIC);
         cDebug::leave();
         return $aResult;
@@ -355,7 +354,7 @@ class cImageHighlight {
         $sFolder = "$psSol/$psInstrument/$psProduct";
         $aData = ["t" => $psTop, "l" => $psLeft, "u" => $psUser];
         $oDB->add_to_array_oldstyle($sFolder, self::IMGHIGH_FILENAME, $aData); //store highlight
-        cSpaceIndex::update_indexes($psSol, $psInstrument, $psProduct, 1, self::INDEX_SUFFIX);
+        cSpaceIndex::update_indexes($psSol, $psInstrument, $psProduct, 1, cSpaceIndex::HILITE_SUFFIX);
         return "ok";
     }
 
@@ -363,7 +362,7 @@ class cImageHighlight {
     //# ADMIN functions
     //######################################################################
     static function reindex() {
-        cSpaceIndex::reindex(1, self::INDEX_SUFFIX, self::IMGHIGH_FILENAME);
+        cSpaceIndex::reindex(1, cSpaceIndex::HILITE_SUFFIX, self::IMGHIGH_FILENAME);
     }
 
     static function kill_highlites($psSol, $psInstr, $psProduct, $psWhich) {
