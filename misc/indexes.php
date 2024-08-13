@@ -10,6 +10,7 @@ class cSpaceIndex {
     const PDS_PREFIX = "p";
 
     const HILITE_SUFFIX = "Highlite";
+    const COMMENT_SUFFIX = "Comment";
 
     static $objstoreDB = null;
 
@@ -95,7 +96,7 @@ class cSpaceIndex {
 
     //********************************************************************
     static function update_top_sol_index($psSol, $psSuffix) {
-        cDebug::enter();
+        //cDebug::enter();
         $sFile = self::get_filename(self::TOP_PREFIX, $psSuffix);
         /** @var cObjStoreDB **/
         $oDB = self::$objstoreDB;
@@ -107,27 +108,27 @@ class cSpaceIndex {
         $aData[$psSol] = $aData[$psSol] + 1;
         cDebug::write("updating top sol index for sol $psSol");
         $oDB->put_oldstyle("", $sFile, $aData);
-        cDebug::leave();
+        //cDebug::leave();
     }
 
     //********************************************************************
     static function update_sol_index($psSol, $psInstrument, $psProduct, $psSuffix) {
-        cDebug::enter();
+        //cDebug::enter();
         $sFile = self::get_filename(self::SOL_PREFIX, $psSuffix);
         /** @var cObjStoreDB **/
         $oDB = self::$objstoreDB;
         $aData = $oDB->get_oldstyle($psSol, $sFile);
         if (!$aData) $aData = [];
         if (!isset($aData[$psInstrument])) $aData[$psInstrument] = [];
-        if (!isset($aData[$psInstrument])) $aData[$psInstrument][$psProduct] = 0;
+        if (!isset($aData[$psInstrument][$psProduct])) $aData[$psInstrument][$psProduct] = 0;
         $aData[$psInstrument][$psProduct] = $aData[$psInstrument][$psProduct] + 1;
         $oDB->put_oldstyle($psSol, $sFile, $aData);
-        cDebug::leave();
+        //cDebug::leave();
     }
 
     //********************************************************************
     static function update_instr_index($psSol, $psInstrument, $psProduct, $poData, $psSuffix) {
-        cDebug::enter();
+        //cDebug::enter();
         $sFile = self::get_filename(self::INSTR_PREFIX, $psSuffix);
         $sFolder = "$psSol/$psInstrument";
         /** @var cObjStoreDB **/
@@ -136,7 +137,7 @@ class cSpaceIndex {
         if (!$aData) $aData = [];
         $aData[$psProduct] = $poData;
         $oDB->put_oldstyle($sFolder, $sFile, $aData);
-        cDebug::leave();
+        //cDebug::leave();
     }
 
     //######################################################################

@@ -33,10 +33,34 @@ class cSpaceComments {
             self::$objstoreDB = new cObjStoreDB(cSpaceRealms::COMMENTS);
     }
 
+    //######################################################################
+    //# INDEX functions
+    //######################################################################
+    static function get_top_index() {
+        cDebug::enter();
+        $aResult = cSpaceIndex::get_top_sol_data(cSpaceIndex::COMMENT_SUFFIX);
+        if ($aResult) ksort($aResult, SORT_NUMERIC);
+        cDebug::leave();
+        return $aResult;
+    }
+
     //********************************************************************
+    static function get_sol_index($psSol) {
+        $aResult = cSpaceIndex::get_sol_data($psSol, cSpaceIndex::COMMENT_SUFFIX);
+        return $aResult;
+    }
+
+    //********************************************************************
+    static function add_to_index($psSol, $psInstrument, $psProduct) {
+        cSpaceIndex::update_indexes($psSol, $psInstrument, $psProduct, 1, cSpaceIndex::COMMENT_SUFFIX);
+    }
+
+    //######################################################################
+    //# getters and setters
+    //######################################################################
     static function get($psSol, $psInstrument, $psProduct) {
         $sFolder = "$psSol/$psInstrument/$psProduct";
-        /** @var cObjStoreDB **/
+        /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         $aTags = $oDB->get_oldstyle($sFolder, self::COMMENT_FILENAME);
         return $aTags;
@@ -48,18 +72,15 @@ class cSpaceComments {
         if (self::STRIP_HTML) $psComment = strip_tags($psComment);
         cDebug::write("comment: $psComment");
 
-        /** @var cObjStoreDB **/
+        /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         $aData = ["c" => $psComment, "u" => $psUser];
         $aData = $oDB->add_to_array_oldstyle($sFolder, self::COMMENT_FILENAME, $aData);
 
+        self::add_to_index($psSol, $psInstrument, $psProduct);
 
-        // update SOL
-        // update SOL/Instrument
-        // update recent
         return $aData;
     }
-    //
 }
 
 cSpaceComments::init_obj_store_db();
