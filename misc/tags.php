@@ -109,12 +109,10 @@ class cSpaceTags {
     //* TAG counts
     //********************************************************************
     static function get_sol_tags($psSol) {
-        cDebug::enter();
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
 
         $aData =  $oDB->get_oldstyle($psSol, self::SOL_TAG_FILE);
-        cDebug::leave();
         return $aData;
     }
 
@@ -164,7 +162,7 @@ class cSpaceTags {
         $oDB->put_oldstyle($sFolder, self::PRODUCT_TAG_FILE, $aData);
 
         //now update the top_index
-        self::update_top_index($psTag);
+        self::update_top_name_index($psTag);
 
         //mark this sol as tagged
         self::update_top_sol_index($psSol);
@@ -233,15 +231,29 @@ class cSpaceTags {
         cDebug::leave();
     }
 
+    private static function get_instr_folder($psSol, $psInstrument) {
+        return "$psSol/$psInstrument";
+    }
+
+    //********************************************************************
+    static function get_instr_index($psSol, $psInstrument) {
+        /** @var cObjStoreDB $oDB **/
+        $oDB = self::$objstoreDB;
+        $sFolder = self::get_instr_folder($psSol, $psInstrument);
+        $aData = $oDB->get_oldstyle($sFolder, self::INSTR_TAG_FILE);
+        return $aData;
+    }
+
     //********************************************************************
     static function update_instr_index($psSol, $psInstrument, $psProduct, $psTag) {
         cDebug::enter();
 
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
-        $sFolder = "$psSol/$psInstrument";
-        $aData = $oDB->get_oldstyle($sFolder, self::INSTR_TAG_FILE);
+        $aData = self::get_instr_index($psSol, $psInstrument);
         if (!$aData) $aData = [];
+
+        $sFolder = self::get_instr_folder($psSol, $psInstrument);
         if (!isset($aData[$psProduct])) $aData[$psProduct] = [];
         $aData[$psProduct][] = $psTag;
         $oDB->put_oldstyle($sFolder, self::INSTR_TAG_FILE, $aData);
@@ -260,7 +272,7 @@ class cSpaceTags {
     }
 
     //********************************************************************
-    static function update_top_index($psTag) {
+    static function update_top_name_index($psTag) {
         cDebug::enter();
 
         cDebug::write("updating index for tag : $psTag");

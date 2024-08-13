@@ -19,7 +19,7 @@ require_once  "$phpInc/ckinc/http.php";
 require_once  "$phpInc/ckinc/hash.php";
 require_once  "$spaceInc/curiosity/curiosity.php";
 
-class cImageHighlight {
+class cSpaceImageHighlight {
     const IMGHIGH_FILENAME = "[imgbox].txt";
     const MOSAIC_COUNT_FILENAME = "[moscount].txt";
     const THUMBS_FILENAME = "[thumbs].txt";
@@ -222,22 +222,27 @@ class cImageHighlight {
         return $aResult;
     }
 
+    static function get_top_mosaic_index() {
+        return cSpaceIndex::get_top_sol_data(cSpaceIndex::MOSAIC_SUFFIX);
+    }
+
     //######################################################################
     //# MOSAIC functions
     //######################################################################
-    static private function pr_get_mosaic_count($psSol) {
+    static function get_mosaic_sol_highlight_count($psSol) {
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
-        $iCount = $oDB->get_oldstyle("$psSol", self::MOSAIC_COUNT_FILENAME);
+        $iCount = $oDB->get_oldstyle($psSol, self::MOSAIC_COUNT_FILENAME);
 
         if ($iCount == null) $iCount = 0;
         return $iCount;
     }
     //**********************************************************************
-    static private function pr_put_mosaic_count($psSol, $piCount) {
+    static private function pr_put_mosaic_sol_hilight_count($psSol, $piCount) {
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
-        $oDB->put_oldstyle("$psSol", self::MOSAIC_COUNT_FILENAME, $piCount);
+        $oDB->put_oldstyle($psSol, self::MOSAIC_COUNT_FILENAME, $piCount);
+        cSpaceIndex::update_top_sol_index($psSol, cSpaceIndex::MOSAIC_SUFFIX);
     }
 
     //**********************************************************************
@@ -326,15 +331,15 @@ class cImageHighlight {
         }
 
         //------------------------------------------------------------------
-        //does the count match what is stored - in that case the mosaic is allready
-        $iStoredCount = self::pr_get_mosaic_count($psSol);
+        //does the count match what is stored - in that case the mosaic has allready been produced
+        $iStoredCount = self::get_mosaic_sol_highlight_count($psSol);
         if ($iStoredCount != $iCount) {
             cDebug::write("but only $iStoredCount were previously known");
             //generate the mosaic
             $sMosaic = self::pr_generate_mosaic($psSol, $oData);
 
             //write out the count 
-            self::pr_put_mosaic_count($psSol, $iCount);
+            self::pr_put_mosaic_sol_hilight_count($psSol, $iCount);
         }
 
         //------------------------------------------------------------------
@@ -378,4 +383,4 @@ class cImageHighlight {
         cDebug::write("now reindex the image highlihgts");
     }
 }
-cImageHighlight::init_obj_store_db();
+cSpaceImageHighlight::init_obj_store_db();

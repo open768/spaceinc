@@ -35,11 +35,11 @@ class cPencilNev {
 
     //***********************************************************************************************
     public static function get_sol_gigas($psSol) {
-        cDebug::enter();
+        //cDebug::enter();
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         $oData = $oDB->get_oldstyle($psSol, self::NEVILLE_FILENAME);
-        cDebug::leave();
+        //cDebug::leave();
         return $oData;
     }
 

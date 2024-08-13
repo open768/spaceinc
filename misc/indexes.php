@@ -11,6 +11,7 @@ class cSpaceIndex {
 
     const HILITE_SUFFIX = "Highlite";
     const COMMENT_SUFFIX = "Comment";
+    const MOSAIC_SUFFIX = "Mosaic";
 
     static $objstoreDB = null;
 

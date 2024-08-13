@@ -8,11 +8,9 @@ require_once  "$phpInc/ckinc/facebook.php";
 //###########################################################################
 //#
 //###########################################################################
-class cFacebookTags
-{
+class cFacebookTags {
     //*******************************************************************
-    public static function make_fb_detail_tags()
-    {
+    public static function make_fb_detail_tags() {
         cDebug::check_GET_or_POST();
 
         $sSol = $_GET["s"];
@@ -43,14 +41,13 @@ class cFacebookTags
     }
 
     //*******************************************************************
-    public static function make_fb_sol_high_tags()
-    {
+    public static function make_fb_sol_high_tags() {
         cDebug::check_GET_or_POST();
 
         $sSol = $_GET["s"];
 
         cDebug::write("getting highlight details for $sSol");
-        $sFilename  = cImageHighlight::get_sol_high_mosaic($sSol);
+        $sFilename  = cSpaceImageHighlight::get_sol_high_mosaic($sSol);
         cDebug::write("<img src='$sFilename'>");
     ?>
         <html>
