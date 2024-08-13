@@ -50,7 +50,7 @@ class cImageHighlight {
     // #######################################################################
 
     static function get($psSol, $psInstrument, $psProduct) {
-        /** @var cObjStoreDB **/
+        /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         $sFolder = "$psSol/$psInstrument/$psProduct";
         $aData = $oDB->get_oldstyle($sFolder, self::IMGHIGH_FILENAME);
@@ -226,7 +226,7 @@ class cImageHighlight {
     //# MOSAIC functions
     //######################################################################
     static private function pr_get_mosaic_count($psSol) {
-        /** @var cObjStoreDB **/
+        /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         $iCount = $oDB->get_oldstyle("$psSol", self::MOSAIC_COUNT_FILENAME);
 
@@ -235,7 +235,7 @@ class cImageHighlight {
     }
     //**********************************************************************
     static private function pr_put_mosaic_count($psSol, $piCount) {
-        /** @var cObjStoreDB **/
+        /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         $oDB->put_oldstyle("$psSol", self::MOSAIC_COUNT_FILENAME, $piCount);
     }
@@ -353,7 +353,7 @@ class cImageHighlight {
     //# UPDATE functions
     //######################################################################
     static function set($psSol, $psInstrument, $psProduct, $psTop, $psLeft, $psUser) {
-        /** @var cObjStoreDB **/
+        /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         //get the file from the object store to get the latest version
         $sFolder = "$psSol/$psInstrument/$psProduct";
@@ -371,7 +371,7 @@ class cImageHighlight {
     }
 
     static function kill_highlites($psSol, $psInstr, $psProduct, $psWhich) {
-        /** @var cObjStoreDB **/
+        /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         $sFolder = "$psSol/$psInstr/$psProduct";
         $oDB->kill_oldstyle($sFolder, self::IMGHIGH_FILENAME);

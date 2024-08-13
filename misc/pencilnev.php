@@ -24,7 +24,7 @@ class cPencilNev {
     //***********************************************************************************************
     public static function get_top_gigas() {
         cDebug::enter();
-        /** @var cObjStoreDB **/
+        /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         $aData =  $oDB->get_oldstyle("", self::TOP_NEVILLE_FILENAME);
         ksort($aData);
@@ -36,7 +36,7 @@ class cPencilNev {
     //***********************************************************************************************
     public static function get_sol_gigas($psSol) {
         cDebug::enter();
-        /** @var cObjStoreDB **/
+        /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         $oData = $oDB->get_oldstyle($psSol, self::NEVILLE_FILENAME);
         cDebug::leave();
@@ -50,7 +50,7 @@ class cPencilNev {
         $aTop = [];
         $iMatched = 0;
 
-        /** @var cObjStoreDB **/
+        /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
 
         //build up the list
@@ -81,7 +81,7 @@ class cPencilNev {
     //***********************************************************************************************
     public static function get_gigas($psSol) {
         cDebug::enter();
-        /** @var cObjStoreDB **/
+        /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         $oData =  $oDB->get_oldstyle($psSol, self::NEVILLE_FILENAME);
         cDebug::leave();

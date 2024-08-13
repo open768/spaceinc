@@ -87,7 +87,7 @@ class cCuriosityLocations {
 
 
         // write out the index files
-        /** @var cObjStoreDB **/
+        /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         cDebug::write("writing index files");
         ksort($aDrivesIndex);
@@ -115,27 +115,27 @@ class cCuriosityLocations {
 
     //***********************************************************************
     public static function getSiteIndex() {
-        /** @var cObjStoreDB **/
+        /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         return $oDB->get_oldstyle(self::TOP_FOLDER, self::SITES_INDEX_FILE);
     }
     //***********************************************************************
     public static function getAllSiteBounds() {
-        /** @var cObjStoreDB **/
+        /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         return $oDB->get_oldstyle(self::TOP_FOLDER . "/" . self::SITES_FOLDER, self::BOUNDS_INDEX_FILE);
     }
 
     //***********************************************************************
     public static function getSite($piSite) {
-        /** @var cObjStoreDB **/
+        /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         return $oDB->get_oldstyle(self::TOP_FOLDER . "/" . self::SITES_FOLDER, $piSite);
     }
     //***********************************************************************
     public static function getSiteBounds($psSite) {
         $piSite = (int) $psSite;
-        /** @var cObjStoreDB **/
+        /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         $aIndex = $oDB->get_oldstyle(self::TOP_FOLDER . "/" . self::SITES_FOLDER, self::BOUNDS_INDEX_FILE);
         return $aIndex[$piSite];
@@ -143,14 +143,14 @@ class cCuriosityLocations {
 
     //***********************************************************************
     public static function getSol($psSol) {
-        /** @var cObjStoreDB **/
+        /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         return $oDB->get_oldstyle(self::TOP_FOLDER . "/" . self::SOLS_FOLDER, $psSol);
     }
 
     //***********************************************************************
     public static function getSolBounds($psSol) {
-        /** @var cObjStoreDB **/
+        /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         $aIndex = $oDB->get_oldstyle(self::TOP_FOLDER . "/" . self::SOLS_FOLDER, self::BOUNDS_INDEX_FILE);
         return $aIndex[$psSol];
@@ -158,7 +158,7 @@ class cCuriosityLocations {
 
     //***********************************************************************
     public static function getDrive($psDrive) {
-        /** @var cObjStoreDB **/
+        /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         return $oDB->get_oldstyle(self::TOP_FOLDER . "/" . self::DRIVES_FOLDER, $psDrive);
     }
@@ -166,7 +166,7 @@ class cCuriosityLocations {
     //***********************************************************************
     public static function getDriveBounds($psDrive) {
         $piDrive = (int) $psDrive;
-        /** @var cObjStoreDB **/
+        /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         $aIndex = $oDB->get_oldstyle(self::TOP_FOLDER . "/" . self::DRIVES_FOLDER, self::BOUNDS_INDEX_FILE);
         return $aIndex[$piDrive];
@@ -199,7 +199,7 @@ class cCuriosityLocations {
     //***********************************************************************
     private static function pr__WriteFiles($psFolder, $paData, $pbStrval = true) {
         $aBoundIndex = [];
-        /** @var cObjStoreDB **/
+        /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
 
         ksort($paData);

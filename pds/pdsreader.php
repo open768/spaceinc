@@ -158,7 +158,7 @@ class cPDS_Reader {
             $sHash = cHash::hash($sFolder);
             cHash::delete_hash($sHash);
         }
-        /** @var cObjStoreDB **/
+        /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         $oDB->kill_oldstyle(self::TAB_FOLDER, $psInstr);
     }
@@ -262,7 +262,7 @@ class cPDS_Reader {
 
         cDebug::write("Processed $iCount lines -  into $iTabIndex files");
         cDebug::write("writing count file");
-        /** @var cObjStoreDB **/
+        /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         $oDB->put_oldstyle(self::TAB_FOLDER, $psVolume, $iTabIndex);
 
@@ -308,7 +308,7 @@ class cPDS_Reader {
     }
     //**********************************************************************
     private  static function pr__get_tab_data_count($psInstr) {
-        /** @var cObjStoreDB **/
+        /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         $oData = $oDB->get_oldstyle(self::TAB_FOLDER, $psInstr);
         return $oData;

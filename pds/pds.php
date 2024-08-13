@@ -40,7 +40,7 @@ class cPDS {
     //**********************************************************************
     public static function get_pds_data($psSol, $psInstrument) {
         cDebug::enter();
-        /** @var cObjStoreDB **/
+        /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
 
         $sFolder = self::pr__get_objstore_Folder($psSol, $psInstrument);
@@ -52,7 +52,7 @@ class cPDS {
 
     //**********************************************************************
     public static function write_index_data($paData) {
-        /** @var cObjStoreDB **/
+        /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         foreach ($paData as  $sSol => $aSolData)
             foreach ($aSolData as $sInstr => $aInstrData) {
@@ -65,7 +65,7 @@ class cPDS {
                 } else
                     $aPDSData = $aInstrData;
 
-                /** @var cObjStoreDB **/
+                /** @var cObjStoreDB $oDB **/
                 $oDB = self::$objstoreDB;
                 $oDB->put_oldstyle(self::OBJDATA_TOP_FOLDER . "/$sSol/$sInstr", $sFilename, $aPDSData);
                 cDebug::extra_debug("$sSol/$sInstr lines:" . count($aPDSData));
@@ -74,7 +74,7 @@ class cPDS {
 
     //**********************************************************************
     public static function kill_index_files() {
-        /** @var cObjStoreDB **/
+        /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         $oDB->kill_folder_oldstyle(self::OBJDATA_TOP_FOLDER);
     }

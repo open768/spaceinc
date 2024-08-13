@@ -29,7 +29,7 @@ class cHiRise {
 
     //********************************************************************
     public static function getIntersections($pfLat1, $pfLong1, $pfLat2, $pfLong2) {
-        /** @var cObjStoreDB **/
+        /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         $aHirise = $oDB->get_oldstyle(self::OBJDATA_TOP_FOLDER, cHiRisePDSIndexer::OBSERVATION_FILE);
         if (!$aHirise) cDebug::error("no hirise index found");
@@ -120,7 +120,7 @@ class cHiRisePDSIndexer {
                 $aData[$sID]->merge($aRow);
         }
 
-        /** @var cObjStoreDB **/
+        /** @var cObjStoreDB $oDB **/
         $oDB = cHiRise::$objstoreDB;
         $oDB->put_oldstyle(cHiRise::OBJDATA_TOP_FOLDER, self::OBSERVATION_FILE, $aData);
     }

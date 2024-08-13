@@ -74,7 +74,7 @@ abstract class cRoverManifest {
     function __construct() {
         if (!$this->MISSION) cDebug::error("MISSION not set");
         $sPath = $this->pr__get_manifest_path();
-        /** @var cObjStoreDB **/
+        /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         $this->oSols = $oDB->get($sPath);
         if (!$this->oSols or cDebug::$IGNORE_CACHE) {
@@ -105,7 +105,7 @@ abstract class cRoverManifest {
 
         //check return type 
         if (!$oSols instanceof  cRoverSols) cDebug::error("return from pr_build_manifest must be cRoverSols");
-        /** @var cObjStoreDB **/
+        /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         $oDB->put($sPath, $oSols, true);
         $this->oSols = $oSols;
@@ -115,7 +115,7 @@ abstract class cRoverManifest {
     //# PUBLIC functions
     //#####################################################################
     public function get_details($psSol, $psInstr) {
-        /** @var cObjStoreDB **/
+        /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         $sPath  = $this->MISSION . "/" . cRoverConstants::DETAILS_PATH . "/$psSol/$psInstr";
         $oDetails =  $oDB->get($sPath);

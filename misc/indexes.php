@@ -33,7 +33,7 @@ class cSpaceIndex {
     //********************************************************************
     static function get_top_sol_data($psSuffix) {
         cDebug::enter();
-        /** @var cObjStoreDB **/
+        /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
 
         $sFile = self::get_filename(self::TOP_PREFIX, $psSuffix);
@@ -47,7 +47,7 @@ class cSpaceIndex {
     static function get_sol_data($psSol, $psSuffix) {
         cDebug::enter();
         $sFile = self::get_filename(self::SOL_PREFIX, $psSuffix);
-        /** @var cObjStoreDB **/
+        /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         $oData = $oDB->get_oldstyle($psSol, $sFile);
         cDebug::leave();
@@ -59,7 +59,7 @@ class cSpaceIndex {
     static function get_instr_data($psSol, $psInstrument, $psSuffix) {
         cDebug::enter();
         $sFile = self::get_filename(self::INSTR_PREFIX, $psSuffix);
-        /** @var cObjStoreDB **/
+        /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         $oData = $oDB->get_oldstyle("$psSol/$psInstrument", $sFile);
         cDebug::leave();
@@ -98,7 +98,7 @@ class cSpaceIndex {
     static function update_top_sol_index($psSol, $psSuffix) {
         //cDebug::enter();
         $sFile = self::get_filename(self::TOP_PREFIX, $psSuffix);
-        /** @var cObjStoreDB **/
+        /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         $aData = $oDB->get_oldstyle("", $sFile);
 
@@ -115,7 +115,7 @@ class cSpaceIndex {
     static function update_sol_index($psSol, $psInstrument, $psProduct, $psSuffix) {
         //cDebug::enter();
         $sFile = self::get_filename(self::SOL_PREFIX, $psSuffix);
-        /** @var cObjStoreDB **/
+        /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         $aData = $oDB->get_oldstyle($psSol, $sFile);
         if (!$aData) $aData = [];
@@ -131,7 +131,7 @@ class cSpaceIndex {
         //cDebug::enter();
         $sFile = self::get_filename(self::INSTR_PREFIX, $psSuffix);
         $sFolder = "$psSol/$psInstrument";
-        /** @var cObjStoreDB **/
+        /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         $aData = $oDB->get_oldstyle($sFolder, $sFile);
         if (!$aData) $aData = [];
@@ -188,7 +188,7 @@ class cSpaceIndex {
     public static function write_index_files($paData, $psSuffix) {
         cDebug::enter();
         $aTopSols = [];
-        /** @var cObjStoreDB **/
+        /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         foreach ($paData as  $sSol => $aSolData) {
             $aTopSols[$sSol] = 1;

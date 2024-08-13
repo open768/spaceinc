@@ -75,7 +75,7 @@ abstract class cRoverManifest {
         if (!$this->MISSION) cDebug::error("MISSION not set");
         $sPath = $this->MISSION . "/" . cRoverConstants::MANIFEST_PATH;
 
-        /** @var cObjStoreDB **/
+        /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         $this->oSols = $oDB->get_oldstyle($sPath, cRoverConstants::MANIFEST_FILE);
         if (!$this->oSols) {
@@ -97,7 +97,7 @@ abstract class cRoverManifest {
     public function get_details($psSol, $psInstr) {
         $sPath  = $this->MISSION . "/" . cRoverConstants::DETAILS_PATH . "/$psSol";
 
-        /** @var cObjStoreDB **/
+        /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         $oDetails =  $oDB->get_oldstyle($sPath, $psInstr);
         if ($oDetails) return $oDetails;
@@ -105,7 +105,7 @@ abstract class cRoverManifest {
         //------------------------------------------------------
         cDebug::write("generating details");
         $oDetails = $this->pr_generate_details($psSol, $psInstr);
-        /** @var cObjStoreDB **/
+        /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         $oDB->put_oldstyle($sPath, $psInstr, $oDetails);
         return $oDetails;
