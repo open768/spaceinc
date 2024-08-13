@@ -168,7 +168,12 @@ class cImageHighlight {
     }
 
 
-    //**********************************************************************
+    /**
+     * gets the highlights for all products in the sol
+     * 
+     * @param string $psSol 
+     * @return array
+     */
     static function get_all_highlights($psSol) {
         //get which products have highlights
         cDebug::write("getting highlights for sol $psSol");

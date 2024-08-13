@@ -35,6 +35,7 @@ class cSpaceTags {
     }
 
     //********************************************************************
+    //* TAG Names
     //********************************************************************
     static function get_tag_names($psSol, $psInstrument, $psProduct) {
         cDebug::enter();
@@ -51,6 +52,82 @@ class cSpaceTags {
 
         cDebug::leave();
         return $aKeys;
+    }
+
+    //********************************************************************
+    static function get_top_tag_names() {
+        cDebug::enter();
+        /** @var cObjStoreDB **/
+        $oDB = self::$objstoreDB;
+
+        $aTags = $oDB->get_oldstyle("", self::TOP_TAG_FILE);
+        //cDebug::vardump($aTags);
+        if ($aTags) ksort($aTags);
+        cDebug::leave();
+        return $aTags;
+    }
+
+    //********************************************************************
+    static function kill_tag_name($psTag) {
+        cDebug::enter();
+
+        /** @var cObjStoreDB **/
+        $oDB = self::$objstoreDB;
+
+        //remove entry from top tag file 
+        $aData = $oDB->get_oldstyle("", self::TOP_TAG_FILE);
+        if (isset($aData[$psTag])) {
+            unset($aData[$psTag]);
+            $oDB->put_oldstyle("", self::TOP_TAG_FILE, $aData);
+        } else {
+            cDebug::write("tag not found");
+            return;
+        }
+
+        //remove tag index file 
+        $filename = $psTag . ".txt";
+        $aTags = $oDB->get_oldstyle(self::TAG_FOLDER, $filename);
+        if ($aTags != null)
+            $oDB->kill_oldstyle(self::TAG_FOLDER, $filename);
+        else {
+            cDebug::write("tagindex not found");
+            return;
+        }
+
+        //remove individual tags
+        foreach ($aTags as $sFolder)
+            $oDB->kill_oldstyle($sFolder, self::PROD_TAG_FILE);
+
+        cDebug::leave();
+    }
+
+    //********************************************************************
+    //* TAG counts
+    //********************************************************************
+    static function get_sol_tags($psSol) {
+        cDebug::enter();
+        /** @var cObjStoreDB **/
+        $oDB = self::$objstoreDB;
+
+        $aData =  $oDB->get_oldstyle($psSol, self::SOL_TAG_FILE);
+        cDebug::leave();
+        return $aData;
+    }
+
+    //********************************************************************
+    static function get_sol_tag_count($psSol) {
+        cDebug::enter();
+        /** @var cObjStoreDB **/
+        $oDB = self::$objstoreDB;
+
+        $aData = $oDB->get_oldstyle($psSol, self::SOL_TAG_FILE);
+        $iCount = 0;
+        if ($aData != null)
+            foreach ($aData as $sInstr => $aTags)
+                foreach ($aTags as $oItem)
+                    $iCount++;
+        cDebug::leave();
+        return $iCount;
     }
 
     //********************************************************************
@@ -100,20 +177,9 @@ class cSpaceTags {
         cDebug::leave();
     }
 
-    //********************************************************************
-    static function get_top_tags() {
-        cDebug::enter();
-        /** @var cObjStoreDB **/
-        $oDB = self::$objstoreDB;
-
-        $aTags = $oDB->get_oldstyle("", self::TOP_TAG_FILE);
-        //cDebug::vardump($aTags);
-        if ($aTags) ksort($aTags);
-        cDebug::leave();
-        return $aTags;
-    }
-
-    //********************************************************************
+    //######################################################################
+    //# INDEX functions
+    //######################################################################
     static function get_tag_index($psTag) {
         cDebug::enter();
 
@@ -127,18 +193,6 @@ class cSpaceTags {
         return $aTags;
     }
 
-    //********************************************************************
-    static function get_sol_tags($psSol) {
-        cDebug::enter();
-        /** @var cObjStoreDB **/
-        $oDB = self::$objstoreDB;
-
-        $aData =  $oDB->get_oldstyle($psSol, self::SOL_TAG_FILE);
-        cDebug::leave();
-        return $aData;
-    }
-
-    //********************************************************************
     static function get_top_sol_index() {
         cDebug::enter();
         /** @var cObjStoreDB **/
@@ -150,26 +204,6 @@ class cSpaceTags {
         return $aData;
     }
 
-
-    //********************************************************************
-    static function get_sol_tag_count($psSol) {
-        cDebug::enter();
-        /** @var cObjStoreDB **/
-        $oDB = self::$objstoreDB;
-
-        $aData = $oDB->get_oldstyle($psSol, self::SOL_TAG_FILE);
-        $iCount = 0;
-        if ($aData != null)
-            foreach ($aData as $sInstr => $aTags)
-                foreach ($aTags as $oItem)
-                    $iCount++;
-        cDebug::leave();
-        return $iCount;
-    }
-
-    //######################################################################
-    //# UPDATE functions
-    //######################################################################
     static function update_top_sol_index($psSol) {
         cDebug::enter();
 
@@ -258,7 +292,7 @@ class cSpaceTags {
         $aAllTags = [];
 
         //get all the tags
-        $aTopTags = self::get_top_tags();
+        $aTopTags = self::get_top_tag_names();
         foreach ($aTopTags as $sTag => $iValue) {
             $aTagData = self::get_tag_index($sTag);
             foreach ($aTagData as $sIndex) {
@@ -302,40 +336,6 @@ class cSpaceTags {
         }
         $oDB->put_oldstyle("", self::TOP_SOL_TAG_FILE, $aTopSols);
 
-
-        cDebug::leave();
-    }
-
-    //********************************************************************
-    static function kill_tag($psTag) {
-        cDebug::enter();
-
-        /** @var cObjStoreDB **/
-        $oDB = self::$objstoreDB;
-
-        //remove entry from top tag file 
-        $aData = $oDB->get_oldstyle("", self::TOP_TAG_FILE);
-        if (isset($aData[$psTag])) {
-            unset($aData[$psTag]);
-            $oDB->put_oldstyle("", self::TOP_TAG_FILE, $aData);
-        } else {
-            cDebug::write("tag not found");
-            return;
-        }
-
-        //remove tag index file 
-        $filename = $psTag . ".txt";
-        $aTags = $oDB->get_oldstyle(self::TAG_FOLDER, $filename);
-        if ($aTags != null)
-            $oDB->kill_oldstyle(self::TAG_FOLDER, $filename);
-        else {
-            cDebug::write("tagindex not found");
-            return;
-        }
-
-        //remove individual tags
-        foreach ($aTags as $sFolder)
-            $oDB->kill_oldstyle($sFolder, self::PROD_TAG_FILE);
 
         cDebug::leave();
     }
