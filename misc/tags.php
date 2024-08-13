@@ -79,7 +79,7 @@ class cSpaceTags {
         $oDB = self::$objstoreDB;
 
         //remove entry from top tag file 
-        $aData = $oDB->get_oldstyle("", self::TOP_TAG_FILE);
+        $aData = self::get_top_tag_names();
         if (isset($aData[$psTag])) {
             unset($aData[$psTag]);
             $oDB->put_oldstyle("", self::TOP_TAG_FILE, $aData);
@@ -161,17 +161,10 @@ class cSpaceTags {
         $sFolder = self::pr__get_product_tag_folder_name($psSol, $psInstrument, $psProduct);
         $oDB->put_oldstyle($sFolder, self::PRODUCT_TAG_FILE, $aData);
 
-        //now update the top_index
-        self::update_top_name_index($psTag);
-
         //mark this sol as tagged
-        self::update_top_sol_index($psSol);
         self::update_sol_index($psSol, $psInstrument, $psProduct, $psTag);
-        self::update_instr_index($psSol, $psInstrument, $psProduct, $psTag);
 
 
-        //and update the index for the image
-        self::update_tag_index($psTag, $sFolder);
         cDebug::leave();
     }
 
@@ -206,12 +199,13 @@ class cSpaceTags {
         cDebug::enter();
 
         /** @var cObjStoreDB $oDB **/
-        $oDB = self::$objstoreDB;
-        $aData = $oDB->get_oldstyle("", self::TOP_SOL_TAG_FILE);
+        $aData = self::get_top_sol_index();
+
         if (!$aData) $aData = [];
         if (!isset($aData[$psSol])) {
             $aData[$psSol] = 1;
             cDebug::write("updating top sol index for sol $psSol");
+            $oDB = self::$objstoreDB;
             $oDB->put_oldstyle("", self::TOP_SOL_TAG_FILE, $aData);
         }
         cDebug::leave();
@@ -220,14 +214,20 @@ class cSpaceTags {
     //********************************************************************
     static function update_sol_index($psSol, $psInstrument, $psProduct, $psTag) {
         cDebug::enter();
-
         /** @var cObjStoreDB $oDB **/
-        $oDB = self::$objstoreDB;
-        $aData = $oDB->get_oldstyle($psSol, self::SOL_TAG_FILE);
+        $aData = self::get_sol_tags($psSol);
         if (!$aData) $aData = [];
         if (!isset($aData[$psInstrument])) $aData[$psInstrument] = [];
         $aData[$psInstrument][] = ["p" => $psProduct, "t" => $psTag];
+        $oDB = self::$objstoreDB;
         $oDB->put_oldstyle($psSol, self::SOL_TAG_FILE, $aData);
+
+        //update other indexes
+        self::update_top_name_index($psTag);
+        self::update_top_sol_index($psSol);
+        self::update_instr_index($psSol, $psInstrument, $psProduct, $psTag);
+        $sFolder = self::pr__get_product_tag_folder_name($psSol, $psInstrument, $psProduct);
+        self::update_tag_index($psTag, $sFolder);
         cDebug::leave();
     }
 
@@ -276,11 +276,9 @@ class cSpaceTags {
         cDebug::enter();
 
         cDebug::write("updating index for tag : $psTag");
-        /** @var cObjStoreDB $oDB **/
-        $oDB = self::$objstoreDB;
 
         // get the existing tags
-        $aData = $oDB->get_oldstyle("", self::TOP_TAG_FILE);
+        $aData = self::get_top_tag_names();
         if (!$aData) $aData = [];
 
         //update the count
@@ -291,6 +289,8 @@ class cSpaceTags {
         //cDebug::vardump($aData);
 
         //write out the data
+        /** @var cObjStoreDB $oDB **/
+        $oDB = self::$objstoreDB;
         $oDB->put_oldstyle("", self::TOP_TAG_FILE, $aData);
         cDebug::leave();
     }
