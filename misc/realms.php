@@ -14,6 +14,7 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 
 class cSpaceRealms {
     const IMAGE_HIGHLIGHT = "PICHI";
+    const MOSAICS = "PICHI";    //same as highlights
     const COMMENTS = "COMMENTS";
     const TAGS = "TAGS";
     const PDS = "PDS";

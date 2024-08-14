@@ -19,17 +19,156 @@ require_once  "$phpInc/ckinc/http.php";
 require_once  "$phpInc/ckinc/hash.php";
 require_once  "$spaceInc/curiosity/curiosity.php";
 
+//###############################################################
+class cSpaceImageMosaic {
+    const MOSAIC_COUNT_FILENAME = "[moscount].txt";
+    const MOSAIC_FOLDER = "images/[mosaics]";
+    const MOSAIC_WIDTH = 8;
+    const BORDER_WIDTH = 5;
+
+    private static $objstoreDB = null;
+
+
+    //********************************************************************
+    static function init_obj_store_db() {
+        if (!self::$objstoreDB)
+            self::$objstoreDB = new cObjStoreDB(cSpaceRealms::MOSAICS);
+    }
+
+    //********************************************************************
+    static function get_mosaic_sol_highlight_count($psSol) {
+        /** @var cObjStoreDB $oDB **/
+        $oDB = self::$objstoreDB;
+        $iCount = $oDB->get_oldstyle($psSol, self::MOSAIC_COUNT_FILENAME);
+
+        if ($iCount == null) $iCount = 0;
+        return $iCount;
+    }
+    //**********************************************************************
+    static private function pr_put_mosaic_sol_hilight_count($psSol, $piCount) {
+        /** @var cObjStoreDB $oDB **/
+        $oDB = self::$objstoreDB;
+        $oDB->put_oldstyle($psSol, self::MOSAIC_COUNT_FILENAME, $piCount);
+        cSpaceIndex::update_top_sol_index($psSol, cSpaceIndex::MOSAIC_SUFFIX);
+    }
+
+    //**********************************************************************
+    static private function pr_generate_mosaic($psSol, $paData) {
+        global $root;
+        $aImgList = [];
+
+        //first make sure all the thumbnails are actually there
+        foreach ($paData as $sInstr => $aInstrData) {
+            cDebug::write("processing thumbs for $sInstr");
+            foreach ($aInstrData as $sProd => $sProdData) {
+                try {
+                    $aData = cSpaceImageHighlight::get_thumbs($psSol, $sInstr, $sProd);
+                } catch (Exception $e) {
+                    continue;
+                }
+                foreach ($aData["u"] as $sPath)
+                    $aImgList[] = $sPath;
+            }
+        }
+
+        //the folder has to be there 
+        $sFolder = $root . "/" . self::MOSAIC_FOLDER;
+        if (!file_exists($sFolder)) {
+            cDebug::write("creating folder: $sFolder");
+            mkdir($sFolder, 0755, true); //folder needs to readable by apache
+        }
+
+        //now combine the highlights into a single mosaic
+        $iCount = count($aImgList);
+        cDebug::write("combining $iCount thumbnails");
+        $iRows = ceil($iCount / self::MOSAIC_WIDTH);
+        cDebug::write("into a Mosaic with size " . self::MOSAIC_WIDTH . " x $iRows");
+        $iWidth = self::BORDER_WIDTH + self::MOSAIC_WIDTH * (cSpaceImageHighlight::CROP_WIDTH + self::BORDER_WIDTH);
+        $iHeight = self::BORDER_WIDTH + $iRows * (cSpaceImageHighlight::CROP_HEIGHT + self::BORDER_WIDTH);
+
+        $oDest = imagecreatetruecolor($iWidth, $iHeight);
+
+        $iRow = 0;
+        $iCol = 0;
+        $iX = self::BORDER_WIDTH;
+        $iY = self::BORDER_WIDTH;
+
+        for ($i = 0; $i < $iCount; $i++) {
+            //load the original image
+            $sThumbFilename = $root . "/" . $aImgList[$i];
+            if (!file_exists($sThumbFilename)) continue;
+
+            $oThumbImg = imagecreatefromjpeg($sThumbFilename);
+
+            //copy it into the mosaic
+            //cDebug::write("copying image into $iX, $iY");
+            imagecopy($oDest, $oThumbImg, $iX, $iY, 0, 0,  cSpaceImageHighlight::CROP_WIDTH, cSpaceImageHighlight::CROP_HEIGHT);
+
+            //next
+            imagedestroy($oThumbImg);
+            $iCol++;
+            $iX += (self::BORDER_WIDTH + cSpaceImageHighlight::CROP_WIDTH);
+            if ($iCol >= self::MOSAIC_WIDTH) {
+                $iRow++;
+                $iCol = 0;
+                $iX = self::BORDER_WIDTH;
+                $iY += (self::BORDER_WIDTH + cSpaceImageHighlight::CROP_HEIGHT);
+            }
+        }
+
+        //write out the results
+        $sImageFile = self::MOSAIC_FOLDER . "/$psSol.jpg";
+        $sReal = "$root/$sImageFile";
+        imagejpeg($oDest, $sReal, cSpaceImageHighlight::THUMB_QUALITY);
+        imagedestroy($oDest);
+
+        return $sImageFile;
+    }
+
+    //**********************************************************************
+    static function get_sol_high_mosaic($psSol) {
+        global $root;
+
+        $oData = cSpaceImageHighlight::get_all_highlights($psSol);
+        $iCount = cSpaceImageHighlight::count_highlights($oData);
+        cDebug::write("there were $iCount highlights");
+        if ($iCount == 0) {
+            cDebug::write("no highlights to create a mosaic from");
+            return null;
+        }
+
+        //------------------------------------------------------------------
+        //does the count match what is stored - in that case the mosaic has allready been produced
+        $iStoredCount = self::get_mosaic_sol_highlight_count($psSol);
+        if ($iStoredCount != $iCount) {
+            cDebug::write("but only $iStoredCount were previously known");
+            //generate the mosaic
+            $sMosaic = self::pr_generate_mosaic($psSol, $oData);
+
+            //write out the count 
+            self::pr_put_mosaic_sol_hilight_count($psSol, $iCount);
+        }
+
+        //------------------------------------------------------------------
+        $sMosaicFile = self::MOSAIC_FOLDER . "/$psSol.jpg";
+        if (!file_exists("$root/$sMosaicFile")) {
+            cDebug::write("regenerating missing mosaic file");
+            $sMosaic = self::pr_generate_mosaic($psSol, $oData);
+        }
+
+
+        return self::MOSAIC_FOLDER . "/$psSol.jpg";
+    }
+}
+
+//###############################################################
 class cSpaceImageHighlight {
     const IMGHIGH_FILENAME = "[imgbox].txt";
-    const MOSAIC_COUNT_FILENAME = "[moscount].txt";
     const THUMBS_FILENAME = "[thumbs].txt";
     const THUMBS_FOLDER = "images/[highs]/";
-    const MOSAIC_FOLDER = "images/[mosaics]";
     const CROP_WIDTH = 120;
     const CROP_HEIGHT = 120;
-    const BORDER_WIDTH = 5;
     const THUMB_QUALITY = 90;
-    const MOSAIC_WIDTH = 8;
     private static $objstoreDB = null;
 
 
@@ -194,7 +333,7 @@ class cSpaceImageHighlight {
     }
 
     //**********************************************************************
-    static private function pr_count_highlights($paData) {
+    static function count_highlights($paData) {
         $iCount = 0;
 
         if ($paData == null)     return 0;
@@ -229,131 +368,6 @@ class cSpaceImageHighlight {
     //######################################################################
     //# MOSAIC functions
     //######################################################################
-    static function get_mosaic_sol_highlight_count($psSol) {
-        /** @var cObjStoreDB $oDB **/
-        $oDB = self::$objstoreDB;
-        $iCount = $oDB->get_oldstyle($psSol, self::MOSAIC_COUNT_FILENAME);
-
-        if ($iCount == null) $iCount = 0;
-        return $iCount;
-    }
-    //**********************************************************************
-    static private function pr_put_mosaic_sol_hilight_count($psSol, $piCount) {
-        /** @var cObjStoreDB $oDB **/
-        $oDB = self::$objstoreDB;
-        $oDB->put_oldstyle($psSol, self::MOSAIC_COUNT_FILENAME, $piCount);
-        cSpaceIndex::update_top_sol_index($psSol, cSpaceIndex::MOSAIC_SUFFIX);
-    }
-
-    //**********************************************************************
-    static private function pr_generate_mosaic($psSol, $paData) {
-        global $root;
-        $aImgList = [];
-
-        //first make sure all the thumbnails are actually there
-        foreach ($paData as $sInstr => $aInstrData) {
-            cDebug::write("processing thumbs for $sInstr");
-            foreach ($aInstrData as $sProd => $sProdData) {
-                try {
-                    $aData = self::get_thumbs($psSol, $sInstr, $sProd);
-                } catch (Exception $e) {
-                    continue;
-                }
-                foreach ($aData["u"] as $sPath)
-                    $aImgList[] = $sPath;
-            }
-        }
-
-        //the folder has to be there 
-        $sFolder = $root . "/" . self::MOSAIC_FOLDER;
-        if (!file_exists($sFolder)) {
-            cDebug::write("creating folder: $sFolder");
-            mkdir($sFolder, 0755, true); //folder needs to readable by apache
-        }
-
-        //now combine the highlights into a single mosaic
-        $iCount = count($aImgList);
-        cDebug::write("combining $iCount thumbnails");
-        $iRows = ceil($iCount / self::MOSAIC_WIDTH);
-        cDebug::write("into a Mosaic with size " . self::MOSAIC_WIDTH . " x $iRows");
-        $iWidth = self::BORDER_WIDTH + self::MOSAIC_WIDTH * (self::CROP_WIDTH + self::BORDER_WIDTH);
-        $iHeight = self::BORDER_WIDTH + $iRows * (self::CROP_HEIGHT + self::BORDER_WIDTH);
-
-        $oDest = imagecreatetruecolor($iWidth, $iHeight);
-
-        $iRow = 0;
-        $iCol = 0;
-        $iX = self::BORDER_WIDTH;
-        $iY = self::BORDER_WIDTH;
-
-        for ($i = 0; $i < $iCount; $i++) {
-            //load the original image
-            $sThumbFilename = $root . "/" . $aImgList[$i];
-            if (!file_exists($sThumbFilename)) continue;
-
-            $oThumbImg = imagecreatefromjpeg($sThumbFilename);
-
-            //copy it into the mosaic
-            //cDebug::write("copying image into $iX, $iY");
-            imagecopy($oDest, $oThumbImg, $iX, $iY, 0, 0,  self::CROP_WIDTH, self::CROP_HEIGHT);
-
-            //next
-            imagedestroy($oThumbImg);
-            $iCol++;
-            $iX += (self::BORDER_WIDTH + self::CROP_WIDTH);
-            if ($iCol >= self::MOSAIC_WIDTH) {
-                $iRow++;
-                $iCol = 0;
-                $iX = self::BORDER_WIDTH;
-                $iY += (self::BORDER_WIDTH + self::CROP_HEIGHT);
-            }
-        }
-
-        //write out the results
-        $sImageFile = self::MOSAIC_FOLDER . "/$psSol.jpg";
-        $sReal = "$root/$sImageFile";
-        imagejpeg($oDest, $sReal, self::THUMB_QUALITY);
-        imagedestroy($oDest);
-
-        return $sImageFile;
-    }
-
-    //**********************************************************************
-    static function get_sol_high_mosaic($psSol) {
-        global $root;
-
-        $oData = self::get_all_highlights($psSol);
-        $iCount = self::pr_count_highlights($oData);
-        cDebug::write("there were $iCount highlights");
-        if ($iCount == 0) {
-            cDebug::write("no highlights to create a mosaic from");
-            return null;
-        }
-
-        //------------------------------------------------------------------
-        //does the count match what is stored - in that case the mosaic has allready been produced
-        $iStoredCount = self::get_mosaic_sol_highlight_count($psSol);
-        if ($iStoredCount != $iCount) {
-            cDebug::write("but only $iStoredCount were previously known");
-            //generate the mosaic
-            $sMosaic = self::pr_generate_mosaic($psSol, $oData);
-
-            //write out the count 
-            self::pr_put_mosaic_sol_hilight_count($psSol, $iCount);
-        }
-
-        //------------------------------------------------------------------
-        $sMosaicFile = self::MOSAIC_FOLDER . "/$psSol.jpg";
-        if (!file_exists("$root/$sMosaicFile")) {
-            cDebug::write("regenerating missing mosaic file");
-            $sMosaic = self::pr_generate_mosaic($psSol, $oData);
-        }
-
-
-        return self::MOSAIC_FOLDER . "/$psSol.jpg";
-    }
-
-
     //######################################################################
     //# UPDATE functions
     //######################################################################

@@ -15,56 +15,18 @@ require_once  "$phpInc/ckinc/objstoredb.php";
 require_once  "$spaceInc/misc/realms.php";
 
 
-class cSpaceTags {
-    const TOP_TAG_FILE = "[top].txt";
-    const TOP_SOL_TAG_FILE = "[solstag].txt";
-    const SOL_TAG_FILE = "[soltag].txt";
-    const INSTR_TAG_FILE = "[instrtag].txt";
-    const PRODUCT_TAG_FILE = "[tag].txt";
+//#############################################################################
+class cSpaceTagNames {
+    const TOP_TAG_NAME_FILE = "[top].txt";
     const TAG_FOLDER = "[tags]";
-    const RECENT_TAG = "TAG";
-    private static $objstoreDB = null;
-
-
-    //********************************************************************
-    //* objdb stuff
-    //********************************************************************
-    static function init_obj_store_db() {
-        if (!self::$objstoreDB)
-            self::$objstoreDB = new cObjStoreDB(cSpaceRealms::TAGS);
-    }
-
-    private static function pr__get_product_tag_folder_name($psSol, $psInstrument, $psProduct) {
-        return "$psSol/$psInstrument/$psProduct";
-    }
-
-    //********************************************************************
-    //* TAG Names
-    //********************************************************************
-    static function get_product_tags($psSol, $psInstrument, $psProduct) {
-        cDebug::enter();
-
-        /** @var cObjStoreDB $oDB **/
-        $oDB = self::$objstoreDB;
-        $sFolder = self::pr__get_product_tag_folder_name($psSol, $psInstrument, $psProduct);
-        $aTags = $oDB->get_oldstyle($sFolder, self::PRODUCT_TAG_FILE);
-        if (!$aTags) $aTags = [];
-
-        $aKeys = [];
-        foreach ($aTags as $sKey => $oValue)
-            array_push($aKeys, $sKey);
-
-        cDebug::leave();
-        return $aKeys;
-    }
 
     //********************************************************************
     static function get_top_tag_names() {
         cDebug::enter();
         /** @var cObjStoreDB $oDB **/
-        $oDB = self::$objstoreDB;
+        $oDB = cSpaceTags::$objstoreDB;
 
-        $aTags = $oDB->get_oldstyle("", self::TOP_TAG_FILE);
+        $aTags = $oDB->get_oldstyle("", self::TOP_TAG_NAME_FILE);
         //cDebug::vardump($aTags);
         if ($aTags) ksort($aTags);
         cDebug::leave();
@@ -76,13 +38,13 @@ class cSpaceTags {
         cDebug::enter();
 
         /** @var cObjStoreDB $oDB **/
-        $oDB = self::$objstoreDB;
+        $oDB = cSpaceTags::$objstoreDB;
 
         //remove entry from top tag file 
         $aData = self::get_top_tag_names();
         if (isset($aData[$psTag])) {
             unset($aData[$psTag]);
-            $oDB->put_oldstyle("", self::TOP_TAG_FILE, $aData);
+            $oDB->put_oldstyle("", self::TOP_TAG_NAME_FILE, $aData);
         } else {
             cDebug::write("tag not found");
             return;
@@ -100,9 +62,100 @@ class cSpaceTags {
 
         //remove individual tags
         foreach ($aTags as $sFolder)
-            $oDB->kill_oldstyle($sFolder, self::PRODUCT_TAG_FILE);
+            $oDB->kill_oldstyle($sFolder, cSpaceTags::PRODUCT_TAG_FILE);
 
         cDebug::leave();
+    }
+
+    //********************************************************************
+    static function update_top_name_index($psTag) {
+        cDebug::enter();
+
+        cDebug::write("updating index for tag : $psTag");
+
+        // get the existing tags
+        $aData = self::get_top_tag_names();
+        if (!$aData) $aData = [];
+
+        //update the count
+        $count = 0;
+        if (isset($aData[$psTag])) $count = $aData[$psTag];
+        $count++;
+        $aData[$psTag] = $count;
+        //cDebug::vardump($aData);
+
+        //write out the data
+        /** @var cObjStoreDB $oDB **/
+        $oDB = cSpaceTags::$objstoreDB;
+        $oDB->put_oldstyle("", self::TOP_TAG_NAME_FILE, $aData);
+        cDebug::leave();
+    }
+    //********************************************************************
+    static function get_tag_name_index($psTag) {
+        cDebug::enter();
+
+        $filename = $psTag . ".txt";
+        /** @var cObjStoreDB $oDB **/
+        $oDB = cSpaceTags::$objstoreDB;
+
+        $aTags = $oDB->get_oldstyle(self::TAG_FOLDER, $filename);
+        cDebug::leave();
+        if ($aTags) sort($aTags);
+        return $aTags;
+    }
+    //********************************************************************
+    static function update_tag_name_index($psTag, $psSol, $psInstrument, $psProduct) {
+        cDebug::enter();
+        $sFolder = cSpaceTags::get_product_tag_folder_name($psSol, $psInstrument, $psProduct);
+        $filename = $psTag . ".txt";
+        /** @var cObjStoreDB $oDB **/
+        $oDB = cSpaceTags::$objstoreDB;
+        $oDB->add_to_array_oldstyle(self::TAG_FOLDER, $filename, $sFolder);
+        cDebug::leave();
+    }
+}
+
+//#############################################################################
+class cSpaceTags {
+    const TOP_SOL_TAG_FILE = "[solstag].txt";
+    const SOL_TAG_FILE = "[soltag].txt";
+    const INSTR_TAG_FILE = "[instrtag].txt";
+    const PRODUCT_TAG_FILE = "[tag].txt";
+    const RECENT_TAG = "TAG";
+    static $objstoreDB = null;
+
+
+    //********************************************************************
+    //* objdb stuff
+    //********************************************************************
+    static function init_obj_store_db() {
+        if (!self::$objstoreDB)
+            self::$objstoreDB = new cObjStoreDB(cSpaceRealms::TAGS);
+    }
+
+
+    //********************************************************************
+    //* TAG Names
+    //********************************************************************
+    static function get_product_tag_folder_name($psSol, $psInstrument, $psProduct) {
+        return "$psSol/$psInstrument/$psProduct";
+    }
+
+    static function get_product_tags($psSol, $psInstrument, $psProduct) {
+        cDebug::enter();
+
+        /** @var cObjStoreDB $oDB **/
+        $oDB = self::$objstoreDB;
+        $sFolder = self::get_product_tag_folder_name($psSol, $psInstrument, $psProduct);
+        $aTags = $oDB->get_oldstyle($sFolder, self::PRODUCT_TAG_FILE);
+        if (!$aTags) $aTags = [];
+
+        $aKeys = [];
+        foreach ($aTags as $sKey => $oValue)
+            array_push($aKeys, $sKey);
+
+        cDebug::leave();
+        return $aKeys;
     }
 
     //********************************************************************
@@ -158,7 +211,7 @@ class cSpaceTags {
         //put the file back
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
-        $sFolder = self::pr__get_product_tag_folder_name($psSol, $psInstrument, $psProduct);
+        $sFolder = self::get_product_tag_folder_name($psSol, $psInstrument, $psProduct);
         $oDB->put_oldstyle($sFolder, self::PRODUCT_TAG_FILE, $aData);
 
         //mark this sol as tagged
@@ -171,18 +224,6 @@ class cSpaceTags {
     //######################################################################
     //# INDEX functions
     //######################################################################
-    static function get_tag_name_index($psTag) {
-        cDebug::enter();
-
-        $filename = $psTag . ".txt";
-        /** @var cObjStoreDB $oDB **/
-        $oDB = self::$objstoreDB;
-
-        $aTags = $oDB->get_oldstyle(self::TAG_FOLDER, $filename);
-        cDebug::leave();
-        if ($aTags) sort($aTags);
-        return $aTags;
-    }
 
     static function get_top_sol_index() {
         cDebug::enter();
@@ -223,14 +264,14 @@ class cSpaceTags {
         $oDB->put_oldstyle($psSol, self::SOL_TAG_FILE, $aData);
 
         //update other indexes
-        self::update_top_name_index($psTag);
+        cSpaceTagNames::update_top_name_index($psTag);
         self::update_top_sol_index($psSol);
         self::update_instr_index($psSol, $psInstrument, $psProduct, $psTag);
-        $sFolder = self::pr__get_product_tag_folder_name($psSol, $psInstrument, $psProduct);
-        self::update_tag_index($psTag, $sFolder);
+        cSpaceTagNames::update_tag_name_index($psTag, $psSol, $psInstrument, $psProduct);
         cDebug::leave();
     }
 
+    //********************************************************************
     private static function get_instr_folder($psSol, $psInstrument) {
         return "$psSol/$psInstrument";
     }
@@ -257,41 +298,6 @@ class cSpaceTags {
         if (!isset($aData[$psProduct])) $aData[$psProduct] = [];
         $aData[$psProduct][] = $psTag;
         $oDB->put_oldstyle($sFolder, self::INSTR_TAG_FILE, $aData);
-        cDebug::leave();
-    }
-
-    //********************************************************************
-    static function update_tag_index($psTag, $psValue) {
-        cDebug::enter();
-
-        $filename = $psTag . ".txt";
-        /** @var cObjStoreDB $oDB **/
-        $oDB = self::$objstoreDB;
-        $oDB->add_to_array_oldstyle(self::TAG_FOLDER, $filename, $psValue);
-        cDebug::leave();
-    }
-
-    //********************************************************************
-    static function update_top_name_index($psTag) {
-        cDebug::enter();
-
-        cDebug::write("updating index for tag : $psTag");
-
-        // get the existing tags
-        $aData = self::get_top_tag_names();
-        if (!$aData) $aData = [];
-
-        //update the count
-        $count = 0;
-        if (isset($aData[$psTag])) $count = $aData[$psTag];
-        $count++;
-        $aData[$psTag] = $count;
-        //cDebug::vardump($aData);
-
-        //write out the data
-        /** @var cObjStoreDB $oDB **/
-        $oDB = self::$objstoreDB;
-        $oDB->put_oldstyle("", self::TOP_TAG_FILE, $aData);
         cDebug::leave();
     }
 }
