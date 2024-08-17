@@ -37,11 +37,13 @@ class cSpaceImageMosaic {
 
     //********************************************************************
     static function get_mosaic_sol_highlight_count($psSol) {
+        cDebug::enter();
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         $iCount = $oDB->get_oldstyle($psSol, self::MOSAIC_COUNT_FILENAME);
 
         if ($iCount == null) $iCount = 0;
+        cDebug::leave();
         return $iCount;
     }
     //**********************************************************************
@@ -160,6 +162,7 @@ class cSpaceImageMosaic {
         return self::MOSAIC_FOLDER . "/$psSol.jpg";
     }
 }
+cSpaceImageMosaic::init_obj_store_db();
 
 //###############################################################
 class cSpaceImageHighlight {
