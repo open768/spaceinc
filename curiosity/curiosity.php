@@ -18,22 +18,24 @@ require_once  "$spaceInc/missions/mission.php";
 require_once  "$spaceInc/curiosity/instrument.php";
 require_once  "$spaceInc/curiosity/static.php";
 require_once  "$spaceInc/curiosity/curiositypds.php";
+require_once  "$spaceInc/curiosity/manifest.php";
 
 
 //##########################################################################
 class cCuriosity implements iMission {
-    const SOL_URL = "https://mars.jpl.nasa.gov/msl-raw-images/image/images_sol";
-    const FEED_URL = "https://mars.jpl.nasa.gov/msl-raw-images/image/image_manifest.json";
     const PDS_VOLUMES = "http://pds-imaging.jpl.nasa.gov/volumes/msl.html";
-    const SOL_CACHE = 604800;    //1 week
     const ALL_INSTRUMENTS = "All";
-    const MANIFEST_CACHE = 3600;    //1 hour
     const LOCAL_THUMB_FOLDER = "images/thumbs";
     const THUMBNAIL_QUALITY = 90;
     const THUMBNAIL_HEIGHT = 120;
 
     private static $Instruments, $instrument_map;
 
+
+    //*****************************************************************************
+    public static function getAllSolData($psSol) {
+        return cCuriosityManifest::getAllSolData($psSol);
+    }
 
     //*****************************************************************************
     public static function search_product($psSearch) {
@@ -192,31 +194,7 @@ class cCuriosity implements iMission {
         return $aData;
     }
 
-    //*****************************************************************************
-    public static function getAllSolData($psSol) {
-        cDebug::enter();
 
-        $sUrl = self::SOL_URL . "{$psSol}.json";
-        cDebug::write("Getting all sol data from: " . $sUrl);
-        $oCache = new cCachedHttp();
-        $oCache->CACHE_EXPIRY = self::SOL_CACHE;
-
-        $oResult = $oCache->getCachedJson($sUrl);
-        cDebug::leave();
-        return $oResult;
-    }
-
-    //*****************************************************************************
-    public static function clearSolDataCache($psSol) {
-        cDebug::enter();
-
-        cDebug::write("clearing sol cache : " . $psSol);
-        $oCache = new cCachedHttp();
-        $sUrl = self::SOL_URL . "{$psSol}.json";
-        $oCache->deleteCachedURL($sUrl);
-
-        cDebug::leave();
-    }
 
     //*****************************************************************************
     public static function getAllSolThumbs($psSol) {
@@ -256,26 +234,13 @@ class cCuriosity implements iMission {
         return $oData;
     }
 
-    //*****************************************************************************
-    private static function pr_getManifest() {
-        $oResult = null;
-        cDebug::enter();
-
-        cDebug::write("Getting sol manifest from: " . self::FEED_URL);
-        $oCache = new cCachedHttp();
-        $oCache->CACHE_EXPIRY = self::MANIFEST_CACHE;
-
-        $oResult = $oCache->getCachedJson(self::FEED_URL);
-        cDebug::leave();
-        return $oResult;
-    }
 
     //*****************************************************************************
     public static function getSolList() {
         cDebug::enter();
 
         //get the manifest
-        $oManifest = self::pr_getManifest();
+        $oManifest = cCuriosityManifest::getManifest();
         $aSols = $oManifest->sols;
         $aData = [];
 
