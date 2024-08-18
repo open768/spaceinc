@@ -13,22 +13,26 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
  **************************************************************************/
 
 class cSpaceRealms {
-    const IMAGE_HIGHLIGHT = "PICHI";
-    const MOSAICS = "PICHI";    //same as highlights
     const COMMENTS = "COMMENTS";
-    const TAGS = "TAGS";
+    const IMAGE_HIGHLIGHT = "PICHI";
+    const INDEXES = "INDEX";
+    const LOCATIONS = "ROVERLOC";
+    const MOSAICS = "PICHI";    //same as highlights
+    const NEVILLE = "PENCILNEV";
     const PDS = "PDS";
     const ROVER_MANIFEST = "ROVMA";
-    const INDEXES = "INDEX";
-    const NEVILLE = "PENCILNEV";
-    const LOCATIONS = "ROVERLOC";
     const ROVER_MISSION = "ROVERMIS";
+    const TAGS = "TAGS";
 }
 
 class cSpaceTables {
-    const LOCATIONS = "Locations";
-    const ROVER_MANIFEST = "ROVERMAN";
-    const ROVER = "ROVER";
-    const PDS = "PDS";
     const INDEX = "INDEX";
+    const LOCATIONS = "Locations";
+    const PDS = "PDS";
+    const ROVER = "ROVER";
+    const ROVER_MANIFEST = "ROVERMAN";
+}
+
+class cSpaceMissions {
+    const CURIOSITY = "MSL";
 }
