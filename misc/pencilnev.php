@@ -14,11 +14,9 @@ class cPencilNev {
     //********************************************************************
     //********************************************************************
     static function init_obj_store_db() {
-        cDebug::enter();
         if (self::$objstoreDB == null) {
             self::$objstoreDB = new cObjStoreDB(cSpaceRealms::NEVILLE);
         }
-        cDebug::leave();
     }
 
     //***********************************************************************************************

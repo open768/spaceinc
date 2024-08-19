@@ -18,11 +18,9 @@ class cSpaceIndex {
     //********************************************************************
     //********************************************************************
     static function init_obj_store_db() {
-        cDebug::enter();
         if (self::$objstoreDB == null) {
             self::$objstoreDB = new cObjStoreDB(cSpaceRealms::INDEXES, cSpaceTables::INDEX);
         }
-        cDebug::leave();
     }
 
     //********************************************************************
