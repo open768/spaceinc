@@ -132,8 +132,6 @@ class cCuriosityManifestIndex {
             $oDB->put(self::INDEXING_STATUS, $sSol, true);
         }
         cDebug::write("done");
-        cDebug::on(true);
-        self::random_mastcam_image();
         cDebug::leave();
     }
 
@@ -167,28 +165,39 @@ class cCuriosityManifestIndex {
     }
 
     //******************************************************************************************* */
-    static function random_mastcam_image() {
+    /**
+     * returns a random image
+     * @todo doesnt return multiple images
+     * @param string $sIntrumentPattern 
+     * @param int $piHowmany 
+     * @return array
+     */
+    static function random_images(string $sIntrumentPattern, int $piHowmany) {
         cDebug::enter();
-        $sSQL = "SELECT :m_col,:s_col,:i_col,:p_col from ':table' WHERE :m_col=:name AND  :i_col like :pattern  order by RANDOM() limit 1";
+
+        //----------------prepare statement
+        $sSQL = "SELECT :m_col,:s_col,:i_col,:p_col FROM ':table' WHERE ( :m_col=:name AND  :i_col LIKE :pattern )  ORDER BY RANDOM() LIMIT :count";
         $sSQL = str_replace(":table", self::MANIFEST_TABLE, $sSQL);
         $sSQL = str_replace(":m_col", self::COL_MISSION, $sSQL);
         $sSQL = str_replace(":s_col", self::COL_SOL, $sSQL);
         $sSQL = str_replace(":i_col", self::COL_INSTR, $sSQL);
         $sSQL = str_replace(":p_col", self::COL_PRODUCT, $sSQL);
+        $sSQL = str_replace(":count", $piHowmany, $sSQL);
 
         $oSqlDB = self::$oSQLDB;
         $oStmt = $oSqlDB->prepare($sSQL);
         $oStmt->bindValue(":name", cSpaceMissions::CURIOSITY);
-        $oStmt->bindValue(":pattern", "MAST_%");
+        $oStmt->bindValue(":pattern", $sIntrumentPattern);
         $sSQL = $oStmt->getSQL(true);
         cDebug::extra_debug("SQL: $sSQL");
 
         $oResultSet = $oSqlDB->exec_stmt($oStmt); //handles retries and errors
+
+        //----------------fetch results
         $aResults = $oResultSet->fetchArray();
-        cDebug::vardump($aResults);
 
         cDebug::leave();
-        return $oResultSet;
+        return $aResults;
     }
 }
 cCuriosityManifestIndex::init_db();
