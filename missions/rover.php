@@ -16,11 +16,30 @@ require_once  "$phpInc/ckinc/http.php";
 require_once  "$phpInc/ckinc/objstoredb.php";
 require_once  "$spaceInc/misc/realms.php";
 
+//#################################################################################
 class cRoverConstants {
     const MANIFEST_PATH = "[manifest]";
     const DETAILS_PATH = "[details]";
     const MANIFEST_FILE = "manifest";
     const SOLS_FILE = "sols";
+}
+
+//#################################################################################
+class cRoverManifestImage {
+    public $m = null;   //mission
+    public $s = null;   //sol
+    public $i = null;   //instrument
+    public $p = null;   //product
+    public $d = null;    //data
+
+    //************************************************************* */
+    function __construct($psMission, $psSol, $psInstrument, $psProduct, $poData = null) {
+        $this->m = $psMission;
+        $this->s = $psSol;
+        $this->i = $psInstrument;
+        $this->p = $psProduct;
+        $this->d = $poData;
+    }
 }
 
 //#####################################################################

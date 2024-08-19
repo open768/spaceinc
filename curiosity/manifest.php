@@ -8,9 +8,12 @@ Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International Licen
 http://creativecommons.org/licenses/by-nc-nd/4.0/legalcode
 
 For licenses that allow for commercial use please contact cluck@chickenkatsu.co.uk
-
 // USE AT YOUR OWN RISK - NO GUARANTEES OR ANY FORM ARE EITHER EXPRESSED OR IMPLIED
  **************************************************************************/
+
+require_once "$spaceInc/missions/rover.php";
+
+//#################################################################################
 class cCuriosityManifestIndex {
     const DB_FILENAME = "curiositymanifest.db";
     const MANIFEST_TABLE = "manifest";
@@ -167,7 +170,6 @@ class cCuriosityManifestIndex {
     //******************************************************************************************* */
     /**
      * returns a random image
-     * @todo doesnt return multiple images
      * @param string $sIntrumentPattern 
      * @param int $piHowmany 
      * @return array
@@ -194,10 +196,19 @@ class cCuriosityManifestIndex {
         $oResultSet = $oSqlDB->exec_stmt($oStmt); //handles retries and errors
 
         //----------------fetch results
-        $aResults = $oResultSet->fetchArray();
+        $aResults = $oSqlDB->fetch_all($oResultSet);
+        $aOut = [];
+        foreach ($aResults as $aRow) {
+            $sMission = $aRow[self::COL_MISSION];
+            $sSol = $aRow[self::COL_SOL];
+            $sInstr = $aRow[self::COL_INSTR];
+            $sProduct = $aRow[self::COL_PRODUCT];
+            $oProduct = new cRoverManifestImage($sMission, $sSol, $sInstr, $sProduct);
+            $aOut[] = $oProduct;
+        }
 
         cDebug::leave();
-        return $aResults;
+        return $aOut;
     }
 }
 cCuriosityManifestIndex::init_db();
