@@ -28,8 +28,10 @@ class cCuriosityManifestIndex {
 
     /**  @var cObjstoreDB $oDB */
     private static $oDB = null;
-    /**  @var cSQLLite $oSQLite */
-    private static $oSQLite = null;
+    /**  @var cSQLLite $oSQLDB */
+    private static $oSQLDB = null;
+
+
     //*****************************************************************************
     static function init_db() {
 
@@ -38,14 +40,19 @@ class cCuriosityManifestIndex {
         }
 
         //-------------- open SQLlite DB
-        /** @var $oDB cSQLLite */
-        $oSqLDB = self::$oSQLite;
+        /** @var cSQLLite $oSqLDB  */
+        $oSqLDB = self::$oSQLDB;
         if ($oSqLDB == null) {
             cDebug::extra_debug("opening cSqlLite database");
             $oSqLDB = new cSqlLite(self::DB_FILENAME);
-            self::$oSQLite = $oSqLDB;
+            self::$oSQLDB = $oSqLDB;
         }
+        self::pr_create_table();
+    }
 
+    //*****************************************************************************
+    private static function pr_create_table() {
+        $oSqLDB = self::$oSQLDB;
         //-------------- check table
         $bTableExists = $oSqLDB->table_exists(self::MANIFEST_TABLE);
         if ($bTableExists) {
@@ -78,6 +85,7 @@ class cCuriosityManifestIndex {
         $oSqLDB->query($sSQL);
         cDebug::extra_debug("index created");
     }
+
     //*****************************************************************************
     static function indexManifest() {
         cDebug::enter();
@@ -100,7 +108,7 @@ class cCuriosityManifestIndex {
         cDebug::write("processing sol Manifest");
         $aSols = $oManifest->sols;
         ksort($aSols, SORT_NUMERIC);
-        $oSqlDB = self::$oSQLite;
+        $oSqlDB = self::$oSQLDB;
 
         foreach ($aSols as $sSol => $oSol) {
             if ($sStatusSol >= $sSol) continue;
@@ -123,7 +131,9 @@ class cCuriosityManifestIndex {
             //update the status
             $oDB->put(self::INDEXING_STATUS, $sSol, true);
         }
-
+        cDebug::write("done");
+        cDebug::on(true);
+        self::random_mastcam_image();
         cDebug::leave();
     }
 
@@ -142,7 +152,8 @@ class cCuriosityManifestIndex {
         $sSQL = str_replace(":p", self::COL_PRODUCT, $sSQL);
         $sSQL = str_replace(":u", self::COL_IMAGE_URL, $sSQL);
 
-        $oSqlDB = self::$oSQLite;
+        /** @var cSQLLite $oSqlDB  */
+        $oSqlDB = self::$oSQLDB;
         $oStmt = $oSqlDB->prepare($sSQL);
         $oStmt->bindValue(1, cSpaceMissions::CURIOSITY);
         $oStmt->bindValue(2, $psSol);
@@ -153,6 +164,31 @@ class cCuriosityManifestIndex {
         $oSqlDB->exec_stmt($oStmt); //handles retries and errors
 
         //cDebug::leave();
+    }
+
+    //******************************************************************************************* */
+    static function random_mastcam_image() {
+        cDebug::enter();
+        $sSQL = "SELECT :m_col,:s_col,:i_col,:p_col from ':table' WHERE :m_col=:name AND  :i_col like :pattern  order by RANDOM() limit 1";
+        $sSQL = str_replace(":table", self::MANIFEST_TABLE, $sSQL);
+        $sSQL = str_replace(":m_col", self::COL_MISSION, $sSQL);
+        $sSQL = str_replace(":s_col", self::COL_SOL, $sSQL);
+        $sSQL = str_replace(":i_col", self::COL_INSTR, $sSQL);
+        $sSQL = str_replace(":p_col", self::COL_PRODUCT, $sSQL);
+
+        $oSqlDB = self::$oSQLDB;
+        $oStmt = $oSqlDB->prepare($sSQL);
+        $oStmt->bindValue(":name", cSpaceMissions::CURIOSITY);
+        $oStmt->bindValue(":pattern", "MAST_%");
+        $sSQL = $oStmt->getSQL(true);
+        cDebug::extra_debug("SQL: $sSQL");
+
+        $oResultSet = $oSqlDB->exec_stmt($oStmt); //handles retries and errors
+        $aResults = $oResultSet->fetchArray();
+        cDebug::vardump($aResults);
+
+        cDebug::leave();
+        return $oResultSet;
     }
 }
 cCuriosityManifestIndex::init_db();
