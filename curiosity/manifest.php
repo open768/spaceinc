@@ -27,11 +27,10 @@ class cCuriosityManifest {
     const COL_INSTR = "I";
     const COL_PRODUCT = "P";
     const COL_IMAGE_URL = "U";
-    const FEED_SLEEP = 5;
+    const FEED_SLEEP = 1200; //milliseconds
 
     /**  @var cObjstoreDB $oDB */
     private static $oDB = null;
-
     /**  @var cSQLLite $oSQLite */
     private static $oSQLite = null;
 
@@ -89,7 +88,6 @@ class cCuriosityManifest {
         $oResult = null;
         cDebug::enter();
 
-        cDebug::write("Getting sol manifest from: " . self::FEED_URL);
         $oCache = new cCachedHttp();
         $oCache->CACHE_EXPIRY = self::MANIFEST_CACHE;
 
@@ -115,7 +113,7 @@ class cCuriosityManifest {
 
         $sUrl = self::getSolJsonUrl($psSol);
 
-        cDebug::write("Getting all sol data from: " . $sUrl);
+        cDebug::write("Getting all sol data for sol $psSol");
         $oCache = new cCachedHttp();
         $oCache->CACHE_EXPIRY = self::SOL_CACHE;
 
@@ -151,9 +149,11 @@ class cCuriosityManifest {
             cDebug::write("indexing status at sol: $sStatusSol");
 
         //----------get manifest
+        cDebug::write("getting sol Manifest");
         $oManifest = self::getManifest();
 
-        //work on manifest
+        //----work on manifest
+        cDebug::write("processing sol Manifest");
         $aSols = $oManifest->sols;
         ksort($aSols, SORT_NUMERIC);
         $oSqlDB = self::$oSQLite;
@@ -162,7 +162,6 @@ class cCuriosityManifest {
             if ($sStatusSol >= $sSol) continue;
             $sUrl = $oSol->catalog_url;
 
-            cDebug::write("sol:$sSol url:$sUrl");
             $oSolData = self::getAllSolData($sSol);
             $oSqlDB->begin_transaction(); {
                 $aImages = $oSolData->images;
@@ -173,8 +172,8 @@ class cCuriosityManifest {
                     self::add_to_index($sSol, $sInstr, $sProduct, $sUrl);
                 }
                 $oSqlDB->commit();
-                cDebug::write("sleeping for " . self::FEED_SLEEP . " seconds\n");
-                sleep(self::FEED_SLEEP);
+                cDebug::write("<p> -- sleeping for " . self::FEED_SLEEP . " ms\n");
+                usleep(self::FEED_SLEEP);
             }
 
             //update the status
@@ -188,7 +187,9 @@ class cCuriosityManifest {
     static function add_to_index($psSol, $psInstr, $psProduct, $psUrl) {
         //cDebug::enter();
 
-        cDebug::write("$psSol, $psInstr, $psProduct, $psUrl");
+        cDebug::extra_debug("adding to index: $psSol, $psInstr, $psProduct");
+        echo ".";
+
         $sSQL = "INSERT INTO ':t' (:m, :s, :i, :p, :u ) VALUES (?, ?, ?, ?, ?)";
         $sSQL = str_replace(":t", self::MANIFEST_TABLE, $sSQL);
         $sSQL = str_replace(":m", self::COL_MISSION, $sSQL);
