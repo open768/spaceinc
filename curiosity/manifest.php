@@ -27,6 +27,7 @@ class cCuriosityManifest {
     const COL_INSTR = "I";
     const COL_PRODUCT = "P";
     const COL_IMAGE_URL = "U";
+    const FEED_SLEEP = 5;
 
     /**  @var cObjstoreDB $oDB */
     private static $oDB = null;
@@ -138,6 +139,7 @@ class cCuriosityManifest {
     //*****************************************************************************
     static function indexManifest() {
         cDebug::enter();
+        cDebug::on(); //turn off extra debugging
 
         //----------get status from odb
         $oDB = self::$oDB;
@@ -171,6 +173,8 @@ class cCuriosityManifest {
                     self::add_to_index($sSol, $sInstr, $sProduct, $sUrl);
                 }
                 $oSqlDB->commit();
+                cDebug::write("sleeping for " . self::FEED_SLEEP . " seconds\n");
+                sleep(self::FEED_SLEEP);
             }
 
             //update the status
@@ -182,7 +186,7 @@ class cCuriosityManifest {
 
     //*****************************************************************************
     static function add_to_index($psSol, $psInstr, $psProduct, $psUrl) {
-        cDebug::enter();
+        //cDebug::enter();
 
         cDebug::write("$psSol, $psInstr, $psProduct, $psUrl");
         $sSQL = "INSERT INTO ':t' (:m, :s, :i, :p, :u ) VALUES (?, ?, ?, ?, ?)";
@@ -200,9 +204,10 @@ class cCuriosityManifest {
         $oStmt->bindValue(3, $psInstr);
         $oStmt->bindValue(4, $psProduct);
         $oStmt->bindValue(5, $psUrl);
-        $oSqlDB->exec_stmt($oStmt);
 
-        cDebug::leave();
+        $oSqlDB->exec_stmt($oStmt); //handles retries and errors
+
+        //cDebug::leave();
     }
 }
 cCuriosityManifest::init_db();
