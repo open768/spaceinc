@@ -54,6 +54,17 @@ class cCuriosityManifestIndex {
     }
 
     //*****************************************************************************
+    private static function pr_replace_sql_params($psSQL) {
+        $sSQL = str_replace(":table", self::MANIFEST_TABLE, $psSQL);
+        $sSQL = str_replace(":m_col", self::COL_MISSION, $sSQL);
+        $sSQL = str_replace(":s_col", self::COL_SOL, $sSQL);
+        $sSQL = str_replace(":i_col", self::COL_INSTR, $sSQL);
+        $sSQL = str_replace(":p_col", self::COL_PRODUCT, $sSQL);
+        $sSQL = str_replace(":u_col", self::COL_IMAGE_URL, $sSQL);
+        return $sSQL;
+    }
+
+    //*****************************************************************************
     private static function pr_create_table() {
         $oSqLDB = self::$oSQLDB;
         //-------------- check table
@@ -66,25 +77,17 @@ class cCuriosityManifestIndex {
         //-------------create TABLE
         cDebug::extra_debug("table doesnt exist " . self::MANIFEST_TABLE);
         $sSQL =
-            "CREATE TABLE ':t' ( " .
-            "':m' TEXT not null, ':s' TEXT not null, ':i' TEXT not null, ':p' TEXT not null, ':u' TEXT not null, " .
-            "CONSTRAINT cmanifest UNIQUE (:m, :s, :i, :p) " .
+            "CREATE TABLE `:table` ( " .
+            ":m_col TEXT not null, :s_col TEXT not null, :i_col TEXT not null, :p_col TEXT not null, :u_col TEXT not null, " .
+            "CONSTRAINT cmanifest UNIQUE (:m_col, :s_col, :i_col, :p_col) " .
             ")";
-        $sSQL = str_replace(":t", self::MANIFEST_TABLE, $sSQL);
-        $sSQL = str_replace(":m", self::COL_MISSION, $sSQL);
-        $sSQL = str_replace(":s", self::COL_SOL, $sSQL);
-        $sSQL = str_replace(":i", self::COL_INSTR, $sSQL);
-        $sSQL = str_replace(":p", self::COL_PRODUCT, $sSQL);
-        $sSQL = str_replace(":u", self::COL_IMAGE_URL, $sSQL);
+        $sSQL = self::pr_replace_sql_params($sSQL);
         $oSqLDB->query($sSQL);
         cDebug::extra_debug("table created");
 
         //-------------create INDEX
-        $sSQL = "CREATE INDEX idx_manifest on ':t' ( :m, :s, :i )";
-        $sSQL = str_replace(":t", self::MANIFEST_TABLE, $sSQL);
-        $sSQL = str_replace(":m", self::COL_MISSION, $sSQL);
-        $sSQL = str_replace(":s", self::COL_SOL, $sSQL);
-        $sSQL = str_replace(":i", self::COL_INSTR, $sSQL);
+        $sSQL = "CREATE INDEX idx_manifest on ':table' ( :m_col, :s_col, :i_col )";
+        $sSQL = self::pr_replace_sql_params($sSQL);
         $oSqLDB->query($sSQL);
         cDebug::extra_debug("index created");
     }
@@ -145,22 +148,17 @@ class cCuriosityManifestIndex {
         cDebug::extra_debug("adding to index: $psSol, $psInstr, $psProduct");
         echo ".";
 
-        $sSQL = "INSERT INTO ':t' (:m, :s, :i, :p, :u ) VALUES (?, ?, ?, ?, ?)";
-        $sSQL = str_replace(":t", self::MANIFEST_TABLE, $sSQL);
-        $sSQL = str_replace(":m", self::COL_MISSION, $sSQL);
-        $sSQL = str_replace(":s", self::COL_SOL, $sSQL);
-        $sSQL = str_replace(":i", self::COL_INSTR, $sSQL);
-        $sSQL = str_replace(":p", self::COL_PRODUCT, $sSQL);
-        $sSQL = str_replace(":u", self::COL_IMAGE_URL, $sSQL);
+        $sSQL = "INSERT INTO `:table` (:m_col, :s_col, :i_col, :p_col, :u_col ) VALUES (:mission, :sol, :instr, :product, :url)";
+        $sSQL = self::pr_replace_sql_params($sSQL);
 
         /** @var cSQLLite $oSqlDB  */
         $oSqlDB = self::$oSQLDB;
         $oStmt = $oSqlDB->prepare($sSQL);
-        $oStmt->bindValue(1, cSpaceMissions::CURIOSITY);
-        $oStmt->bindValue(2, $psSol);
-        $oStmt->bindValue(3, $psInstr);
-        $oStmt->bindValue(4, $psProduct);
-        $oStmt->bindValue(5, $psUrl);
+        $oStmt->bindValue(":mission", cSpaceMissions::CURIOSITY);
+        $oStmt->bindValue(":sol", $psSol);
+        $oStmt->bindValue(":instr", $psInstr);
+        $oStmt->bindValue(":product", $psProduct);
+        $oStmt->bindValue(":url", $psUrl);
 
         $oSqlDB->exec_stmt($oStmt); //handles retries and errors
 
@@ -178,13 +176,14 @@ class cCuriosityManifestIndex {
         cDebug::enter();
 
         //----------------prepare statement
-        $sSQL = "SELECT :m_col,:s_col,:i_col,:p_col FROM ':table' WHERE ( :m_col=:name AND  :i_col LIKE :pattern )  ORDER BY RANDOM() LIMIT :count";
+        $sSQL = "SELECT :m_col,:s_col,:i_col,:p_col,:u_col FROM `:table` WHERE ( :m_col=:name AND  :i_col LIKE :pattern )  ORDER BY RANDOM() LIMIT :howmany";
         $sSQL = str_replace(":table", self::MANIFEST_TABLE, $sSQL);
         $sSQL = str_replace(":m_col", self::COL_MISSION, $sSQL);
         $sSQL = str_replace(":s_col", self::COL_SOL, $sSQL);
         $sSQL = str_replace(":i_col", self::COL_INSTR, $sSQL);
         $sSQL = str_replace(":p_col", self::COL_PRODUCT, $sSQL);
-        $sSQL = str_replace(":count", $piHowmany, $sSQL);
+        $sSQL = str_replace(":u_col", self::COL_IMAGE_URL, $sSQL);
+        $sSQL = str_replace(":howmany", $piHowmany, $sSQL);
 
         $oSqlDB = self::$oSQLDB;
         $oStmt = $oSqlDB->prepare($sSQL);
@@ -203,7 +202,8 @@ class cCuriosityManifestIndex {
             $sSol = $aRow[self::COL_SOL];
             $sInstr = $aRow[self::COL_INSTR];
             $sProduct = $aRow[self::COL_PRODUCT];
-            $oProduct = new cRoverManifestImage($sMission, $sSol, $sInstr, $sProduct);
+            $sUrl = $aRow[self::COL_IMAGE_URL];
+            $oProduct = new cRoverManifestImage($sMission, $sSol, $sInstr, $sProduct, $sUrl);
             $aOut[] = $oProduct;
         }
 
