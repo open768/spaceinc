@@ -123,13 +123,23 @@ class cCuriosityManifestIndex {
         ksort($aSols, SORT_NUMERIC);
         $oSqlDB = self::$oSQLDB;
 
+        $aKeys = array_keys($aSols);
+        $iKeyCount = count($aKeys);
+        $iCount = 0;
+
         foreach ($aSols as $number => $oSol) {
             $sSol = $oSol->sol;
+            $iCount++;
             if ($sStatusSol >= $sSol) continue;
 
-            $oSolData = cCuriosityManifest::getAllSolData($sSol);
+            $bCheckCache = $iCount >= ($iKeyCount - 10);
+            $oSolData = cCuriosityManifest::getAllSolData($sSol, $bCheckCache);
+            $aImages = $oSolData->images;
+            if ($aImages === null) {
+                cDebug::error("no image data");
+            }
+
             $oSqlDB->begin_transaction(); {
-                $aImages = $oSolData->images;
                 foreach ($aImages as $sKey => $oImgData) {
 
                     $sSampleType = $oImgData->sampleType;
@@ -288,7 +298,7 @@ class cCuriosityManifest {
     }
 
     //*****************************************************************************
-    public static function getAllSolData($psSol) {
+    public static function getAllSolData($psSol, $pbCheckExpiry = true) {
         cDebug::enter();
 
         $sUrl = self::getSolJsonUrl($psSol);
@@ -298,7 +308,7 @@ class cCuriosityManifest {
         $oCache = new cCachedHttp();
         $oCache->CACHE_EXPIRY = self::SOL_CACHE;
 
-        $oResult = $oCache->getCachedJson($sUrl);
+        $oResult = $oCache->getCachedJson($sUrl, $pbCheckExpiry);
         cDebug::leave();
         return $oResult;
     }
