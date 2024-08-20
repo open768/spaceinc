@@ -239,8 +239,16 @@ class cCuriosityManifest {
         cDebug::enter();
         $oManifest = self::getManifest();
         $aSols = $oManifest->sols;
-        $oSol = $aSols[$psSol];
-        $sUrl = $oSol->catalog_url;
+        $iSol = (int) $psSol;
+        ksort($aSols, SORT_NUMERIC);
+
+        $sUrl = null;
+        foreach ($aSols as $oSol) {
+            if ($oSol->sol === $iSol) {
+                $sUrl = $oSol->catalog_url;
+                break;
+            }
+        }
         cDebug::leave();
         return $sUrl;
     }
