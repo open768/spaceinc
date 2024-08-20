@@ -237,11 +237,13 @@ class cCuriosityManifest {
     //*****************************************************************************
     static function getSolJsonUrl($psSol) {
         cDebug::enter();
+        //---- get the manifest
         $oManifest = self::getManifest();
         $aSols = $oManifest->sols;
-        $iSol = (int) $psSol;
+        $iSol = (int) $psSol; //make sure we have an integer
         ksort($aSols, SORT_NUMERIC);
 
+        //----array is not keyed on sol, so we have to find the sol
         $sUrl = null;
         foreach ($aSols as $oSol) {
             if ($oSol->sol === $iSol) {
