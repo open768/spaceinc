@@ -21,6 +21,7 @@ class cCuriosityManifestIndex {
     const FEED_SLEEP = 1200; //milliseconds
     const INDEXING_STATUS = "indexing:status";
     const STATUS_NOT_STARTED = -1;
+    const STATUS_COMPLETE = "complete";
 
     const COL_MISSION = "M";
     const COL_SOL = "S";
@@ -103,7 +104,9 @@ class cCuriosityManifestIndex {
         if ($sStatusSol === null) {
             cDebug::write("indexing not begun");
             $sStatusSol = self::STATUS_NOT_STARTED;
-        } else
+        } else if ($sStatusSol === self::STATUS_COMPLETE)
+            cDebug::error("indexing allready complete");
+        else
             cDebug::write("indexing status at sol: $sStatusSol");
 
         //----------get manifest
@@ -137,6 +140,9 @@ class cCuriosityManifestIndex {
             //update the status
             $oDB->put(self::INDEXING_STATUS, $sSol, true);
         }
+        $sStatusSol = $oDB->put(self::INDEXING_STATUS, self::STATUS_COMPLETE, true);
+        cDebug::write("compresssing database");
+        $oSqlDB->vacuum();
         cDebug::write("done");
         cDebug::leave();
     }
