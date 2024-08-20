@@ -116,9 +116,9 @@ class cCuriosityManifestIndex {
         ksort($aSols, SORT_NUMERIC);
         $oSqlDB = self::$oSQLDB;
 
-        foreach ($aSols as $sSol => $oSol) {
+        foreach ($aSols as $number => $oSol) {
+            $sSol = $oSol->sol;
             if ($sStatusSol >= $sSol) continue;
-            $sUrl = $oSol->catalog_url;
 
             $oSolData = cCuriosityManifest::getAllSolData($sSol);
             $oSqlDB->begin_transaction(); {
@@ -126,8 +126,8 @@ class cCuriosityManifestIndex {
                 foreach ($aImages as $sKey => $oImgData) {
                     $sInstr = $oImgData->instrument;
                     $sProduct = $oImgData->itemName;
-                    $sUrl = $oImgData->urlList;
-                    self::add_to_index($sSol, $sInstr, $sProduct, $sUrl);
+                    $sProductUrl = $oImgData->urlList;
+                    self::add_to_index($sSol, $sInstr, $sProduct, $sProductUrl);
                 }
                 $oSqlDB->commit();
                 cDebug::write("<p> -- sleeping for " . self::FEED_SLEEP . " ms\n");
@@ -166,13 +166,31 @@ class cCuriosityManifestIndex {
     }
 
     //******************************************************************************************* */
+    static function deleteIndex() {
+        cDebug::enter();
+        //delete everything
+        $sSQL = "DELETE from `:table`";
+        $sSQL = self::pr_replace_sql_params($sSQL);
+        $oSqlDB = self::$oSQLDB;
+        $oStmt = $oSqlDB->prepare($sSQL);
+        $oSqlDB->exec_stmt($oStmt); //handles retries and errors
+
+        //update the status
+        $oDB = self::$oDB;
+        $oDB->put(self::INDEXING_STATUS, self::STATUS_NOT_STARTED, true);
+
+        cDebug::write("done");
+        cDebug::leave();
+    }
+
+    //******************************************************************************************* */
     /**
      * returns a random image
      * @param string $sIntrumentPattern 
      * @param int $piHowmany 
      * @return array
      */
-    static function random_images(string $sIntrumentPattern, int $piHowmany) {
+    static function get_random_images(string $sIntrumentPattern, int $piHowmany) {
         cDebug::enter();
 
         //----------------prepare statement
@@ -260,6 +278,7 @@ class cCuriosityManifest {
         cDebug::enter();
 
         $sUrl = self::getSolJsonUrl($psSol);
+        if (cCommon::is_string_empty($sUrl)) cDebug::error("empty url for $psSol");
 
         cDebug::write("Getting all sol data for sol $psSol");
         $oCache = new cCachedHttp();
