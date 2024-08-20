@@ -359,9 +359,9 @@ class cCuriosity implements iMission {
         }
         //if nothing found
 
-        if ($oDetails == null)
+        if ($oDetails == null) {
             $oResult = null;
-        else
+        } else
             $oResult = ["d" => $oDetails, "max" => $iCount, "item" => $i + 1];
 
         cDebug::leave();
