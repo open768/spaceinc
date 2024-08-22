@@ -314,7 +314,7 @@ class cCuriosity implements iMission {
                 cDebug::write("<img src='$sImgUrl'>");
                 $iWidth = imagesx($oMSLImg);
                 $iHeight = imagesy($oMSLImg);
-                $iNewWidth = $iWidth * self::THUMBNAIL_HEIGHT / $iHeight;
+                $iNewWidth = floor($iWidth * self::THUMBNAIL_HEIGHT / $iHeight);
 
                 //----------------------------------------------------------------------
                 cDebug::write("new Width is $iNewWidth .. resizing");
