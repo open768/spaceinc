@@ -46,7 +46,7 @@ class cSpaceComments {
 
     //********************************************************************
     static function get_sol_index($psSol) {
-        $aResult = cSpaceIndex::get_sol_data($psSol, cSpaceIndex::COMMENT_SUFFIX);
+        $aResult = cSpaceIndex::get_sol_data($psSol, cSpaceIndex::COMMENT_SUFFIX, true);
         return $aResult;
     }
 

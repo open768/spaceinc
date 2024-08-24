@@ -2,7 +2,10 @@
 require_once  "$spaceInc/misc/realms.php";
 require_once  "$phpInc/ckinc/objstoredb.php";
 
-
+/**
+ * slight problem this indexes as Sol,Instr,Product when it should have been Sol,Product,Instr
+ * @package 
+ */
 class cSpaceIndex {
     const TOP_PREFIX = "t";
     const SOL_PREFIX = "s";
@@ -43,14 +46,25 @@ class cSpaceIndex {
     }
 
     //********************************************************************
-    static function get_sol_data($psSol, $psSuffix) {
+    static function get_sol_data($psSol, $psSuffix, $pbSolProdInstr = false) {
         cDebug::enter();
         $sFile = self::get_filename(self::SOL_PREFIX, $psSuffix);
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         $oData = $oDB->get_oldstyle($psSol, $sFile);
-        cDebug::leave();
 
+        //refactor data into sol,prod,instr is required
+        if ($pbSolProdInstr) {
+            $aProdData = [];
+            foreach ($oData as $sInstr => $aProducts) {
+                foreach ($aProducts as $sProduct => $iCount) {
+                    if (!isset($aProdData[$sProduct])) $aProdData[$sProduct] = [];
+                    $aProdData[$sProduct][] = $sInstr;
+                }
+            }
+            $oData = $aProdData;
+        }
+        cDebug::leave();
         return $oData;
     }
 
