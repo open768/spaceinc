@@ -46,7 +46,7 @@ class cSpaceIndex {
     }
 
     //********************************************************************
-    static function get_sol_data($psSol, $psSuffix, $pbSolProdInstr = false) {
+    static function get_sol_index($psSol, $psSuffix, $pbSolProdInstr = false) {
         cDebug::enter();
         $sFile = self::get_filename(self::SOL_PREFIX, $psSuffix);
         /** @var cObjStoreDB $oDB **/
@@ -84,11 +84,11 @@ class cSpaceIndex {
     static function get_solcount($psSol, $psFile) {
         cDebug::enter();
         $iCount = 0;
-        $aData = self::get_sol_data($psSol, $psFile);
+        $aData = self::get_sol_index($psSol, $psFile);
         if ($aData) {
             foreach ($aData as $sInstr => $aInstrData) {
-                foreach ($aInstrData as $sProduct)
-                    $iCount++;
+                foreach ($aInstrData as $sProduct => $iProdCount)
+                    $iCount += $iProdCount;
             }
         }
         cDebug::leave();

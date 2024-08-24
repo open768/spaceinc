@@ -46,7 +46,7 @@ class cSpaceComments {
 
     //********************************************************************
     static function get_sol_index($psSol) {
-        $aResult = cSpaceIndex::get_sol_data($psSol, cSpaceIndex::COMMENT_SUFFIX, true);
+        $aResult = cSpaceIndex::get_sol_index($psSol, cSpaceIndex::COMMENT_SUFFIX, true);
         return $aResult;
     }
 
@@ -64,6 +64,19 @@ class cSpaceComments {
         $oDB = self::$objstoreDB;
         $aTags = $oDB->get_oldstyle($sFolder, self::COMMENT_FILENAME);
         return $aTags;
+    }
+
+    //********************************************************************
+    static function get_all_sol_data($psSol) {
+        $aSolIndex = self::get_sol_index($psSol);
+        $aAllSolData = [];
+        foreach ($aSolIndex as $sProduct => $aProdData)
+            foreach ($aProdData as $sInstr) {
+                $aComments = self::get($psSol, $sInstr, $sProduct);
+                if (!isset($aAllSolData[$sProduct])) $aAllSolData[$sProduct] = [];
+                $aAllSolData[$sProduct][$sInstr] = $aComments;
+            }
+        return $aAllSolData;
     }
 
     //********************************************************************
