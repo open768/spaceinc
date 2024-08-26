@@ -351,7 +351,7 @@ class cSpaceImageHighlight {
     //# INDEX functions
     //######################################################################
     static function get_sol_highlighted_products($psSol) {
-        $oResult = cSpaceIndex::get_sol_data($psSol, cSpaceIndex::HILITE_SUFFIX);
+        $oResult = cSpaceIndex::get_sol_index($psSol, cSpaceIndex::HILITE_SUFFIX);
         return $oResult;
     }
 
