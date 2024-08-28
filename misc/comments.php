@@ -83,7 +83,11 @@ class cSpaceComments {
     static function set($psSol, $psInstrument, $psProduct, $psComment, $psUser) {
         $sFolder = "$psSol/$psInstrument/$psProduct";
         if (self::STRIP_HTML) $psComment = strip_tags($psComment);
+        if (cCommon::is_string_empty($psComment)) cDebug::error("empty string");
+
+        $psComment = self::moderate($psComment);
         cDebug::write("comment: $psComment");
+
 
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
@@ -93,6 +97,14 @@ class cSpaceComments {
         self::add_to_index($psSol, $psInstrument, $psProduct);
 
         return $aData;
+    }
+
+    //********************************************************************
+    static function moderate($psText) {
+        cDebug::enter();
+        cPageOutput::warning("moderation not implemented");
+        cDebug::leave();
+        return $psText;
     }
 }
 
