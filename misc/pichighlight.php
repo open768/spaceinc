@@ -396,7 +396,7 @@ class cSpaceImageHighlight {
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         $sFolder = "$psSol/$psInstr/$psProduct";
-        $oDB->kill_oldstyle($sFolder, self::IMGHIGH_FILENAME);
+        $oDB->kill("$sFolder/" . self::IMGHIGH_FILENAME);
         cDebug::write("now reindex the image highlihgts");
     }
 }

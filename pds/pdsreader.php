@@ -160,7 +160,7 @@ class cPDS_Reader {
         }
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
-        $oDB->kill_oldstyle(self::TAB_FOLDER, $psInstr);
+        $oDB->kill(self::TAB_FOLDER . "/$psInstr");
     }
 
     //**********************************************************************

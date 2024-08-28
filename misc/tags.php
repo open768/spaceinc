@@ -54,7 +54,7 @@ class cSpaceTagNames {
         $filename = $psTag . ".txt";
         $aTags = $oDB->get(self::TAG_FOLDER . "/$filename");
         if ($aTags != null)
-            $oDB->kill_oldstyle(self::TAG_FOLDER, $filename);
+            $oDB->kill(self::TAG_FOLDER . "/$filename");
         else {
             cDebug::write("tagindex not found");
             return;
@@ -62,7 +62,7 @@ class cSpaceTagNames {
 
         //remove individual tags
         foreach ($aTags as $sFolder)
-            $oDB->kill_oldstyle($sFolder, cSpaceTags::PRODUCT_TAG_FILE);
+            $oDB->kill("$sFolder/" . cSpaceTags::PRODUCT_TAG_FILE);
 
         cDebug::leave();
     }
