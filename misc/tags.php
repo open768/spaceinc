@@ -122,59 +122,6 @@ class cSpaceTagNames {
 }
 
 //#############################################################################
-class cOldSpaceTagsIndex {
-    const INSTR_TAG_FILE = "[instrtag].txt";
-    const TOP_SOL_TAG_FILE = "[solstag].txt";
-
-    //********************************************************************
-    //* privates
-    //********************************************************************
-    private static function pr_get_instr_folder($psSol, $psInstrument) {
-        return "$psSol/$psInstrument";
-    }
-
-    static function kill_instr_index($psSol, $psInstrument) {
-        $oDB = cSpaceTags::$objstoreDB;
-        $sFolder = self::pr_get_instr_folder($psSol, $psInstrument);
-        $oDB->kill("$sFolder/" . self::INSTR_TAG_FILE);
-    }
-
-    static function kill_top_sol_index() {
-        $oDB = cSpaceTags::$objstoreDB;
-        $aData = $oDB->kill("/" . self::TOP_SOL_TAG_FILE);
-    }
-
-    //********************************************************************
-    static function get_top_sol_index() {
-        cDebug::enter();
-        /** @var cObjStoreDB $oDB **/
-        $oDB = cSpaceTags::$objstoreDB;
-
-        $aData = $oDB->get("/" . self::TOP_SOL_TAG_FILE);
-        if ($aData !== null) ksort($aData);
-        cDebug::leave();
-        return $aData;
-    }
-
-    //********************************************************************
-    static function update_top_sol_index($psSol) {
-        cDebug::enter();
-
-        /** @var cObjStoreDB $oDB **/
-        $aData = self::get_top_sol_index();
-
-        if (!$aData) $aData = [];
-        if (!isset($aData[$psSol])) {
-            $aData[$psSol] = 1;
-            cDebug::write("updating top sol index for sol $psSol");
-            $oDB = cSpaceTags::$objstoreDB;
-            $oDB->put("/" . self::TOP_SOL_TAG_FILE, $aData);
-        }
-        cDebug::leave();
-    }
-}
-
-//#############################################################################
 class cSpaceTagsIndex {
     static function get_top_sol_index() {
         return cSpaceIndex::get_top_sol_data(cSpaceIndex::TAG_SUFFIX);
