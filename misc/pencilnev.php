@@ -69,8 +69,8 @@ class cPencilNev {
         if ($iMatched == 0)    cDebug::error("** nothing matched");
         //output the files
         foreach ($aData as $sSol => $aItems)
-            $oDB->put_oldstyle($sSol, self::NEVILLE_FILENAME, $aItems);
-        $oDB->put_oldstyle("", self::TOP_NEVILLE_FILENAME, $aTop);
+            $oDB->put("$sSol/" . self::NEVILLE_FILENAME, $aItems);
+        $oDB->put("/" . self::TOP_NEVILLE_FILENAME, $aTop);
 
         cDebug::write("Completed indexing of neville gigapans");
         cDebug::leave();

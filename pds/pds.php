@@ -67,7 +67,7 @@ class cPDS {
 
                 /** @var cObjStoreDB $oDB **/
                 $oDB = self::$objstoreDB;
-                $oDB->put_oldstyle(self::OBJDATA_TOP_FOLDER . "/$sSol/$sInstr", $sFilename, $aPDSData);
+                $oDB->put(self::OBJDATA_TOP_FOLDER . "/$sSol/$sInstr/$sFilename", $aPDSData);
                 cDebug::extra_debug("$sSol/$sInstr lines:" . count($aPDSData));
             }
     }

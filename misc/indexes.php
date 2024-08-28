@@ -121,7 +121,7 @@ class cSpaceIndex {
 
         $aData[$psSol] = $aData[$psSol] + 1;
         cDebug::write("updating top sol index for sol $psSol");
-        $oDB->put_oldstyle("", $sFile, $aData);
+        $oDB->put("/$sFile", $aData);
         //cDebug::leave();
     }
 
@@ -138,7 +138,7 @@ class cSpaceIndex {
         $sFile = self::get_filename(self::SOL_PREFIX, $psSuffix);
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
-        $oDB->put_oldstyle($psSol, $sFile, $aData);
+        $oDB->put("$psSol/$sFile", $aData);
         //cDebug::leave();
     }
 
@@ -152,7 +152,7 @@ class cSpaceIndex {
         $aData = $oDB->get("$sFolder/$sFile");
         if (!$aData) $aData = [];
         $aData[$psProduct] = $poData;
-        $oDB->put_oldstyle($sFolder, $sFile, $aData);
+        $oDB->put("$sFolder/$sFile", $aData);
         //cDebug::leave();
     }
 
@@ -209,10 +209,10 @@ class cSpaceIndex {
         foreach ($paData as  $sSol => $aSolData) {
             $aTopSols[$sSol] = 1;
             foreach ($aSolData as $sInstr => $aInstrData)
-                $oDB->put_oldstyle("$sSol/$sInstr", self::get_filename(self::INSTR_PREFIX, $psSuffix), $aInstrData);
-            $oDB->put_oldstyle($sSol, self::get_filename(self::SOL_PREFIX, $psSuffix), $aSolData);
+                $oDB->put("$sSol/$sInstr" . self::get_filename(self::INSTR_PREFIX, $psSuffix), $aInstrData);
+            $oDB->put("$sSol/" . self::get_filename(self::SOL_PREFIX, $psSuffix), $aSolData);
         }
-        $oDB->put_oldstyle("", self::get_filename(self::TOP_PREFIX, $psSuffix), $aTopSols);
+        $oDB->put("/" . self::get_filename(self::TOP_PREFIX, $psSuffix), $aTopSols);
         cDebug::leave();
     }
 }

@@ -50,7 +50,7 @@ class cSpaceImageMosaic {
     static private function pr_put_mosaic_sol_hilight_count($psSol, $piCount) {
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
-        $oDB->put_oldstyle($psSol, self::MOSAIC_COUNT_FILENAME, $piCount);
+        $oDB->put("$psSol/" . self::MOSAIC_COUNT_FILENAME, $piCount);
         cSpaceIndex::update_top_sol_index($psSol, cSpaceIndex::MOSAIC_SUFFIX);
     }
 

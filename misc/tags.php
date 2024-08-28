@@ -44,7 +44,7 @@ class cSpaceTagNames {
         $aData = self::get_top_tag_names();
         if (isset($aData[$psTag])) {
             unset($aData[$psTag]);
-            $oDB->put_oldstyle("", self::TOP_TAG_NAME_FILE, $aData);
+            $oDB->put("/" . self::TOP_TAG_NAME_FILE, $aData);
         } else {
             cDebug::write("tag not found");
             return;
@@ -87,7 +87,7 @@ class cSpaceTagNames {
         //write out the data
         /** @var cObjStoreDB $oDB **/
         $oDB = cSpaceTags::$objstoreDB;
-        $oDB->put_oldstyle("", self::TOP_TAG_NAME_FILE, $aData);
+        $oDB->put("/" . self::TOP_TAG_NAME_FILE, $aData);
         cDebug::leave();
     }
     //********************************************************************
@@ -151,7 +151,7 @@ class cSpaceTagsIndex {
         $sFolder = self::pr_get_instr_folder($psSol, $psInstrument);
         if (!isset($aData[$psProduct])) $aData[$psProduct] = [];
         $aData[$psProduct][] = $psTag;
-        $oDB->put_oldstyle($sFolder, self::INSTR_TAG_FILE, $aData);
+        $oDB->put("$sFolder/" . self::INSTR_TAG_FILE, $aData);
         cDebug::leave();
     }
 
@@ -179,7 +179,7 @@ class cSpaceTagsIndex {
             $aData[$psSol] = 1;
             cDebug::write("updating top sol index for sol $psSol");
             $oDB = cSpaceTags::$objstoreDB;
-            $oDB->put_oldstyle("", self::TOP_SOL_TAG_FILE, $aData);
+            $oDB->put("/" . self::TOP_SOL_TAG_FILE, $aData);
         }
         cDebug::leave();
     }
@@ -193,7 +193,7 @@ class cSpaceTagsIndex {
         if (!isset($aData[$psInstrument])) $aData[$psInstrument] = [];
         $aData[$psInstrument][] = ["p" => $psProduct, "t" => $psTag];
         $oDB = cSpaceTags::$objstoreDB;
-        $oDB->put_oldstyle($psSol, cSpaceTags::SOL_TAG_FILE, $aData);
+        $oDB->put("$psSol/" . cSpaceTags::SOL_TAG_FILE, $aData);
 
         //update other indexes
         cSpaceTagNames::update_top_name_index($psTag);
@@ -302,7 +302,7 @@ class cSpaceTags {
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         $sFolder = self::get_product_tag_folder_name($psSol, $psInstrument, $psProduct);
-        $oDB->put_oldstyle($sFolder, self::PRODUCT_TAG_FILE, $aData);
+        $oDB->put("$sFolder/" . self::PRODUCT_TAG_FILE, $aData);
 
         //mark this sol as tagged
         cSpaceTagsIndex::update_sol_index($psSol, $psInstrument, $psProduct, $psTag);
