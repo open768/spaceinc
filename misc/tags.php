@@ -26,7 +26,7 @@ class cSpaceTagNames {
         /** @var cObjStoreDB $oDB **/
         $oDB = cSpaceTags::$objstoreDB;
 
-        $aTags = $oDB->get_oldstyle("", self::TOP_TAG_NAME_FILE);
+        $aTags = $oDB->get("/" . self::TOP_TAG_NAME_FILE);
         //cDebug::vardump($aTags);
         if ($aTags) ksort($aTags);
         cDebug::leave();
@@ -52,7 +52,7 @@ class cSpaceTagNames {
 
         //remove tag index file 
         $filename = $psTag . ".txt";
-        $aTags = $oDB->get_oldstyle(self::TAG_FOLDER, $filename);
+        $aTags = $oDB->get(self::TAG_FOLDER . "/$filename");
         if ($aTags != null)
             $oDB->kill_oldstyle(self::TAG_FOLDER, $filename);
         else {
@@ -98,7 +98,7 @@ class cSpaceTagNames {
         /** @var cObjStoreDB $oDB **/
         $oDB = cSpaceTags::$objstoreDB;
 
-        $aTags = $oDB->get_oldstyle(self::TAG_FOLDER, $filename);
+        $aTags = $oDB->get(self::TAG_FOLDER . "/$filename");
         cDebug::leave();
         if ($aTags) sort($aTags);
         return $aTags;
@@ -135,7 +135,7 @@ class cSpaceTagsIndex {
         /** @var cObjStoreDB $oDB **/
         $oDB = cSpaceTags::$objstoreDB;
         $sFolder = self::pr_get_instr_folder($psSol, $psInstrument);
-        $aData = $oDB->get_oldstyle($sFolder, self::INSTR_TAG_FILE);
+        $aData = $oDB->get("$sFolder/" . self::INSTR_TAG_FILE);
         return $aData;
     }
 
@@ -161,7 +161,7 @@ class cSpaceTagsIndex {
         /** @var cObjStoreDB $oDB **/
         $oDB = cSpaceTags::$objstoreDB;
 
-        $aData = $oDB->get_oldstyle("", self::TOP_SOL_TAG_FILE);
+        $aData = $oDB->get("/" . self::TOP_SOL_TAG_FILE);
         if ($aData !== null) ksort($aData);
         cDebug::leave();
         return $aData;
@@ -234,7 +234,7 @@ class cSpaceTags {
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         $sFolder = self::get_product_tag_folder_name($psSol, $psInstrument, $psProduct);
-        $aTags = $oDB->get_oldstyle($sFolder, self::PRODUCT_TAG_FILE);
+        $aTags = $oDB->get("$sFolder/" . self::PRODUCT_TAG_FILE);
         if (!$aTags) $aTags = [];
 
         $aKeys = [];
@@ -252,7 +252,7 @@ class cSpaceTags {
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
 
-        $aData =  $oDB->get_oldstyle($psSol, self::SOL_TAG_FILE);
+        $aData =  $oDB->get("$psSol/" . self::SOL_TAG_FILE);
         return $aData;
     }
 

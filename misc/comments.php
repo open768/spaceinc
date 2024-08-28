@@ -62,7 +62,7 @@ class cSpaceComments {
         $sFolder = "$psSol/$psInstrument/$psProduct";
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
-        $aTags = $oDB->get_oldstyle($sFolder, self::COMMENT_FILENAME);
+        $aTags = $oDB->get("$sFolder/" . self::COMMENT_FILENAME);
         return $aTags;
     }
 

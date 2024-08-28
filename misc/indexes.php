@@ -39,7 +39,7 @@ class cSpaceIndex {
         $oDB = self::$objstoreDB;
 
         $sFile = self::get_filename(self::TOP_PREFIX, $psSuffix);
-        $oData = $oDB->get_oldstyle("", $sFile);
+        $oData = $oDB->get("/$sFile");
         cDebug::leave();
 
         return $oData;
@@ -51,9 +51,9 @@ class cSpaceIndex {
         $sFile = self::get_filename(self::SOL_PREFIX, $psSuffix);
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
-        $oData = $oDB->get_oldstyle($psSol, $sFile);
+        $oData = $oDB->get("$psSol/$sFile");
 
-        //refactor data into sol,prod,instr is required
+        //refactor data into sol,prod,instr if required
         if ($pbSolProdInstr) {
             $aProdData = [];
             foreach ($oData as $sInstr => $aProducts) {
@@ -74,7 +74,7 @@ class cSpaceIndex {
         $sFile = self::get_filename(self::INSTR_PREFIX, $psSuffix);
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
-        $oData = $oDB->get_oldstyle("$psSol/$psInstrument", $sFile);
+        $oData = $oDB->get("$psSol/$psInstrument/$sFile");
         cDebug::leave();
 
         return $oData;
@@ -114,7 +114,7 @@ class cSpaceIndex {
         $sFile = self::get_filename(self::TOP_PREFIX, $psSuffix);
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
-        $aData = $oDB->get_oldstyle("", $sFile);
+        $aData = $oDB->get("/$sFile");
 
         if (!$aData) $aData = [];
         if (!isset($aData[$psSol])) $aData[$psSol] = 0;
@@ -128,15 +128,16 @@ class cSpaceIndex {
     //********************************************************************
     static function update_sol_index($psSol, $psInstrument, $psProduct, $psSuffix) {
         //cDebug::enter();
-        $sFile = self::get_filename(self::SOL_PREFIX, $psSuffix);
-        /** @var cObjStoreDB $oDB **/
-        $oDB = self::$objstoreDB;
-        $aData = $oDB->get_oldstyle($psSol, $sFile);
+        $aData = self::get_sol_index($psSol, $psSuffix);
         if (!$aData) $aData = [];
         if (!isset($aData[$psInstrument])) $aData[$psInstrument] = [];
         if (!isset($aData[$psInstrument][$psProduct])) $aData[$psInstrument][$psProduct] = 0;
 
         $aData[$psInstrument][$psProduct] = $aData[$psInstrument][$psProduct] + 1;
+
+        $sFile = self::get_filename(self::SOL_PREFIX, $psSuffix);
+        /** @var cObjStoreDB $oDB **/
+        $oDB = self::$objstoreDB;
         $oDB->put_oldstyle($psSol, $sFile, $aData);
         //cDebug::leave();
     }
@@ -148,7 +149,7 @@ class cSpaceIndex {
         $sFolder = "$psSol/$psInstrument";
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
-        $aData = $oDB->get_oldstyle($sFolder, $sFile);
+        $aData = $oDB->get("$sFolder/$sFile");
         if (!$aData) $aData = [];
         $aData[$psProduct] = $poData;
         $oDB->put_oldstyle($sFolder, $sFile, $aData);

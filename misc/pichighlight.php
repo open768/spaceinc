@@ -40,7 +40,7 @@ class cSpaceImageMosaic {
         cDebug::enter();
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
-        $iCount = $oDB->get_oldstyle($psSol, self::MOSAIC_COUNT_FILENAME);
+        $iCount = $oDB->get("$psSol/" . self::MOSAIC_COUNT_FILENAME);
 
         if ($iCount == null) $iCount = 0;
         cDebug::leave();
@@ -195,7 +195,7 @@ class cSpaceImageHighlight {
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         $sFolder = "$psSol/$psInstrument/$psProduct";
-        $aData = $oDB->get_oldstyle($sFolder, self::IMGHIGH_FILENAME);
+        $aData = $oDB->get("$sFolder/" . self::IMGHIGH_FILENAME);
         $aOut = ["s" => $psSol, "i" => $psInstrument, "p" => $psProduct, "d" => $aData];
         return $aOut;
     }

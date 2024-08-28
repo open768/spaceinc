@@ -24,7 +24,7 @@ class cPencilNev {
         cDebug::enter();
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
-        $aData =  $oDB->get_oldstyle("", self::TOP_NEVILLE_FILENAME);
+        $aData =  $oDB->get("/" . self::TOP_NEVILLE_FILENAME);
         ksort($aData);
         cDebug::leave();
 
@@ -36,7 +36,7 @@ class cPencilNev {
         //cDebug::enter();
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
-        $oData = $oDB->get_oldstyle($psSol, self::NEVILLE_FILENAME);
+        $oData = $oDB->get("$psSol/" . self::NEVILLE_FILENAME);
         //cDebug::leave();
         return $oData;
     }
@@ -81,7 +81,7 @@ class cPencilNev {
         cDebug::enter();
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
-        $oData =  $oDB->get_oldstyle($psSol, self::NEVILLE_FILENAME);
+        $oData =  $oDB->get("$psSol/" . self::NEVILLE_FILENAME);
         cDebug::leave();
         return $oData;
     }
