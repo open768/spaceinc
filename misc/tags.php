@@ -68,6 +68,12 @@ class cSpaceTagNames {
     }
 
     //********************************************************************
+    static function update_indexes($psSol, $psInstr, $psProduct, $psTag) {
+        self::update_top_name_index($psTag);
+        self::update_tag_name_index($psTag, $psSol, $psInstr, $psProduct);
+    }
+
+    //********************************************************************
     static function update_top_name_index($psTag) {
         cDebug::enter();
 
@@ -106,7 +112,7 @@ class cSpaceTagNames {
     //********************************************************************
     static function update_tag_name_index($psTag, $psSol, $psInstrument, $psProduct) {
         cDebug::enter();
-        $sFolder = cSpaceTags::get_product_tag_folder_name($psSol, $psInstrument, $psProduct);
+        $sFolder = cSpaceTags::get_product_tag_folder($psSol, $psInstrument, $psProduct);
         $filename = $psTag . ".txt";
         /** @var cObjStoreDB $oDB **/
         $oDB = cSpaceTags::$objstoreDB;
@@ -116,8 +122,7 @@ class cSpaceTagNames {
 }
 
 //#############################################################################
-class cSpaceTagsIndex {
-
+class cOldSpaceTagsIndex {
     const INSTR_TAG_FILE = "[instrtag].txt";
     const TOP_SOL_TAG_FILE = "[solstag].txt";
 
@@ -128,31 +133,15 @@ class cSpaceTagsIndex {
         return "$psSol/$psInstrument";
     }
 
-    //********************************************************************
-    //*
-    //********************************************************************
-    static function get_instr_index($psSol, $psInstrument) {
-        /** @var cObjStoreDB $oDB **/
+    static function kill_instr_index($psSol, $psInstrument) {
         $oDB = cSpaceTags::$objstoreDB;
         $sFolder = self::pr_get_instr_folder($psSol, $psInstrument);
-        $aData = $oDB->get("$sFolder/" . self::INSTR_TAG_FILE);
-        return $aData;
+        $oDB->kill("$sFolder/" . self::INSTR_TAG_FILE);
     }
 
-    //********************************************************************
-    static function update_instr_index($psSol, $psInstrument, $psProduct, $psTag) {
-        cDebug::enter();
-
-        /** @var cObjStoreDB $oDB **/
+    static function kill_top_sol_index() {
         $oDB = cSpaceTags::$objstoreDB;
-        $aData = self::get_instr_index($psSol, $psInstrument);
-        if (!$aData) $aData = [];
-
-        $sFolder = self::pr_get_instr_folder($psSol, $psInstrument);
-        if (!isset($aData[$psProduct])) $aData[$psProduct] = [];
-        $aData[$psProduct][] = $psTag;
-        $oDB->put("$sFolder/" . self::INSTR_TAG_FILE, $aData);
-        cDebug::leave();
+        $aData = $oDB->kill("/" . self::TOP_SOL_TAG_FILE);
     }
 
     //********************************************************************
@@ -183,23 +172,17 @@ class cSpaceTagsIndex {
         }
         cDebug::leave();
     }
+}
 
-    //********************************************************************
-    static function update_sol_index($psSol, $psInstrument, $psProduct, $psTag) {
+//#############################################################################
+class cSpaceTagsIndex {
+    static function get_top_sol_index() {
+        return cSpaceIndex::get_top_sol_data(cSpaceIndex::TAG_SUFFIX);
+    }
+
+    static function update_indexes($psSol, $psInstrument, $psProduct, $piValue) {
         cDebug::enter();
-        /** @var cObjStoreDB $oDB **/
-        $aData = cSpaceTags::get_sol_tags($psSol);
-        if (!$aData) $aData = [];
-        if (!isset($aData[$psInstrument])) $aData[$psInstrument] = [];
-        $aData[$psInstrument][] = ["p" => $psProduct, "t" => $psTag];
-        $oDB = cSpaceTags::$objstoreDB;
-        $oDB->put("$psSol/" . cSpaceTags::SOL_TAG_FILE, $aData);
-
-        //update other indexes
-        cSpaceTagNames::update_top_name_index($psTag);
-        self::update_top_sol_index($psSol);
-        self::update_instr_index($psSol, $psInstrument, $psProduct, $psTag);
-        cSpaceTagNames::update_tag_name_index($psTag, $psSol, $psInstrument, $psProduct);
+        cSpaceIndex::update_indexes($psSol, $psInstrument, $psProduct, $piValue, cSpaceIndex::TAG_SUFFIX);
         cDebug::leave();
     }
 }
@@ -224,7 +207,7 @@ class cSpaceTags {
     //********************************************************************
     //* TAG Names
     //********************************************************************
-    static function get_product_tag_folder_name($psSol, $psInstrument, $psProduct) {
+    static function get_product_tag_folder($psSol, $psInstrument, $psProduct) {
         return "$psSol/$psInstrument/$psProduct";
     }
 
@@ -233,7 +216,7 @@ class cSpaceTags {
 
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
-        $sFolder = self::get_product_tag_folder_name($psSol, $psInstrument, $psProduct);
+        $sFolder = self::get_product_tag_folder($psSol, $psInstrument, $psProduct);
         $aTags = $oDB->get("$sFolder/" . self::PRODUCT_TAG_FILE);
         if (!$aTags) $aTags = [];
 
@@ -246,31 +229,7 @@ class cSpaceTags {
     }
 
     //********************************************************************
-    //* TAG counts
-    //********************************************************************
-    static function get_sol_tags($psSol) {
-        /** @var cObjStoreDB $oDB **/
-        $oDB = self::$objstoreDB;
-
-        $aData =  $oDB->get("$psSol/" . self::SOL_TAG_FILE);
-        return $aData;
-    }
-
-    //********************************************************************
-    static function get_sol_tag_count($psSol) {
-        cDebug::enter();
-        $aData = self::get_sol_tags($psSol);
-        $iCount = 0;
-        if ($aData != null)
-            foreach ($aData as $sInstr => $aTags)
-                foreach ($aTags as $oItem)
-                    $iCount++;
-        cDebug::leave();
-        return $iCount;
-    }
-
-    //********************************************************************
-    static function set_tag($psSol, $psInstrument, $psProduct, $psTag, $psUser) {
+    static function set_product_tag($psSol, $psInstrument, $psProduct, $psTag, $psUser) {
         cDebug::enter();
 
         //tidy the tags - remove anything non alphanumeric
@@ -301,14 +260,51 @@ class cSpaceTags {
         //put the file back
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
-        $sFolder = self::get_product_tag_folder_name($psSol, $psInstrument, $psProduct);
+        $sFolder = self::get_product_tag_folder($psSol, $psInstrument, $psProduct);
         $oDB->put("$sFolder/" . self::PRODUCT_TAG_FILE, $aData);
 
-        //mark this sol as tagged
-        cSpaceTagsIndex::update_sol_index($psSol, $psInstrument, $psProduct, $psTag);
-
+        //update Indexes
+        self::update_sol_tags($psSol, $psInstr, $psProduct, $psTag);
 
         cDebug::leave();
+    }
+
+    //********************************************************************
+    //********************************************************************
+    static function get_sol_tags($psSol) {
+        /** @var cObjStoreDB $oDB **/
+        $oDB = self::$objstoreDB;
+
+        $aData =  $oDB->get("$psSol/" . self::SOL_TAG_FILE);
+        return $aData;
+    }
+
+    //********************************************************************
+    static function update_sol_tags($psSol, $psInstrument, $psProduct, $psTag) {
+        /** @var cObjStoreDB $oDB **/
+        $oDB = self::$objstoreDB;
+        $aData = self::get_sol_tags($psSol);
+        if (!$aData) $aData = [];
+        if (!isset($aData[$psInstrument])) $aData[$psInstrument] = [];
+        $aData[$psInstrument][] = ["p" => $psProduct, "t" => $psTag];
+        $oDB = self::$objstoreDB;
+        $oDB->put("$psSol/" . self::SOL_TAG_FILE, $aData);
+
+        cSpaceTagsIndex::update_indexes($psSol, $psInstrument, $psProduct, 1);
+        cSpaceTagNames::update_indexes($psTag, $psSol, $psInstrument, $psProduct);
+    }
+
+    //********************************************************************
+    static function get_sol_tag_count($psSol) {
+        cDebug::enter();
+        $aData = self::get_sol_tags($psSol);
+        $iCount = 0;
+        if ($aData != null)
+            foreach ($aData as $sInstr => $aTags)
+                foreach ($aTags as $oItem)
+                    $iCount++;
+        cDebug::leave();
+        return $iCount;
     }
 }
 cSpaceTags::init_obj_store_db();
