@@ -159,7 +159,7 @@ class cCuriosityManifestIndex {
         }
         $sStatusSol = $oDB->put(self::INDEXING_STATUS, self::STATUS_COMPLETE, true);
         cDebug::write("compresssing database");
-        $oSqlDB->vacuum();
+        cSqlLiteUtils::vacuum(self::DB_FILENAME);
         cDebug::write("done");
         cDebug::leave();
     }
@@ -237,7 +237,7 @@ class cCuriosityManifestIndex {
         $oResultSet = $oSqlDB->exec_stmt($oStmt); //handles retries and errors
 
         //----------------fetch results
-        $aResults = $oSqlDB->fetch_all($oResultSet);
+        $aResults = cSqlLiteUtils::fetch_all($oResultSet);
         $aOut = [];
         foreach ($aResults as $aRow) {
             $sMission = $aRow[self::COL_MISSION];
