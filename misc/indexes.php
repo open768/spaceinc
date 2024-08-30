@@ -48,7 +48,7 @@ class cSpaceIndex {
 
     //********************************************************************
     static function get_sol_index($psSol, $psSuffix, $pbSolProdInstr = false) {
-        cDebug::enter();
+        //cDebug::enter();
         $sFile = self::get_filename(self::SOL_PREFIX, $psSuffix);
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
@@ -65,7 +65,7 @@ class cSpaceIndex {
             }
             $oData = $aProdData;
         }
-        cDebug::leave();
+        //cDebug::leave();
         return $oData;
     }
 

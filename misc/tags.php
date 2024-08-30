@@ -143,6 +143,10 @@ class cSpaceTagsIndex {
         return cSpaceIndex::get_top_sol_data(cSpaceIndex::TAG_SUFFIX);
     }
 
+    static function get_sol_index($psSol) {
+        return cSpaceIndex::get_sol_index($psSol, cSpaceIndex::TAG_SUFFIX);
+    }
+
     static function update_indexes($psSol, $psInstrument, $psProduct, $piValue) {
         cDebug::enter();
         cSpaceIndex::update_indexes($psSol, $psInstrument, $psProduct, $piValue, cSpaceIndex::TAG_SUFFIX);
@@ -175,8 +179,7 @@ class cSpaceTags {
     }
 
     //********************************************************************
-    static function get_product_tags($psSol, $psInstrument, $psProduct) {
-        cDebug::enter();
+    static function get_product_tags($psSol, $psInstrument, $psProduct, bool $pbRaw = false) {
 
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
@@ -184,12 +187,16 @@ class cSpaceTags {
         $aTags = $oDB->get("$sFolder/" . self::PRODUCT_TAG_FILE);
         if (!$aTags) $aTags = [];
 
-        $aKeys = [];
-        foreach ($aTags as $sKey => $oValue)
-            array_push($aKeys, $sKey);
-
-        cDebug::leave();
-        return $aKeys;
+        $oOut = null;
+        if ($pbRaw)
+            $oOut = $aTags;
+        else {
+            $aKeys = [];
+            foreach ($aTags as $sKey => $oValue)
+                array_push($aKeys, $sKey);
+            $oOut = $aKeys;
+        }
+        return $oOut;
     }
 
     //********************************************************************
@@ -197,33 +204,26 @@ class cSpaceTags {
         cDebug::enter();
 
         //tidy the tags - remove anything non alphanumeric
-        $psTag = strtolower($psTag);
-        $psTag = preg_replace("/[^a-z0-9\-]/", '', $psTag);
+        $sTag = strtolower($psTag);
+        $sTag = preg_replace("/[^a-z0-9\-]/", '', $sTag);
 
         //get the file from the object store
-        $aData = self::get_product_tags($psSol, $psInstrument, $psProduct);
+        $aData = self::get_product_tags($psSol, $psInstrument, $psProduct, true);
         if (!$aData) $aData = [];
-        cDebug::write("existing tags: ");
-        cDebug::vardump($aData, true);
-        cDebug::error("stop");
 
         //update the structure (array of arrays)
-        if (!isset($aData[$psTag])) {
-            cDebug::write("creating tag entry: $psTag");
-            $aData[$psTag] = [];
-        }
-
-        if (!isset($aData[$psTag][$psUser])) {
-            cDebug::write("adding user $psUser to tags : $psTag");
-            $aData[$psTag][$psUser] = 1;
-        } else {
-            cDebug::write("user has already reported this tag : $psTag");
+        if (isset($aData[$sTag])) {
+            cDebug::write("tag  already reported for this product: $psTag");
             return;
         }
 
-        cDebug::write("existing tags: ");
-        cDebug::vardump($aData, true);
+        cDebug::write("creating tag entry: $sTag");
+        cDebug::vardump($aData);
+
+        $aData[$sTag] = [];
+        $aData[$sTag][$psUser] = 1;
         cDebug::error("stop");
+
         //put the file back
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
@@ -231,7 +231,7 @@ class cSpaceTags {
         $oDB->put("$sFolder/" . self::PRODUCT_TAG_FILE, $aData);
 
         //update Indexes
-        self::update_sol_tags($psSol, $psInstr, $psProduct, $psTag);
+        self::update_sol_tags($psSol, $psInstrument, $psProduct, $psTag);
 
         cDebug::leave();
     }
@@ -273,6 +273,38 @@ class cSpaceTags {
                     $iCount++;
         cDebug::leave();
         return $iCount;
+    }
+
+    //********************************************************************
+    static function clean_product_tags() {
+        cDebug::enter(); {
+            /** @var cObjStoreDB $oDB **/
+            $oDB = self::$objstoreDB;
+
+            //get the top index
+            $aTopIndex = cSpaceTagsIndex::get_top_sol_index();
+            foreach ($aTopIndex as $sSol => $iSolCount) {
+                echo ".";
+                cDebug::flush();
+                $aSolData  = cSpaceTagsIndex::get_sol_index($sSol);
+                foreach ($aSolData as $sInstr => $aProds)
+                    foreach ($aProds as $sProd => $iProdCount) {
+                        //- - - - - - get the tags for the product
+                        $aProdData = self::get_product_tags($sSol, $sInstr, $sProd, true);
+                        $bErrorShown = false;
+
+                        //check if there are any blank entries
+                        foreach ($aProdData as $sKey => $sValue) {
+                            if (cCommon::is_string_empty($sKey)) {
+                                cDebug::write("deleting product data: s:$sSol, i:$sInstr, p:$sProd");
+                                $sFolder = self::get_product_tag_folder($sSol, $sInstr, $sProd);
+                                $oDB->kill("$sFolder/" . self::PRODUCT_TAG_FILE);
+                            }
+                        }
+                    }
+            }
+        }
+        cDebug::leave();
     }
 }
 cSpaceTags::init_obj_store_db();
