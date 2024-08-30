@@ -27,7 +27,7 @@ class cPDS {
     //********************************************************************
     static function init_obj_store_db() {
         if (!self::$objstoreDB) {
-            self::$objstoreDB = new cObjStoreDB(cSpaceRealms::PDS);
+            self::$objstoreDB = new cObjStoreDB(cSpaceRealms::PDS, cSpaceTables::PDS);
         }
     }
 
