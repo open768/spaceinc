@@ -35,35 +35,35 @@ class cSpaceTagNames {
 
     //********************************************************************
     static function kill_tag_name($psTag) {
-        cDebug::enter();
+        cDebug::enter(); {
 
-        /** @var cObjStoreDB $oDB **/
-        $oDB = cSpaceTags::$objstoreDB;
+            /** @var cObjStoreDB $oDB **/
+            $oDB = cSpaceTags::$objstoreDB;
 
-        //remove entry from top tag file 
-        $aData = self::get_top_tag_names();
-        if (isset($aData[$psTag])) {
-            unset($aData[$psTag]);
-            $oDB->put("/" . self::TOP_TAG_NAME_FILE, $aData);
-        } else {
-            cDebug::write("tag not found");
-            return;
+            //remove entry from top tag file 
+            $aData = self::get_top_tag_names();
+            if (isset($aData[$psTag])) {
+                unset($aData[$psTag]);
+                $oDB->put("/" . self::TOP_TAG_NAME_FILE, $aData);
+            } else {
+                cDebug::write("tag not found");
+                return;
+            }
+
+            //remove tag index file 
+            $filename = $psTag . ".txt";
+            $aTags = $oDB->get(self::TAG_FOLDER . "/$filename");
+            if ($aTags != null)
+                $oDB->kill(self::TAG_FOLDER . "/$filename");
+            else {
+                cDebug::write("tagindex not found");
+                return;
+            }
+
+            //remove individual tags
+            foreach ($aTags as $sFolder)
+                $oDB->kill("$sFolder/" . cSpaceTags::PRODUCT_TAG_FILE);
         }
-
-        //remove tag index file 
-        $filename = $psTag . ".txt";
-        $aTags = $oDB->get(self::TAG_FOLDER . "/$filename");
-        if ($aTags != null)
-            $oDB->kill(self::TAG_FOLDER . "/$filename");
-        else {
-            cDebug::write("tagindex not found");
-            return;
-        }
-
-        //remove individual tags
-        foreach ($aTags as $sFolder)
-            $oDB->kill("$sFolder/" . cSpaceTags::PRODUCT_TAG_FILE);
-
         cDebug::leave();
     }
 
@@ -221,6 +221,9 @@ class cSpaceTags {
             return;
         }
 
+        cDebug::write("existing tags: ");
+        cDebug::vardump($aData, true);
+        cDebug::error("stop");
         //put the file back
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
