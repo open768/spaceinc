@@ -218,11 +218,8 @@ class cSpaceTags {
         }
 
         cDebug::write("creating tag entry: $sTag");
-        cDebug::vardump($aData);
-
         $aData[$sTag] = [];
         $aData[$sTag][$psUser] = 1;
-        cDebug::error("stop");
 
         //put the file back
         /** @var cObjStoreDB $oDB **/
