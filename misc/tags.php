@@ -69,6 +69,7 @@ class cSpaceTagNames {
 
     //********************************************************************
     static function update_indexes($psSol, $psInstr, $psProduct, $psTag) {
+        if (!is_numeric($psSol)) cDebug::error("sol must be numeric");
         self::update_top_name_index($psTag);
         self::update_tag_name_index($psTag, $psSol, $psInstr, $psProduct);
     }
@@ -148,9 +149,7 @@ class cSpaceTagsIndex {
     }
 
     static function update_indexes($psSol, $psInstrument, $psProduct, $piValue) {
-        cDebug::enter();
         cSpaceIndex::update_indexes($psSol, $psInstrument, $psProduct, $piValue, cSpaceIndex::TAG_SUFFIX);
-        cDebug::leave();
     }
 }
 
@@ -179,7 +178,16 @@ class cSpaceTags {
     }
 
     //********************************************************************
-    static function get_product_tags($psSol, $psInstrument, $psProduct, bool $pbRaw = false) {
+    static function get_product_tag_names($psSol, $psInstrument, $psProduct) {
+        $aData = self::get_product_tags($psSol, $psInstrument, $psProduct);
+        $aTagNames = [];
+        foreach ($aData as $sTag => $oValue)
+            array_push($aTagNames, $sTag);
+        return $aTagNames;
+    }
+
+    //********************************************************************
+    static function get_product_tags($psSol, $psInstrument, $psProduct) {
 
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
@@ -187,16 +195,7 @@ class cSpaceTags {
         $aTags = $oDB->get("$sFolder/" . self::PRODUCT_TAG_FILE);
         if (!$aTags) $aTags = [];
 
-        $oOut = null;
-        if ($pbRaw)
-            $oOut = $aTags;
-        else {
-            $aKeys = [];
-            foreach ($aTags as $sKey => $oValue)
-                array_push($aKeys, $sKey);
-            $oOut = $aKeys;
-        }
-        return $oOut;
+        return $aTags;
     }
 
     //********************************************************************
@@ -208,7 +207,7 @@ class cSpaceTags {
         $sTag = preg_replace("/[^a-z0-9\-]/", '', $sTag);
 
         //get the file from the object store
-        $aData = self::get_product_tags($psSol, $psInstrument, $psProduct, true);
+        $aData = self::get_product_tags($psSol, $psInstrument, $psProduct);
         if (!$aData) $aData = [];
 
         //update the structure (array of arrays)
@@ -221,14 +220,14 @@ class cSpaceTags {
         $aData[$sTag] = [];
         $aData[$sTag][$psUser] = 1;
 
-        //put the file back
+        //update the data
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         $sFolder = self::get_product_tag_folder($psSol, $psInstrument, $psProduct);
         $oDB->put("$sFolder/" . self::PRODUCT_TAG_FILE, $aData);
 
         //update Indexes
-        self::update_sol_tags($psSol, $psInstrument, $psProduct, $psTag);
+        self::update_sol_tags($psSol, $psInstrument, $psProduct, $sTag);
 
         cDebug::leave();
     }
@@ -256,7 +255,7 @@ class cSpaceTags {
         $oDB->put("$psSol/" . self::SOL_TAG_FILE, $aData);
 
         cSpaceTagsIndex::update_indexes($psSol, $psInstrument, $psProduct, 1);
-        cSpaceTagNames::update_indexes($psTag, $psSol, $psInstrument, $psProduct);
+        cSpaceTagNames::update_indexes($psSol, $psInstrument, $psProduct, $psTag);
     }
 
     //********************************************************************
@@ -287,7 +286,7 @@ class cSpaceTags {
                 foreach ($aSolData as $sInstr => $aProds)
                     foreach ($aProds as $sProd => $iProdCount) {
                         //- - - - - - get the tags for the product
-                        $aProdData = self::get_product_tags($sSol, $sInstr, $sProd, true);
+                        $aProdData = self::get_product_tags($sSol, $sInstr, $sProd);
                         $bErrorShown = false;
 
                         //check if there are any blank entries
