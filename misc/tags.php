@@ -119,6 +119,22 @@ class cSpaceTagNames {
         $oDB->add_to_array_oldstyle(self::TAG_FOLDER, $filename, $sFolder);
         cDebug::leave();
     }
+
+    //********************************************************************
+    static function search_tag_names($psPartial) {
+        cDebug::enter();
+
+        if (strlen($psPartial) < 2) cDebug::error("partial match must be at least 2 characeters");
+        $aOut = [];
+        $oAllNames = self::get_top_tag_names();
+
+        foreach ($oAllNames as $sTag => $iCount)
+            if (strstr($sTag, $psPartial))
+                $aOut[] = $sTag;
+
+        cDebug::leave();
+        return $aOut;
+    }
 }
 
 //#############################################################################
@@ -152,12 +168,13 @@ class cSpaceTags {
 
 
     //********************************************************************
-    //* TAG Names
+    //* product
     //********************************************************************
     static function get_product_tag_folder($psSol, $psInstrument, $psProduct) {
         return "$psSol/$psInstrument/$psProduct";
     }
 
+    //********************************************************************
     static function get_product_tags($psSol, $psInstrument, $psProduct) {
         cDebug::enter();
 
@@ -217,6 +234,7 @@ class cSpaceTags {
     }
 
     //********************************************************************
+    //* Sol
     //********************************************************************
     static function get_sol_tags($psSol) {
         /** @var cObjStoreDB $oDB **/
