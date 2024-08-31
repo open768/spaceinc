@@ -20,8 +20,9 @@ require_once  "$spaceInc/misc/realms.php";
 
 //##########################################################################
 class cPDS {
-    const OBJDATA_TOP_FOLDER = "[pds]";
+    const PDS_TOP_FOLDER = "[pds]";
     const PDS_SUFFIX = "PDS";
+    const PDS_FILENAME = "[pds.txt]";
     private static $objstoreDB = null;
 
     //********************************************************************
@@ -32,8 +33,8 @@ class cPDS {
     }
 
     //**********************************************************************
-    private static function pr__get_objstore_Folder($psSol, $psInstrument) {
-        $sFolder = self::OBJDATA_TOP_FOLDER . "/$psSol/$psInstrument";
+    private static function pr__get_objstore_filename($psSol, $psInstrument) {
+        $sFolder = self::PDS_TOP_FOLDER . "/$psSol/$psInstrument/" + self::PDS_FILENAME;
         return $sFolder;
     }
 
@@ -43,21 +44,27 @@ class cPDS {
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
 
-        $sFolder = self::pr__get_objstore_Folder($psSol, $psInstrument);
-        $oData = $oDB->get_oldstyle($sFolder, cSpaceIndex::get_filename(cSpaceIndex::INSTR_PREFIX, self::PDS_SUFFIX));
+        $sFilename = self::pr__get_objstore_filename($psSol, $psInstrument);
+        $oData = $oDB->get($sFilename);
         cDebug::leave();
 
         return $oData;
     }
 
     //**********************************************************************
-    public static function write_index_data($paData) {
+    public static function put_pds_data($psSol, $psInstr, $paData) {
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
+        $sFilename = self::pr__get_objstore_filename($psSol, $psInstr);
+        $oDB->put($sFilename, $paData, true);
+    }
+
+    //**********************************************************************
+    public static function write_index_data($paData) {
+        /** @var cObjStoreDB $oDB **/
         foreach ($paData as  $sSol => $aSolData)
             foreach ($aSolData as $sInstr => $aInstrData) {
-                $sFilename = cSpaceIndex::get_filename(cSpaceIndex::INSTR_PREFIX, self::PDS_SUFFIX);
-                $aPDSData = $oDB->get_oldstyle(self::OBJDATA_TOP_FOLDER . "/$sSol/$sInstr", $sFilename);
+                $aPDSData = self::get_pds_data($sSol, $sInstr);
                 if ($aPDSData) {
                     //update existing with new data
                     foreach ($aInstrData as $sNewKey => $aNewData)
@@ -65,18 +72,8 @@ class cPDS {
                 } else
                     $aPDSData = $aInstrData;
 
-                /** @var cObjStoreDB $oDB **/
-                $oDB = self::$objstoreDB;
-                $oDB->put(self::OBJDATA_TOP_FOLDER . "/$sSol/$sInstr/$sFilename", $aPDSData);
-                cDebug::extra_debug("$sSol/$sInstr lines:" . count($aPDSData));
+                self::put_pds_data($sSol, $sInstr, $aPDSData);
             }
-    }
-
-    //**********************************************************************
-    public static function kill_index_files() {
-        /** @var cObjStoreDB $oDB **/
-        $oDB = self::$objstoreDB;
-        $oDB->kill_folder_oldstyle(self::OBJDATA_TOP_FOLDER);
     }
 }
 cPDS::init_obj_store_db();
