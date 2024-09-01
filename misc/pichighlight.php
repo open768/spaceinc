@@ -380,7 +380,7 @@ class cSpaceImageHighlight {
         //get the file from the object store to get the latest version
         $sFolder = "$psSol/$psInstrument/$psProduct";
         $aData = ["t" => $psTop, "l" => $psLeft, "u" => $psUser];
-        $oDB->add_to_array_oldstyle($sFolder, self::IMGHIGH_FILENAME, $aData); //store highlight
+        $oDB->add_to_array("$sFolder/" . self::IMGHIGH_FILENAME, $aData); //store highlight
         cSpaceIndex::update_indexes($psSol, $psInstrument, $psProduct, 1, cSpaceIndex::HILITE_SUFFIX);
         return "ok";
     }

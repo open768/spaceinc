@@ -92,7 +92,7 @@ class cSpaceComments {
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         $aData = ["c" => $psComment, "u" => $psUser];
-        $aData = $oDB->add_to_array_oldstyle($sFolder, self::COMMENT_FILENAME, $aData);
+        $aData = $oDB->add_to_array("$sFolder/" . self::COMMENT_FILENAME, $aData);
 
         self::add_to_index($psSol, $psInstrument, $psProduct);
 

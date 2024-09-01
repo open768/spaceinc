@@ -117,7 +117,7 @@ class cSpaceTagNames {
         $filename = $psTag . ".txt";
         /** @var cObjStoreDB $oDB **/
         $oDB = cSpaceTags::$objstoreDB;
-        $oDB->add_to_array_oldstyle(self::TAG_FOLDER, $filename, $sFolder);
+        $oDB->add_to_array(self::TAG_FOLDER . "/$filename", $sFolder);
         cDebug::leave();
     }
 
