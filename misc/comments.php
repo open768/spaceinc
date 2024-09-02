@@ -69,6 +69,8 @@ class cSpaceComments {
     //********************************************************************
     static function get_all_sol_data($psSol) {
         $aSolIndex = self::get_sol_index($psSol);
+        if ($aSolIndex == null) return null;
+
         $aAllSolData = [];
         foreach ($aSolIndex as $sProduct => $aProdData)
             foreach ($aProdData as $sInstr) {

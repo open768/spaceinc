@@ -53,6 +53,10 @@ class cSpaceIndex {
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         $oData = $oDB->get("$psSol/$sFile");
+        if ($oData == null) {
+            cDebug::write("no index found for sol:$psSol suffix:$psSuffix");
+            return null;
+        }
 
         //refactor data into sol,prod,instr if required
         if ($pbSolProdInstr) {
