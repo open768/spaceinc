@@ -18,8 +18,8 @@ class cCuriosityManifestIndex {
     const DB_FILENAME = "curiositymanifest.db";
     const MANIFEST_TABLE = "manifest";
 
-    const FEED_SLEEP = 1200; //milliseconds
-    const INDEXING_STATUS = "indexing:status";
+    const INDEXING_STATUS_KEY = "indexing:status";
+    const INDEXING_LASTSOL_KEY = "indexing:lastsol";
     const STATUS_NOT_STARTED = -1;
     const STATUS_COMPLETE = "complete";
 
@@ -29,8 +29,10 @@ class cCuriosityManifestIndex {
     const COL_PRODUCT = "P";
     const COL_IMAGE_URL = "U";
     const COL_SAMPLE_TYPE = "SA";
+    const COL_DATE_ADDED = "DA";
 
     const SAMPLE_THUMB = "thumbnail";
+    const REINDEX_SOLS = 10; //how many sols to reindex (ignore cache)
 
 
     /**  @var cObjstoreDB $oDB */
@@ -66,6 +68,7 @@ class cCuriosityManifestIndex {
         $sSQL = str_replace(":i_col", self::COL_INSTR, $sSQL);
         $sSQL = str_replace(":p_col", self::COL_PRODUCT, $sSQL);
         $sSQL = str_replace(":u_col", self::COL_IMAGE_URL, $sSQL);
+        $sSQL = str_replace(":d_col", self::COL_DATE_ADDED, $sSQL);
         return $sSQL;
     }
 
@@ -77,13 +80,18 @@ class cCuriosityManifestIndex {
         if ($bTableExists) {
             cDebug::extra_debug("table exists: " . self::MANIFEST_TABLE);
             return;
+        } else {
+            cDebug::extra_debug("deleting status");
+            $oDB = self::$oDB;
+            $oDB->kill(self::INDEXING_STATUS_KEY);
+            $oDB->kill(self::INDEXING_LASTSOL_KEY);
         }
 
         //-------------create TABLE
         cDebug::extra_debug("table doesnt exist " . self::MANIFEST_TABLE);
         $sSQL =
             "CREATE TABLE `:table` ( " .
-            ":m_col TEXT not null, :so_col TEXT not null, :i_col TEXT not null, :p_col TEXT not null, :u_col TEXT not null, :sa_col TEXT, " .
+            ":m_col TEXT not null, :so_col TEXT not null, :i_col TEXT not null, :p_col TEXT not null, :u_col TEXT not null, :sa_col TEXT, :d_col INTEGER, " .
             "CONSTRAINT cmanifest UNIQUE (:m_col, :so_col, :i_col, :p_col) " .
             ")";
         $sSQL = self::pr_replace_sql_params($sSQL);
@@ -104,20 +112,20 @@ class cCuriosityManifestIndex {
 
         //----------get status from odb
         $oDB = self::$oDB;
-        $sStatusSol = $oDB->get(self::INDEXING_STATUS);
-        if ($sStatusSol === null) {
-            cDebug::write("indexing not begun");
-            $sStatusSol = self::STATUS_NOT_STARTED;
-        } else if ($sStatusSol === self::STATUS_COMPLETE)
+        $sStatus = $oDB->get(self::INDEXING_STATUS_KEY);
+
+        if ($sStatus === self::STATUS_COMPLETE)
             cDebug::error("indexing allready complete");
-        else
-            cDebug::write("indexing status at sol: $sStatusSol");
+
+        //----------get last indexed sol  odb
+        $sStatusSol = $oDB->get(self::INDEXING_LASTSOL_KEY);
+        if ($sStatusSol == null) $sStatusSol = -1;
+        cDebug::write("indexing starting at sol: $sStatusSol");
 
         //----------get manifest
         cDebug::write("getting sol Manifest");
         $oManifest = cCuriosityManifest::getManifest();
 
-        //----work on manifest
         cDebug::write("processing sol Manifest");
         $aSols = $oManifest->sols;
         ksort($aSols, SORT_NUMERIC);
@@ -125,39 +133,30 @@ class cCuriosityManifestIndex {
 
         $aKeys = array_keys($aSols);
         $iKeyCount = count($aKeys);
-        $iCount = 0;
+        $iRow = 0;
+        $iReindexFrom = $iKeyCount - self::REINDEX_SOLS;
 
+        //---------------iterate manifest
         foreach ($aSols as $number => $oSol) {
             $sSol = $oSol->sol;
-            $iCount++;
-            if ($sStatusSol >= $sSol) continue;
+            $iRow++;
 
-            $bCheckCache = $iCount >= ($iKeyCount - 10);
-            $oSolData = cCuriosityManifest::getAllSolData($sSol, $bCheckCache);
-            $aImages = $oSolData->images;
-            if ($aImages === null) {
-                cDebug::error("no image data");
-            }
+            //---------------------check if the row needs reindexing
+            $bIgnoreCache = $iRow >= $iReindexFrom;
+            if ($bIgnoreCache)
+                self::delete_sol_index($sSol);
+            elseif ($sStatusSol >= $sSol)
+                continue;
 
-            $oSqlDB->begin_transaction(); {
-                foreach ($aImages as $sKey => $oImgData) {
-
-                    $sSampleType = $oImgData->sampleType;
-                    if ($sSampleType === self::SAMPLE_THUMB) continue;
-                    $sInstr = $oImgData->instrument;
-                    $sProduct = $oImgData->itemName;
-                    $sProductUrl = $oImgData->urlList;
-                    self::add_to_index($sSol, $sInstr, $sProduct, $sProductUrl, $sSampleType);
-                }
-                $oSqlDB->commit();
-                cDebug::write("<p> -- sleeping for " . self::FEED_SLEEP . " ms\n");
-                usleep(self::FEED_SLEEP);
-            }
+            //-------perform the index
+            self::index_sol($sSol, $bIgnoreCache);
 
             //update the status
-            $oDB->put(self::INDEXING_STATUS, $sSol, true);
+            $oDB->put(self::INDEXING_LASTSOL_KEY, $sSol, true);
         }
-        $sStatusSol = $oDB->put(self::INDEXING_STATUS, self::STATUS_COMPLETE, true);
+        $sStatusSol = $oDB->put(self::INDEXING_STATUS_KEY, self::STATUS_COMPLETE, true);
+
+        //----------------compress database
         cDebug::write("compresssing database");
         cSqlLiteUtils::vacuum(self::DB_FILENAME);
         cDebug::write("done");
@@ -165,24 +164,66 @@ class cCuriosityManifestIndex {
     }
 
     //*****************************************************************************
-    static function add_to_index($psSol, $psInstr, $psProduct, $psUrl, $psSampleType) {
-        //cDebug::enter();
+    static function index_sol($psSol, $pbIgnoreCache) {
+        $oSqlDB = self::$oSQLDB;
+        $oSolData = cCuriosityManifest::getAllSolData($psSol, $pbIgnoreCache);
+        $aImages = $oSolData->images;
+        if ($aImages === null) {
+            cDebug::error("no image data");
+        }
 
-        cDebug::extra_debug("adding to index: $psSol, $psInstr, $psProduct, $psSampleType");
-        echo ".";
+        $oSqlDB->begin_transaction(); {
+            foreach ($aImages as $sKey => $oImgData)
+                self::add_to_index($psSol, $oImgData);
+            $oSqlDB->commit();
+        }
+    }
 
-        $sSQL = "INSERT INTO `:table` (:m_col, :so_col, :i_col, :p_col, :u_col, :sa_col ) VALUES (:mission, :sol, :instr, :product, :url, :sample)";
+    //*****************************************************************************
+    static function delete_sol_index($psSol) {
+        cDebug::extra_debug("deleting Sol $psSol index");
+        $sSQL = "DELETE FROM `:table` where :so_col=:sol";
         $sSQL = self::pr_replace_sql_params($sSQL);
 
+        $oSqlDB = self::$oSQLDB;
+        $oStmt = $oSqlDB->prepare($sSQL);
+        $oStmt->bindValue(":sol", $psSol);
+
+        $oSqlDB->exec_stmt($oStmt); //handles retries and errors
+    }
+
+    //*****************************************************************************
+    static function add_to_index($psSol, $poItem) {
+        //cDebug::enter();
+        //--------------get the data out of the item
+        $sSampleType = $poItem->sampleType;
+        if ($sSampleType === self::SAMPLE_THUMB) return;
+        $sInstr = $poItem->instrument;
+        $sProduct = $poItem->itemName;
+        $sUrl = $poItem->urlList;
+        $sUtc = $poItem->utc; {
+            $dUtc = new DateTime($sUtc, new DateTimeZone("UTC"));
+            $iUtc = $dUtc->format('U');
+        }
+
+        //--------------get the data out of the item
+        cDebug::extra_debug("adding to index: $psSol, $sInstr, $sProduct, $sSampleType");
+        echo ".";
+        $sSQL = "INSERT INTO `:table` (:m_col, :so_col, :i_col, :p_col, :u_col, :sa_col ,:d_col) VALUES (:mission, :sol, :instr, :product, :url, :sample , :d_val)";
+        $sSQL = self::pr_replace_sql_params($sSQL);
+
+        //--------------put it into the database
         /** @var cSQLLite $oSqlDB  */
         $oSqlDB = self::$oSQLDB;
         $oStmt = $oSqlDB->prepare($sSQL);
         $oStmt->bindValue(":mission", cSpaceMissions::CURIOSITY);
         $oStmt->bindValue(":sol", $psSol);
-        $oStmt->bindValue(":instr", $psInstr);
-        $oStmt->bindValue(":product", $psProduct);
-        $oStmt->bindValue(":url", $psUrl);
-        $oStmt->bindValue(":sample", $psSampleType);
+        $oStmt->bindValue(":instr", $sInstr);
+        $oStmt->bindValue(":product", $sProduct);
+        $oStmt->bindValue(":url", $sUrl);
+        $oStmt->bindValue(":sample", $sSampleType);
+        $oStmt->bindValue(":d_val", $iUtc);
+
 
         $oSqlDB->exec_stmt($oStmt); //handles retries and errors
 
@@ -201,7 +242,7 @@ class cCuriosityManifestIndex {
 
         //update the status
         $oDB = self::$oDB;
-        $oDB->put(self::INDEXING_STATUS, self::STATUS_NOT_STARTED, true);
+        $oDB->put(self::INDEXING_STATUS_KEY, self::STATUS_NOT_STARTED, true);
 
         cDebug::write("done");
         cDebug::leave();
@@ -261,6 +302,7 @@ class cCuriosityManifest {
     const FEED_URL = "https://mars.jpl.nasa.gov/msl-raw-images/image/image_manifest.json";
     const SOL_URL = "https://mars.jpl.nasa.gov/msl-raw-images/image/images_sol";
     const SOL_CACHE = 604800;    //1 week
+    const FEED_SLEEP = 200; //milliseconds
 
 
     //*****************************************************************************
@@ -305,10 +347,17 @@ class cCuriosityManifest {
         if (cCommon::is_string_empty($sUrl)) cDebug::error("empty url for $psSol");
 
         cDebug::write("Getting all sol data for sol $psSol");
+
         $oCache = new cCachedHttp();
         $oCache->CACHE_EXPIRY = self::SOL_CACHE;
-
+        $bIsCached = $oCache->is_cached($sUrl, $pbCheckExpiry);
         $oResult = $oCache->getCachedJson($sUrl, $pbCheckExpiry);
+
+        if (!$bIsCached) {
+            cDebug::write("<p> -- sleeping for " . self::FEED_SLEEP . " ms\n");
+            usleep(self::FEED_SLEEP);
+        }
+
         cDebug::leave();
         return $oResult;
     }
