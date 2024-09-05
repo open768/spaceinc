@@ -102,7 +102,13 @@ class cCuriosityManifestIndex {
         $sSQL = "CREATE INDEX idx_manifest on ':table' ( :m_col, :so_col, :i_col )";
         $sSQL = self::pr_replace_sql_params($sSQL);
         $oSqLDB->query($sSQL);
-        cDebug::extra_debug("index created");
+        cDebug::extra_debug("main index created");
+
+        //-------------create INDEX
+        $sSQL = "CREATE INDEX idx_manifest_date on ':table' ( :d_col )";
+        $sSQL = self::pr_replace_sql_params($sSQL);
+        $oSqLDB->query($sSQL);
+        cDebug::extra_debug("secondary index created");
     }
 
     //*****************************************************************************
