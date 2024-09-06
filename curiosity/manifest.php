@@ -95,19 +95,19 @@ class cCuriosityManifestIndex {
             "CONSTRAINT cmanifest UNIQUE (:mission_col, :sol_col, :instr_col, :product_col) " .
             ")";
         $sSQL = self::pr_replace_sql_params($sSQL);
-        $oSqLDB->query($sSQL);
+        $oSqLDB->querySQL($sSQL);
         cDebug::extra_debug("table created");
 
         //-------------create INDEX
         $sSQL = "CREATE INDEX idx_manifest on ':table' ( :mission_col, :sol_col, :instr_col )";
         $sSQL = self::pr_replace_sql_params($sSQL);
-        $oSqLDB->query($sSQL);
+        $oSqLDB->querySQL($sSQL);
         cDebug::extra_debug("main index created");
 
         //-------------create INDEX
         $sSQL = "CREATE INDEX idx_manifest_date on ':table' ( :date_col )";
         $sSQL = self::pr_replace_sql_params($sSQL);
-        $oSqLDB->query($sSQL);
+        $oSqLDB->querySQL($sSQL);
         cDebug::extra_debug("secondary index created");
     }
 
