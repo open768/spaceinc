@@ -62,13 +62,13 @@ class cCuriosityManifestIndex {
     //*****************************************************************************
     private static function pr_replace_sql_params($psSQL) {
         $sSQL = str_replace(":table", self::MANIFEST_TABLE, $psSQL);
-        $sSQL = str_replace(":m_col", self::COL_MISSION, $sSQL);
-        $sSQL = str_replace(":so_col", self::COL_SOL, $sSQL);
-        $sSQL = str_replace(":sa_col", self::COL_SAMPLE_TYPE, $sSQL);
-        $sSQL = str_replace(":i_col", self::COL_INSTR, $sSQL);
-        $sSQL = str_replace(":p_col", self::COL_PRODUCT, $sSQL);
-        $sSQL = str_replace(":u_col", self::COL_IMAGE_URL, $sSQL);
-        $sSQL = str_replace(":d_col", self::COL_DATE_ADDED, $sSQL);
+        $sSQL = str_replace(":mission_col", self::COL_MISSION, $sSQL);
+        $sSQL = str_replace(":sol_col", self::COL_SOL, $sSQL);
+        $sSQL = str_replace(":sample_col", self::COL_SAMPLE_TYPE, $sSQL);
+        $sSQL = str_replace(":instr_col", self::COL_INSTR, $sSQL);
+        $sSQL = str_replace(":product_col", self::COL_PRODUCT, $sSQL);
+        $sSQL = str_replace(":url_col", self::COL_IMAGE_URL, $sSQL);
+        $sSQL = str_replace(":date_col", self::COL_DATE_ADDED, $sSQL);
         return $sSQL;
     }
 
@@ -91,21 +91,21 @@ class cCuriosityManifestIndex {
         cDebug::extra_debug("table doesnt exist " . self::MANIFEST_TABLE);
         $sSQL =
             "CREATE TABLE `:table` ( " .
-            ":m_col TEXT not null, :so_col TEXT not null, :i_col TEXT not null, :p_col TEXT not null, :u_col TEXT not null, :sa_col TEXT, :d_col INTEGER, " .
-            "CONSTRAINT cmanifest UNIQUE (:m_col, :so_col, :i_col, :p_col) " .
+            ":mission_col TEXT not null, :sol_col TEXT not null, :instr_col TEXT not null, :product_col TEXT not null, :url_col TEXT not null, :sample_col TEXT, :date_col INTEGER, " .
+            "CONSTRAINT cmanifest UNIQUE (:mission_col, :sol_col, :instr_col, :product_col) " .
             ")";
         $sSQL = self::pr_replace_sql_params($sSQL);
         $oSqLDB->query($sSQL);
         cDebug::extra_debug("table created");
 
         //-------------create INDEX
-        $sSQL = "CREATE INDEX idx_manifest on ':table' ( :m_col, :so_col, :i_col )";
+        $sSQL = "CREATE INDEX idx_manifest on ':table' ( :mission_col, :sol_col, :instr_col )";
         $sSQL = self::pr_replace_sql_params($sSQL);
         $oSqLDB->query($sSQL);
         cDebug::extra_debug("main index created");
 
         //-------------create INDEX
-        $sSQL = "CREATE INDEX idx_manifest_date on ':table' ( :d_col )";
+        $sSQL = "CREATE INDEX idx_manifest_date on ':table' ( :date_col )";
         $sSQL = self::pr_replace_sql_params($sSQL);
         $oSqLDB->query($sSQL);
         cDebug::extra_debug("secondary index created");
@@ -188,7 +188,7 @@ class cCuriosityManifestIndex {
     //*****************************************************************************
     static function delete_sol_index($psSol) {
         cDebug::extra_debug("deleting Sol $psSol index");
-        $sSQL = "DELETE FROM `:table` where :so_col=:sol";
+        $sSQL = "DELETE FROM `:table` where :sol_col=:sol";
         $sSQL = self::pr_replace_sql_params($sSQL);
 
         $oSqlDB = self::$oSQLDB;
@@ -203,7 +203,6 @@ class cCuriosityManifestIndex {
         //cDebug::enter();
         //--------------get the data out of the item
         $sSampleType = $poItem->sampleType;
-        if ($sSampleType === self::SAMPLE_THUMB) return;
         $sInstr = $poItem->instrument;
         $sProduct = $poItem->itemName;
         $sUrl = $poItem->urlList;
@@ -215,7 +214,7 @@ class cCuriosityManifestIndex {
         //--------------get the data out of the item
         cDebug::extra_debug("adding to index: $psSol, $sInstr, $sProduct, $sSampleType");
         echo ".";
-        $sSQL = "INSERT INTO `:table` (:m_col, :so_col, :i_col, :p_col, :u_col, :sa_col ,:d_col) VALUES (:mission, :sol, :instr, :product, :url, :sample , :d_val)";
+        $sSQL = "INSERT INTO `:table` (:mission_col, :sol_col, :instr_col, :product_col, :url_col, :sample_col ,:date_col) VALUES (:mission, :sol, :instr, :product, :url, :sample , :d_val)";
         $sSQL = self::pr_replace_sql_params($sSQL);
 
         //--------------put it into the database
@@ -265,13 +264,8 @@ class cCuriosityManifestIndex {
         cDebug::enter();
 
         //----------------prepare statement
-        $sSQL = "SELECT :m_col,:so_col,:i_col,:p_col,:u_col FROM `:table` WHERE ( :m_col=:name AND  :i_col LIKE :pattern )  ORDER BY RANDOM() LIMIT :howmany";
-        $sSQL = str_replace(":table", self::MANIFEST_TABLE, $sSQL);
-        $sSQL = str_replace(":m_col", self::COL_MISSION, $sSQL);
-        $sSQL = str_replace(":so_col", self::COL_SOL, $sSQL);
-        $sSQL = str_replace(":i_col", self::COL_INSTR, $sSQL);
-        $sSQL = str_replace(":p_col", self::COL_PRODUCT, $sSQL);
-        $sSQL = str_replace(":u_col", self::COL_IMAGE_URL, $sSQL);
+        $sSQL = "SELECT :mission_col,:sol_col,:instr_col,:product_col,:url_col FROM `:table` WHERE ( :mission_col=:name AND  :instr_col LIKE :pattern AND :sample_col != 'thumbnail')  ORDER BY RANDOM() LIMIT :howmany";
+        $sSQL = self::pr_replace_sql_params($sSQL);
         $sSQL = str_replace(":howmany", $piHowmany, $sSQL);
 
         $oSqlDB = self::$oSQLDB;
@@ -316,10 +310,10 @@ class cCuriosityManifest {
         $oResult = null;
         cDebug::enter();
 
-        $oCache = new cCachedHttp();
-        $oCache->CACHE_EXPIRY = self::MANIFEST_CACHE;
-
-        $oResult = $oCache->getCachedJson(self::FEED_URL);
+        $oCache = new cCachedHttp(); {
+            $oCache->CACHE_EXPIRY = self::MANIFEST_CACHE;
+            $oResult = $oCache->getCachedJson(self::FEED_URL);
+        }
         cDebug::leave();
         return $oResult;
     }
@@ -354,10 +348,11 @@ class cCuriosityManifest {
 
         cDebug::write("Getting all sol data for sol $psSol");
 
-        $oCache = new cCachedHttp();
-        $oCache->CACHE_EXPIRY = self::SOL_CACHE;
-        $bIsCached = $oCache->is_cached($sUrl, $pbCheckExpiry);
-        $oResult = $oCache->getCachedJson($sUrl, $pbCheckExpiry);
+        $oCache = new cCachedHttp(); {
+            $oCache->CACHE_EXPIRY = self::SOL_CACHE;
+            $bIsCached = $oCache->is_cached($sUrl, $pbCheckExpiry);
+            $oResult = $oCache->getCachedJson($sUrl, $pbCheckExpiry);
+        }
 
         if (!$bIsCached) {
             cDebug::write("<p> -- sleeping for " . self::FEED_SLEEP . " ms\n");
@@ -373,8 +368,8 @@ class cCuriosityManifest {
         cDebug::enter();
 
         cDebug::write("clearing sol cache : " . $psSol);
-        $oCache = new cCachedHttp();
         $sUrl = self::getSolJsonUrl($psSol);
+        $oCache = new cCachedHttp();
         $oCache->deleteCachedURL($sUrl);
 
         cDebug::leave();

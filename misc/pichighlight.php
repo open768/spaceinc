@@ -13,6 +13,7 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
  **************************************************************************/
 
 require_once  "$phpInc/ckinc/objstoredb.php";
+require_once  "$phpInc/ckinc/image.php";
 require_once  "$spaceInc/misc/indexes.php";
 require_once  "$spaceInc/misc/realms.php";
 require_once  "$phpInc/ckinc/http.php";
@@ -223,22 +224,8 @@ class cSpaceImageHighlight {
     private static function pr_perform_crop($poImg, $piX, $piY, $psOutfile) {
         global $root;
         cDebug::write("cropping to $piX, $piY");
-
-        $oDest = imagecreatetruecolor(self::CROP_WIDTH, self::CROP_HEIGHT);
-        cDebug::write("cropping ($piX, $piY), w=" . self::CROP_WIDTH . " h=" . self::CROP_HEIGHT);
-        imagecopy($oDest, $poImg, 0, 0, $piX, $piY, self::CROP_WIDTH, self::CROP_HEIGHT);
-
-        //write out the file
         $sFilename = "$root/$psOutfile";
-        $sFolder = dirname($sFilename);
-        if (!file_exists($sFolder)) {
-            cDebug::write("creating folder: $sFolder");
-            mkdir($sFolder, 0755, true); //folder needs to readable by apache
-        }
-
-        cDebug::write("writing jpeg to $sFilename");
-        imagejpeg($oDest, $sFilename, self::THUMB_QUALITY);
-        imagedestroy($oDest);
+        cImageFunctions::crop($poImg, $piX, $piY, self::CROP_WIDTH, self::CROP_HEIGHT, self::THUMB_QUALITY, $sFilename);
     }
 
     //**********************************************************************
