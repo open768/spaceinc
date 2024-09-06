@@ -78,7 +78,7 @@ class cCuriosityManifestIndex {
         //-------------- check table
         $bTableExists = $oSqLDB->table_exists(self::MANIFEST_TABLE);
         if ($bTableExists) {
-            cDebug::extra_debug("table exists: " . self::MANIFEST_TABLE);
+            //cDebug::extra_debug("table exists: " . self::MANIFEST_TABLE);
             return;
         } else {
             cDebug::extra_debug("deleting status");
