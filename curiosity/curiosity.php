@@ -13,6 +13,8 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
  **************************************************************************/
 
 require_once  "$phpInc/ckinc/common.php";
+require_once  "$phpInc/ckinc/thumbnail.php";
+require_once  "$phpInc/ckinc/image.php";
 require_once  "$phpInc/ckinc/cached_http.php";
 require_once  "$spaceInc/missions/mission.php";
 require_once  "$spaceInc/curiosity/instrument.php";
@@ -25,7 +27,7 @@ require_once  "$spaceInc/curiosity/manifest.php";
 class cCuriosity implements iMission {
     const PDS_VOLUMES = "http://pds-imaging.jpl.nasa.gov/volumes/msl.html";
     const ALL_INSTRUMENTS = "All";
-    const LOCAL_THUMB_FOLDER = "images/thumbs";
+    const LOCAL_THUMB_FOLDER = "images/[thumbs]";
     const THUMBNAIL_QUALITY = 90;
     const THUMBNAIL_HEIGHT = 120;
 
@@ -298,38 +300,14 @@ class cCuriosity implements iMission {
         cDebug::enter();
 
         $sRelative = self::LOCAL_THUMB_FOLDER . "/$psSol/$psInstrument/$psProduct.jpg";
-        $sPath = "$root/$sRelative";
+        $sThumbPath = "$root/$sRelative";
 
-        if (!file_exists($sPath)) {
+        if (!file_exists($sThumbPath)) {
 
             $oDetails = self::getProductDetails($psSol, $psInstrument, $psProduct);
             if ($oDetails["d"]) {
                 $sImgUrl = $oDetails["d"]["i"];
-
-                //----------------------------------------------------------------------
-                cDebug::write("fetching $sImgUrl");
-                $oHttp = new cHttp();
-                $oMSLImg = $oHttp->fetch_image($sImgUrl);
-                cDebug::write("got image");
-                cDebug::write("<img src='$sImgUrl'>");
-                $iWidth = imagesx($oMSLImg);
-                $iHeight = imagesy($oMSLImg);
-                $iNewWidth = floor($iWidth * self::THUMBNAIL_HEIGHT / $iHeight);
-
-                //----------------------------------------------------------------------
-                cDebug::write("new Width is $iNewWidth .. resizing");
-                $oThumb = imagecreatetruecolor($iNewWidth, self::THUMBNAIL_HEIGHT);
-                imagecopyresampled($oThumb, $oMSLImg, 0, 0, 0, 0, $iNewWidth, self::THUMBNAIL_HEIGHT, $iWidth, $iHeight);
-                $sFolder = dirname($sPath);
-                if (!file_exists($sFolder)) {
-                    cDebug::write("creating folder: $sFolder");
-                    mkdir($sFolder, 0755, true); //folder needs to readable by apache
-                }
-                imagejpeg($oThumb, $sPath, self::THUMBNAIL_QUALITY);
-
-                //----------------------------------------------------------------------
-                imagedestroy($oMSLImg);
-                imagedestroy($oThumb);
+                cImageFunctions::make_thumbnail($sImgUrl, SELF::THUMBNAIL_HEIGHT, SELF::THUMBNAIL_QUALITY, $sThumbPath);
             } else
                 $sRelative = null; //no image found
         }
