@@ -296,7 +296,7 @@ class cCuriosity implements iMission {
 
     //*****************************************************************************
     public static function getLocalThumbnail($psSol, $psInstrument, $psProduct) {
-        global $root;
+        global $root, $home;
         cDebug::enter();
 
         $sRelative = self::LOCAL_THUMB_FOLDER . "/$psSol/$psInstrument/$psProduct.jpg";
@@ -312,7 +312,7 @@ class cCuriosity implements iMission {
                 $sRelative = null; //no image found
         }
 
-        cDebug::write("<img src='../../$sRelative'>");
+        cDebug::write("<img src='$home/$sRelative'>");
         $oDetails = ["s" => $psSol, "i" => $psInstrument, "p" => $psProduct, "u" => $sRelative];
 
         cDebug::leave();
