@@ -13,9 +13,9 @@ class cFacebookTags {
     public static function make_fb_detail_tags() {
         cDebug::check_GET_or_POST();
 
-        $sSol = cHeader::get("s");
-        $sInstrument = cHeader::get("i");
-        $sProduct = cHeader::get("p");
+        $sSol = cHeader::get(cSpaceUrlParams::SOL);
+        $sInstrument = cHeader::get(cSpaceUrlParams::INSTRUMENT);
+        $sProduct = cHeader::get(cSpaceUrlParams::PRODUCT);
 
         cDebug::write("getting product details for $sSol, $sInstrument, $sProduct");
         $oInstrumentData = cCuriosity::getProductDetails($sSol, $sInstrument, $sProduct);
@@ -44,7 +44,7 @@ class cFacebookTags {
     public static function make_fb_sol_high_tags() {
         cDebug::check_GET_or_POST();
 
-        $sSol = cHeader::get("s");
+        $sSol = cHeader::get(cSpaceUrlParams::SOL);
 
         cDebug::write("getting highlight details for $sSol");
         $sFilename  = cSpaceImageHighlight::get_sol_high_mosaic($sSol);
