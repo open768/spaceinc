@@ -24,6 +24,8 @@ require_once  "$spaceInc/curiosity/manifest.php";
 
 
 //##########################################################################
+cMissionNames::add_mission("curiosity", "MSL", "https://science.nasa.gov/mission/msl-curiosity/");
+
 class cCuriosity implements iMission {
     const PDS_VOLUMES = "http://pds-imaging.jpl.nasa.gov/volumes/msl.html";
     const ALL_INSTRUMENTS = "All";
@@ -386,3 +388,5 @@ class cCuriosityImages implements iMissionImages {
         return ["s" => $psSol, "i" => $psInstrument, "d" => $poAllSolThumbs];
     }
 }
+
+//cMissions::register("MSL", cCuriosity, cCuriosityImages);
