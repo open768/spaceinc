@@ -11,13 +11,15 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 
 // USE AT YOUR OWN RISK - NO GUARANTEES OR ANY FORM ARE EITHER EXPRESSED OR IMPLIED
  **************************************************************************/ //##########################################################################
-interface iMission
-{
+interface iMission {
     static function getAllSolData($psSol);
     static function getSolList();
     static function search_product($psSearch);
-    static function getThumbnails($psSol, $psInstrument);
     static function getSolInstrumentList($piSol);
     static function getProductDetails($psSol, $psInstrument, $psProduct);
+}
+
+interface iMissionImages {
+    static function getThumbnails($psSol, $psInstrument);
     static function getLocalThumbnail($psSol, $psInstrument, $psProduct);
 }
