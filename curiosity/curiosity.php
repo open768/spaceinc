@@ -24,14 +24,28 @@ require_once  "$spaceInc/curiosity/manifest.php";
 
 
 //##########################################################################
-cMissionNames::add_mission("curiosity", "MSL", "https://science.nasa.gov/mission/msl-curiosity/");
 
 class cCuriosity implements iMission {
     const PDS_VOLUMES = "http://pds-imaging.jpl.nasa.gov/volumes/msl.html";
     const ALL_INSTRUMENTS = "All";
+    const MISSION_NAME = "curiosity";
+    const MISSION_ID = "msl";
+    const MISSION_URL = "https://science.nasa.gov/mission/msl-curiosity/";
 
     private static $Instruments, $instrument_map;
 
+    static function get_mission_name() {
+        return self::MISSION_NAME;
+    }
+
+
+    static function get_mission_id() {
+        return self::MISSION_ID;
+    }
+
+    static function get_mission_url() {
+        return self::MISSION_URL;
+    }
 
     //*****************************************************************************
     public static function getAllSolData($psSol) {
@@ -204,6 +218,8 @@ class cCuriosity implements iMission {
         return $aOutput;
     }
 }
+cMissions::add_mission(cCuriosity::class);
+
 
 class cCuriosityImages implements iMissionImages {
     const LOCAL_THUMB_FOLDER = "images/[thumbs]";
