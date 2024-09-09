@@ -15,29 +15,25 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 require_once  "$phpInc/ckinc/cached_http.php";
 
 //##########################################################################
-class cInstrumentData
-{
+class cInstrumentData {
     public $du, $dm, $i, $p, $data;
 }
 
 //##########################################################################
-class cInstrument
-{
+class cInstrument {
     public $instrument;
     public $data;
     public $product;
     public static $Instruments, $instrument_map;
 
     //*************************************************************************
-    function __construct($psInstrument)
-    {
+    function __construct($psInstrument) {
         $this->instrument = $psInstrument;
         $this->data = array();
     }
 
     //*************************************************************************
-    public function add($poCuriosityData, $pbThumbs = false)
-    {
+    public function add($poCuriosityData, $pbThumbs = false) {
         //dont add thumbnail products if not wanted
 
         $bProceed = false;
@@ -66,8 +62,7 @@ class cInstrument
     }
 
     //*****************************************************************************
-    public static function getInstrumentList()
-    {
+    public static function getInstrumentList() {
         if (!self::$Instruments) {
             // build instrument list
             self::$Instruments = [
@@ -100,16 +95,17 @@ class cInstrument
     }
 
     //*****************************************************************************
-    public static function getInstrumentAbbr($psInstrument)
-    {
+    public static function getInstrumentAbbr($psInstrument) {
         self::getInstrumentList();
         return self::$instrument_map[$psInstrument]["abbr"];
     }
 
     //*****************************************************************************
-    public static function getInstrumentName($psInstrument)
-    {
+    public static function getInstrumentName($psInstrument) {
         self::getInstrumentList();
-        return  self::$instrument_map[$psInstrument]["name"];
+        if (array_key_exists($psInstrument, self::$instrument_map))
+            return  self::$instrument_map[$psInstrument]["name"];
+        else
+            cDebug::error("unknown instrument: $psInstrument");
     }
 }
