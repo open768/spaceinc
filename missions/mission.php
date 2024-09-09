@@ -25,7 +25,7 @@ interface iMission {
 
 interface iMissionImages {
     static function getThumbnails($psSol, $psInstrument);
-    static function getLocalThumbnail($psSol, $psInstrument, $psProduct);
+    static function getImageUrl($psSol, $psInstrument, $psProduct);
 }
 
 //#########################################################################

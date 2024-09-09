@@ -227,28 +227,27 @@ class cCuriosityImages implements iMissionImages {
     const THUMBNAIL_HEIGHT = 120;
 
     //*****************************************************************************
-    public static function getLocalThumbnail($psSol, $psInstrument, $psProduct) {
-        global $root, $home;
+    public static function getThumbBlobData($psSol, $psInstr, $psProduct) {
         cDebug::enter();
 
-        $sRelative = self::LOCAL_THUMB_FOLDER . "/$psSol/$psInstrument/$psProduct.jpg";
-        $sThumbPath = "$root/$sRelative";
-
-        if (!file_exists($sThumbPath)) {
-
-            $oDetails = cCuriosity::getProductDetails($psSol, $psInstrument, $psProduct);
-            if ($oDetails["d"]) {
-                $sImgUrl = $oDetails["d"]["i"];
-                cImageFunctions::make_thumbnail($sImgUrl, SELF::THUMBNAIL_HEIGHT, SELF::THUMBNAIL_QUALITY, $sThumbPath);
-            } else
-                $sRelative = null; //no image found
-        }
-
-        cDebug::write("<img src='$home/$sRelative'>");
-        $oDetails = ["s" => $psSol, "i" => $psInstrument, "p" => $psProduct, "u" => $sRelative];
+        $sImgUrl = cCuriosityImages::getImageUrl($psSol, $psInstr, $psProduct);
+        if ($sImgUrl == null)
+            cDebug::error("unable to find image for $psSol, $psInstr, $psProduct");
+        $aData = cImageFunctions::get_thumbnail_blob_data($sImgUrl, self::THUMBNAIL_HEIGHT, self::THUMBNAIL_QUALITY);
 
         cDebug::leave();
-        return $oDetails;
+        return $aData;
+    }
+
+    public static function getImageUrl($psSol, $psInstrument, $psProduct) {
+        cDebug::enter();
+        $oDetails = cCuriosity::getProductDetails($psSol, $psInstrument, $psProduct);
+        if ($oDetails["d"])
+            return $oDetails["d"]["i"];
+        else
+            cDebug::error("no image found");
+
+        cDebug::leave();
     }
 
     //*****************************************************************************
