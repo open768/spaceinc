@@ -23,8 +23,7 @@ require_once  "$spaceInc/pds/pds.php";
 
 
 //##########################################################################
-class cCuriosityPDS
-{
+class cCuriosityPDS {
     const SHORT_REGEX = "/^(\d{4})(\D{2})(\d{4})(\d{3})(\d{3})(\D)(\d{1})_(\D{4})/";
     const PICNO_REGEX = "/^(\d{4})(\D{2})(\d{6})(\d{3})(\d{2})(\d{5})(\D)(\d{2})_(\D{4})/";
     const PICNO_FORMAT = "%04d%s%06d%03d%02d%05d%s%02d_%s";
@@ -36,8 +35,7 @@ class cCuriosityPDS
 
     //*****************************************************************************
     //* see http://pds-imaging.jpl.nasa.gov/data/msl/MSLMST_0005/DOCUMENT/MSL_MMM_EDR_RDR_DPSIS.PDF pg23 PICNO
-    public static function explode_productID($psProduct)
-    {
+    public static function explode_productID($psProduct) {
         $aResult = null;
 
         if (preg_match(self::SHORT_REGEX, $psProduct, $aMatches)) {
@@ -73,9 +71,8 @@ class cCuriosityPDS
     }
 
     //**********************************************************************
-    public static function get_product_type($psProduct)
-    {
-        cDebug::enter();
+    public static function get_product_type($psProduct) {
+        //cDebug::enter();
         $iProduct_type = self::PRODUCT_TYPE_UNKNOWN;
 
         if (preg_match(self::SHORT_REGEX, $psProduct, $aMatches))
@@ -84,20 +81,13 @@ class cCuriosityPDS
             $iProduct_type = self::PRODUCT_TYPE_PICNO;
 
         cDebug::extra_debug("Product $psProduct is of type $iProduct_type");
-        cDebug::enter();
+        //cDebug::leave();
         return $iProduct_type;
     }
 
-    //**********************************************************************
-    private static function get_MSL_ProductID($psSearch)
-    {
-        $aExplode = self::explode_productID($psSearch);
-        ##TBD;
-    }
 
     //**********************************************************************
-    public static function get_pds_productRegex($psProduct)
-    {
+    public static function get_pds_productRegex($psProduct) {
         //split the MSL product apart	
         //seq_line and CPD_ID may be zero
         //BROKEN!!!
@@ -120,8 +110,7 @@ class cCuriosityPDS
     }
 
     //**********************************************************************
-    public static function get_pds_productID($psProduct)
-    {
+    public static function get_pds_productID($psProduct) {
         //split the MSL product apart	
         if (self::get_product_type($psProduct) == self::PRODUCT_TYPE_PICNO) {
             cDebug::write("product is allread a PICNO");
@@ -150,8 +139,7 @@ class cCuriosityPDS
 
 
     //**********************************************************************
-    public static function search_pds($psSol, $psInstrument, $psProduct)
-    {
+    public static function search_pds($psSol, $psInstrument, $psProduct) {
         $bIsRegex = true;
         $aProducts = [];
         $sI01Product = null;
@@ -230,8 +218,7 @@ class cCuriosityPDS
     }
 
     //**********************************************************************
-    public function map_MSL_Instrument($psInstrument)
-    {
+    public function map_MSL_Instrument($psInstrument) {
         $aMapping = [
             "ML" => "MST",
             "MR" => "MST",
@@ -242,8 +229,7 @@ class cCuriosityPDS
     }
 
     //**********************************************************************
-    public static function catalogs()
-    {
+    public static function catalogs() {
         $aOut = [];
         for ($i = 1; $i <= 10; $i++) {
             $aOut[] = "MSLMHL_" . str_pad("$i", 4, "0", STR_PAD_LEFT);

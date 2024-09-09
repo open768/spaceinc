@@ -34,7 +34,7 @@ class cPDS {
 
     //**********************************************************************
     private static function pr__get_objstore_filename($psSol, $psInstrument) {
-        $sFolder = self::PDS_TOP_FOLDER . "/$psSol/$psInstrument/" + self::PDS_FILENAME;
+        $sFolder = self::PDS_TOP_FOLDER . "/$psSol/$psInstrument/" . self::PDS_FILENAME;
         return $sFolder;
     }
 
