@@ -8,4 +8,5 @@ class cSpaceUrlParams {
     const INSTRUMENT = "i";
     const PRODUCT = "p";
     const MISSION = "m";
+    const URL = "u";
 }
