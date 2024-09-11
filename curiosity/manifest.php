@@ -14,14 +14,56 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 require_once "$spaceInc/missions/rover.php";
 
 //#################################################################################
-class cCuriosityManifestIndex {
-    const DB_FILENAME = "curiositymanifest.db";
-    const MANIFEST_TABLE = "manifest";
-
+class cCuriosityManifestIndexStatus {
     const INDEXING_STATUS_KEY = "indexing:status";
     const INDEXING_LASTSOL_KEY = "indexing:lastsol";
     const STATUS_NOT_STARTED = -1;
     const STATUS_COMPLETE = "complete";
+
+    /**  @var cObjstoreDB $oDB */
+    private static $oDB = null;
+
+    //*****************************************************************************
+    static function init_db() {
+        if (self::$oDB === null)
+            self::$oDB = new cOBjStoreDB(cSpaceRealms::ROVER_MANIFEST, cSpaceTables::ROVER_MANIFEST);
+    }
+
+    //*****************************************************************************
+    static function clear_status() {
+        $oDB = self::$oDB;
+        $oDB->kill(self::INDEXING_STATUS_KEY);
+        $oDB->kill(self::INDEXING_LASTSOL_KEY);
+    }
+
+    static function get_status() {
+        $oDB = self::$oDB;
+        $sStatus = $oDB->get(self::INDEXING_STATUS_KEY);
+        return $sStatus;
+    }
+    static function put_status($psStatus) {
+        $oDB = self::$oDB;
+        $oDB->put(self::INDEXING_STATUS_KEY, $psStatus, true);
+    }
+
+    static function get_last_indexed_sol() {
+        $oDB = self::$oDB;
+        $sStatusSol = $oDB->get(self::INDEXING_LASTSOL_KEY);
+        return $sStatusSol;
+    }
+    static function put_last_indexed_sol($psSol) {
+        $oDB = self::$oDB;
+        $oDB->put(self::INDEXING_LASTSOL_KEY, $psSol, true);
+    }
+}
+cCuriosityManifestIndexStatus::init_db();
+
+//#################################################################################
+class cCuriosityManifestIndex {
+    const DB_FILENAME = "curiositymanifest.db";
+    const MANIFEST_TABLE = "manifest";
+
+    const INDEXING_PREFIX = "indexing:";
 
     const COL_MISSION = "M";
     const COL_SOL = "SO";
@@ -35,19 +77,12 @@ class cCuriosityManifestIndex {
     const REINDEX_SOLS = 10; //how many sols to reindex (ignore cache)
 
 
-    /**  @var cObjstoreDB $oDB */
-    private static $oDB = null;
     /**  @var cSQLLite $oSQLDB */
     private static $oSQLDB = null;
 
 
     //*****************************************************************************
     static function init_db() {
-
-        if (self::$oDB === null) {
-            self::$oDB = new cOBjStoreDB(cSpaceRealms::ROVER_MANIFEST, cSpaceTables::ROVER_MANIFEST);
-        }
-
         //-------------- open SQLlite DB
         /** @var cSQLLite $oSqLDB  */
         $oSqLDB = self::$oSQLDB;
@@ -82,9 +117,6 @@ class cCuriosityManifestIndex {
             return;
         } else {
             cDebug::extra_debug("deleting status");
-            $oDB = self::$oDB;
-            $oDB->kill(self::INDEXING_STATUS_KEY);
-            $oDB->kill(self::INDEXING_LASTSOL_KEY);
         }
 
         //-------------create TABLE
@@ -116,21 +148,26 @@ class cCuriosityManifestIndex {
         cDebug::enter();
         cDebug::on(); //turn off extra debugging
 
-        //----------get status from odb
-        $oDB = self::$oDB;
-        $sStatus = $oDB->get(self::INDEXING_STATUS_KEY);
-
-        if ($sStatus === self::STATUS_COMPLETE)
-            cDebug::error("indexing allready complete");
-
-        //----------get last indexed sol  odb
-        $sStatusSol = $oDB->get(self::INDEXING_LASTSOL_KEY);
-        if ($sStatusSol == null) $sStatusSol = -1;
-        cDebug::write("indexing starting at sol: $sStatusSol");
-
         //----------get manifest
         cDebug::write("getting sol Manifest");
         $oManifest = cCuriosityManifest::getManifest();
+
+        //----------get status from odb
+        $sStatus = cCuriosityManifestIndexStatus::get_status();
+
+        if ($sStatus === cCuriosityManifestIndexStatus::STATUS_COMPLETE) {
+            $sLastIndexedSol = cCuriosityManifestIndexStatus::get_last_indexed_sol();
+            $sLatestManifestSol = $oManifest->latest_sol;
+            cDebug::write("last indexed sol was: $sLastIndexedSol, latest manifest sol: $sLatestManifestSol");
+            if ($sLastIndexedSol >= $sLatestManifestSol)
+                cDebug::error("indexing allready complete");
+        }
+
+        //----------get last indexed sol  odb
+        $sStatusSol = cCuriosityManifestIndexStatus::get_last_indexed_sol();
+        if ($sStatusSol == null) $sStatusSol = -1;
+        cDebug::write("indexing starting at sol: $sStatusSol");
+
 
         cDebug::write("processing sol Manifest");
         $aSols = $oManifest->sols;
@@ -158,9 +195,9 @@ class cCuriosityManifestIndex {
             self::index_sol($sSol, $bIgnoreCache);
 
             //update the status
-            $oDB->put(self::INDEXING_LASTSOL_KEY, $sSol, true);
+            cCuriosityManifestIndexStatus::put_last_indexed_sol($sSol);
         }
-        $sStatusSol = $oDB->put(self::INDEXING_STATUS_KEY, self::STATUS_COMPLETE, true);
+        cCuriosityManifestIndexStatus::put_status(cCuriosityManifestIndexStatus::STATUS_COMPLETE);
 
         //----------------compress database
         cDebug::write("compresssing database");
@@ -246,8 +283,7 @@ class cCuriosityManifestIndex {
         $oSqlDB->exec_stmt($oStmt); //handles retries and errors
 
         //update the status
-        $oDB = self::$oDB;
-        $oDB->put(self::INDEXING_STATUS_KEY, self::STATUS_NOT_STARTED, true);
+        cCuriosityManifestIndexStatus::clear_status();
 
         cDebug::write("done");
         cDebug::leave();
