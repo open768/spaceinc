@@ -92,6 +92,7 @@ class cCuriosityManifestIndex {
 
     /**  @var cSQLLite $oSQLDB */
     private static $oSQLDB = null;
+    private static $cached_all_data = null;
 
 
     //*****************************************************************************
@@ -232,7 +233,12 @@ class cCuriosityManifestIndex {
     //*****************************************************************************
     static function index_sol($psSol, $pbReindex) {
         $oSqlDB = self::$oSQLDB;
-        $oSolData = cCuriosityManifest::getAllSolData($psSol, $pbReindex);
+        if (self::$cached_all_data == null)
+            self::$cached_all_data = cCuriosityManifest::getAllSolData($psSol, $pbReindex);
+        else
+            cDebug::write("using cached manifest");
+        $oSolData = self::$cached_all_data;
+
         $aImages = $oSolData->images;
         if ($aImages === null) {
             cDebug::error("no image data");
