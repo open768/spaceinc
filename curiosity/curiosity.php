@@ -54,9 +54,6 @@ class cCuriosity implements iMission {
 
     //*****************************************************************************
     public static function search_product($psSearch) {
-        //split parts into var iables using regular expressions
-        //locate the product, make sure its not a thumbnail
-        $oData = null;
         cDebug::enter();
 
         $aExploded = cCuriosityPDS::explode_productID($psSearch);
