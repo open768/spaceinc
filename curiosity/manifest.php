@@ -164,8 +164,6 @@ class cCuriosityManifestIndex {
         //----------get manifest
         cDebug::write("getting sol Manifest");
         $oManifest = cCuriosityManifest::getManifest();
-        cDebug::vardump($oManifest, true);
-        cDebug::error("stop");
 
         //----------get status from odb
         $sStatus = cCuriosityManifestIndexStatus::get_status();
@@ -192,25 +190,35 @@ class cCuriosityManifestIndex {
         $aKeys = array_keys($aSols);
         $iKeyCount = count($aKeys);
         $iRow = 0;
-        $iReindexFrom = $iKeyCount - self::REINDEX_SOLS;
+        $iMustReindexFromRow = $iKeyCount - self::REINDEX_SOLS;
 
         //---------------iterate manifest
         foreach ($aSols as $number => $oSol) {
             $sSol = $oSol->sol;
             $iRow++;
 
+            //get the last updated
+            $bReindex = false;
+            $sStoredLastUpdated = cCuriosityManifestIndexStatus::get_sol_last_updated($sSol);
+            $sManifestLastUpdated = $oSol->last_updated;
+            //cDebug::write("stored lastindex:$sStoredLastUpdated, manifest date:$sManifestLastUpdated");
+            if ($sStoredLastUpdated !== null)
+                if ($sStoredLastUpdated < $sManifestLastUpdated)
+                    $bReindex = true;
+
             //---------------------check if the row needs reindexing
-            $bIgnoreCache = $iRow >= $iReindexFrom;
-            if ($bIgnoreCache)
+            if (!$bReindex)  $bReindex = $iRow >= $iMustReindexFromRow;
+            if ($bReindex)
                 self::delete_sol_index($sSol);
             elseif ($sStatusSol >= $sSol)
                 continue;
 
             //-------perform the index
-            self::index_sol($sSol, $bIgnoreCache);
+            self::index_sol($sSol, $bReindex);
 
             //update the status
             cCuriosityManifestIndexStatus::put_last_indexed_sol($sSol);
+            cCuriosityManifestIndexStatus::put_sol_last_updated($sSol, $sManifestLastUpdated);
         }
         cCuriosityManifestIndexStatus::put_status(cCuriosityManifestIndexStatus::STATUS_COMPLETE);
 
@@ -222,9 +230,9 @@ class cCuriosityManifestIndex {
     }
 
     //*****************************************************************************
-    static function index_sol($psSol, $pbIgnoreCache) {
+    static function index_sol($psSol, $pbReindex) {
         $oSqlDB = self::$oSQLDB;
-        $oSolData = cCuriosityManifest::getAllSolData($psSol, $pbIgnoreCache);
+        $oSolData = cCuriosityManifest::getAllSolData($psSol, $pbReindex);
         $aImages = $oSolData->images;
         if ($aImages === null) {
             cDebug::error("no image data");
