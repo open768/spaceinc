@@ -17,6 +17,7 @@ require_once "$spaceInc/missions/rover.php";
 class cCuriosityManifestIndexStatus {
     const INDEXING_STATUS_KEY = "indexing:status";
     const INDEXING_LASTSOL_KEY = "indexing:lastsol";
+    const LAST_SOL_PREFIX = "indexing:lastsol:";
     const STATUS_NOT_STARTED = -1;
     const STATUS_COMPLETE = "complete";
 
@@ -55,6 +56,19 @@ class cCuriosityManifestIndexStatus {
         $oDB = self::$oDB;
         $oDB->put(self::INDEXING_LASTSOL_KEY, $psSol, true);
     }
+
+    static function get_sol_last_updated($psSol) {
+        $oDB = self::$oDB;
+        $sKey = self::LAST_SOL_PREFIX . $psSol;
+        $sLastUpdated = $oDB->get($sKey);
+        return $sLastUpdated;
+    }
+
+    static function put_sol_last_updated($psSol, $psDate) {
+        $oDB = self::$oDB;
+        $sKey = self::LAST_SOL_PREFIX . $psSol;
+        $oDB->put($sKey, $psDate, true);
+    }
 }
 cCuriosityManifestIndexStatus::init_db();
 
@@ -63,7 +77,6 @@ class cCuriosityManifestIndex {
     const DB_FILENAME = "curiositymanifest.db";
     const MANIFEST_TABLE = "manifest";
 
-    const INDEXING_PREFIX = "indexing:";
 
     const COL_MISSION = "M";
     const COL_SOL = "SO";
@@ -151,6 +164,8 @@ class cCuriosityManifestIndex {
         //----------get manifest
         cDebug::write("getting sol Manifest");
         $oManifest = cCuriosityManifest::getManifest();
+        cDebug::vardump($oManifest, true);
+        cDebug::error("stop");
 
         //----------get status from odb
         $sStatus = cCuriosityManifestIndexStatus::get_status();
@@ -276,13 +291,18 @@ class cCuriosityManifestIndex {
     static function deleteIndex() {
         cDebug::enter();
         //delete everything
+        cDebug::write("deleting from sql");
         $sSQL = "DELETE from `:table`";
         $sSQL = self::pr_replace_sql_params($sSQL);
         $oSqlDB = self::$oSQLDB;
         $oStmt = $oSqlDB->prepare($sSQL);
         $oSqlDB->exec_stmt($oStmt); //handles retries and errors
 
+        cDebug::write("vacuuming db");
+        cSqlLiteUtils::vacuum(self::DB_FILENAME);
+
         //update the status
+        cDebug::write("updating status");
         cCuriosityManifestIndexStatus::clear_status();
 
         cDebug::write("done");
