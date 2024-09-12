@@ -233,10 +233,9 @@ class cCuriosityManifestIndex {
     //*****************************************************************************
     static function index_sol($psSol, $pbReindex) {
         $oSqlDB = self::$oSQLDB;
+        cDebug::write("indexing sol:$psSol");
         if (self::$cached_all_data == null)
             self::$cached_all_data = cCuriosityManifest::getAllSolData($psSol, $pbReindex);
-        else
-            cDebug::write("using cached manifest");
         $oSolData = self::$cached_all_data;
 
         $aImages = $oSolData->images;
