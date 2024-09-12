@@ -3,7 +3,7 @@
 
 require_once  "$phpInc/ckinc/debug.php";
 require_once  "$phpInc/ckinc/objstoredb.php";
-require_once  "$spaceInc/misc/realms.php";
+require_once  cAppGlobals::$spaceInc . "/misc/realms.php";
 static $objstoreDB = null;
 
 class cPencilNev {

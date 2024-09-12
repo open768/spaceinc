@@ -12,7 +12,7 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
  **************************************************************************/
 
 require_once  "$phpInc/ckinc/objstoredb.php";
-require_once  "$spaceInc/pds/pdsreader.php";
+require_once  cAppGlobals::$spaceInc . "/pds/pdsreader.php";
 
 class cHiRise {
     const OBJDATA_TOP_FOLDER = "[hirise]";

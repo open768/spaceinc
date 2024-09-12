@@ -27,22 +27,19 @@ example of RSS requests reverse engineered from
 #		https://mars.nasa.gov/mars2020/multimedia/raw-images/EUF_0001_0667022672_630ECV_N0010052EDLC00001_0010LUJ01
  **************************************************************************/
 
-require_once  "$spaceInc/missions/rover.php";
+require_once  cAppGlobals::$spaceInc . "/missions/rover.php";
 require_once  "$phpInc/ckinc/cached_http.php";
 
-class cPerseverance extends cRoverManifest
-{
+class cPerseverance extends cRoverManifest {
 
-    function __construct()
-    {
+    function __construct() {
         //self::$BASE_URL = "http://mars.nasa.gov/mer/gallery/all/";
         $this->MISSION = "Perseverance";
         parent::__construct();
     }
 
     //*******************************************************************************
-    protected  function pr_build_manifest()
-    {
+    protected  function pr_build_manifest() {
         cDebug::enter();
         $oSols = $this->pr__do_build_manifest();
         cDebug::leave();
@@ -50,8 +47,7 @@ class cPerseverance extends cRoverManifest
     }
 
     //*******************************************************************************
-    protected  function pr_generate_details($psSol, $psInstr)
-    {
+    protected  function pr_generate_details($psSol, $psInstr) {
         cDebug::enter();
         cDebug::leave();
     }
@@ -59,8 +55,7 @@ class cPerseverance extends cRoverManifest
     //#####################################################################
     //# PRIVATES
     //#####################################################################
-    private function pr__do_build_manifest()
-    {
+    private function pr__do_build_manifest() {
         cDebug::enter();
 
         //get the total number of sols from the RSS feed

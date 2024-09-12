@@ -13,13 +13,13 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
  **************************************************************************/
 
 require_once  "$phpInc/ckinc/http.php";
-require_once  "$spaceInc/misc/indexes.php";
-require_once  "$spaceInc/curiosity/curiosity.php";
-require_once  "$spaceInc/curiosity/instrument.php";
-require_once  "$spaceInc/curiosity/pdsindexer.php";
-require_once  "$spaceInc/pds/lbl.php";
-require_once  "$spaceInc/pds/pdsreader.php";
-require_once  "$spaceInc/pds/pds.php";
+require_once  cAppGlobals::$spaceInc . "/misc/indexes.php";
+require_once  cAppGlobals::$spaceInc . "/curiosity/curiosity.php";
+require_once  cAppGlobals::$spaceInc . "/curiosity/instrument.php";
+require_once  cAppGlobals::$spaceInc . "/curiosity/pdsindexer.php";
+require_once  cAppGlobals::$spaceInc . "/pds/lbl.php";
+require_once  cAppGlobals::$spaceInc . "/pds/pdsreader.php";
+require_once  cAppGlobals::$spaceInc . "/pds/pds.php";
 
 
 //##########################################################################

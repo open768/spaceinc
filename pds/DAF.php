@@ -16,16 +16,14 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 require_once  "$phpInc/ckinc/debug.php";
 require_once  "$phpInc/ckinc/http.php";
 require_once  "$phpInc/ckinc/gz.php";
-require_once  "$spaceInc/curiosity/static.php";
+require_once  cAppGlobals::$spaceInc . "/curiosity/static.php";
 require_once  "$phpInc/ckinc/common.php";
 require_once  "$phpInc/ckinc/hash.php";
 
 
-class cPDS_DAFReader
-{
+class cPDS_DAFReader {
     //**********************************************************************
-    public function parseURL($psUrl)
-    {
+    public function parseURL($psUrl) {
         //fetch and compress url
         //open a stream from the file
         //read the header of the file

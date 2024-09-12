@@ -16,15 +16,13 @@ uses phpQuery https://code.google.com/archive/p/phpquery/ which is Licensed unde
 require_once  "$phpInc/ckinc/debug.php";
 require_once  "$phpInc/ckinc/http.php";
 require_once  "$phpInc/extra/phpquery/phpQuery-onefile.php";
-require_once  "$spaceInc/missions/rover.php";
+require_once  cAppGlobals::$spaceInc . "/missions/rover.php";
 
 //#####################################################################
 //#####################################################################
-class cSpiritInstruments extends cRoverInstruments
-{
+class cSpiritInstruments extends cRoverInstruments {
 
-    protected function prAddInstruments()
-    {
+    protected function prAddInstruments() {
         self::pr_add("FHAZ",    "F",    "Front Hazcam",    "red");
         self::pr_add("RHAZ",    "R",    "Rear Hazcam",    "green");
         self::pr_add("NAVCAM",    "N",    "Navigation Camera",    "steelblue");
@@ -39,12 +37,10 @@ class cSpiritInstruments extends cRoverInstruments
 
 //#####################################################################
 //#####################################################################
-class cSpiritRover extends cRoverManifest
-{
+class cSpiritRover extends cRoverManifest {
     const MANIFEST_URL = "spirit.html";
 
-    function __construct()
-    {
+    function __construct() {
         self::$BASE_URL = "http://mars.nasa.gov/mer/gallery/all/";
         $this->MISSION = "SPIRIT";
         parent::__construct();
@@ -54,8 +50,7 @@ class cSpiritRover extends cRoverManifest
     //#####################################################################
     //# implement abstract functions
     //#####################################################################
-    protected function pr_generate_details($psSol, $psInstr)
-    {
+    protected function pr_generate_details($psSol, $psInstr) {
         cDebug::enter();
 
         //find the url where to get the instrument details from
@@ -109,8 +104,7 @@ class cSpiritRover extends cRoverManifest
     }
 
     //*****************************************************************************
-    protected function pr_generate_manifest()
-    {
+    protected function pr_generate_manifest() {
         cDebug::enter();
 
         //------------------------------------------------------

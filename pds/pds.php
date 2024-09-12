@@ -14,8 +14,8 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 
 require_once  "$phpInc/ckinc/http.php";
 require_once  "$phpInc/ckinc/objstoredb.php";
-require_once  "$spaceInc/misc/indexes.php";
-require_once  "$spaceInc/misc/realms.php";
+require_once  cAppGlobals::$spaceInc . "/misc/indexes.php";
+require_once  cAppGlobals::$spaceInc . "/misc/realms.php";
 
 
 //##########################################################################

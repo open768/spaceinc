@@ -14,15 +14,13 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
  **************************************************************************/
 require_once  "$phpInc/ckinc/debug.php";
 require_once  "$phpInc/ckinc/http.php";
-require_once  "$spaceInc/missions/rover.php";
+require_once  cAppGlobals::$spaceInc . "/missions/rover.php";
 
 //################################################################################
 //################################################################################
 
-class cRosettaOrbiterInstruments extends cRoverInstruments
-{
-    protected function prAddInstruments()
-    {
+class cRosettaOrbiterInstruments extends cRoverInstruments {
+    protected function prAddInstruments() {
         self::pr_add("ALICE",    "A",    "Ultraviolet Imaging Spectrometer",    "red");
         self::pr_add("CONSERT",    "CN",    "Comet Nucleus Sounding Experiment by Radiowave Transmission",    "green");
         self::pr_add("COSIMA",    "CS",    "Cometary Secondary Ion Mass Analyser",    "steelblue");
@@ -37,10 +35,8 @@ class cRosettaOrbiterInstruments extends cRoverInstruments
         self::pr_add("RPC",        "RPC",    "Entry, Descent, and Landing",    "tomato");
     }
 }
-class cRosettaLanderInstruments extends cRoverInstruments
-{
-    protected function prAddInstruments()
-    {
+class cRosettaLanderInstruments extends cRoverInstruments {
+    protected function prAddInstruments() {
         self::pr_add("APXS",    "A",    "Alpha X-ray Spectrometer",    "red");
         self::pr_add("CIVA",    "CI",    "Panoramic cameras",    "green");
         self::pr_add("CONSERT",    "CN",    "Comet Nucleus Sounding Experiment by Radiowave Transmission",    "steelblue");
@@ -56,16 +52,13 @@ class cRosettaLanderInstruments extends cRoverInstruments
 
 //################################################################################
 //################################################################################
-class cRosetta extends cRoverManifest
-{
+class cRosetta extends cRoverManifest {
     const INSTRUMENT_URL = "http://www.rssd.esa.int/index.php?project=PSA&page=rosetta";
-    protected function pr_generate_manifest()
-    {
+    protected function pr_generate_manifest() {
         cDebug::error("not implemented");
     }
 
-    protected function pr_generate_details($psSol, $psInstr)
-    {
+    protected function pr_generate_details($psSol, $psInstr) {
         cDebug::error("not implemented");
     }
 }

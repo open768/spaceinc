@@ -17,7 +17,7 @@ require_once  "$phpInc/ckinc/http.php";
 require_once  "$phpInc/ckinc/gz.php";
 require_once  "$phpInc/ckinc/common.php";
 require_once  "$phpInc/ckinc/hash.php";
-require_once  "$spaceInc/pds/lbl.php";
+require_once  cAppGlobals::$spaceInc . "/pds/lbl.php";
 
 
 class cPDS_Reader {

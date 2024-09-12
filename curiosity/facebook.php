@@ -1,6 +1,6 @@
 <?php
-require_once  "$spaceInc/curiosity/curiosity.php";
-require_once  "$spaceInc/misc/pichighlight.php";
+require_once  cAppGlobals::$spaceInc . "/curiosity/curiosity.php";
+require_once  cAppGlobals::$spaceInc . "/misc/pichighlight.php";
 require_once  "$phpInc/ckinc/debug.php";
 require_once  "$phpInc/ckinc/common.php";
 require_once  "$phpInc/ckinc/facebook.php";

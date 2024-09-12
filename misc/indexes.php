@@ -1,5 +1,5 @@
 <?php
-require_once  "$spaceInc/misc/realms.php";
+require_once  cAppGlobals::$spaceInc . "/misc/realms.php";
 require_once  "$phpInc/ckinc/objstoredb.php";
 
 /**
