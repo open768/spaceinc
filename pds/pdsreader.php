@@ -12,11 +12,11 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 // USE AT YOUR OWN RISK - NO GUARANTEES OR ANY FORM ARE EITHER EXPRESSED OR IMPLIED
  **************************************************************************/
 
-require_once  "$phpInc/ckinc/debug.php";
-require_once  "$phpInc/ckinc/http.php";
-require_once  "$phpInc/ckinc/gz.php";
-require_once  "$phpInc/ckinc/common.php";
-require_once  "$phpInc/ckinc/hash.php";
+require_once  cAppGlobals::$phpInc . "/ckinc/debug.php";
+require_once  cAppGlobals::$phpInc . "/ckinc/http.php";
+require_once  cAppGlobals::$phpInc . "/ckinc/gz.php";
+require_once  cAppGlobals::$phpInc . "/ckinc/common.php";
+require_once  cAppGlobals::$phpInc . "/ckinc/hash.php";
 require_once  cAppGlobals::$spaceInc . "/pds/lbl.php";
 
 
@@ -67,7 +67,7 @@ class cPDS_Reader {
 
     //**********************************************************************
     public static function fetch_lbl($psUrl) {
-        global $root;
+
         //create a unique hash for the 
         cHash::$CACHE_EXPIRY = cHash::FOREVER;        //cache forever
         //cHash::$show_filenames = true;

@@ -12,8 +12,8 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 // USE AT YOUR OWN RISK - NO GUARANTEES OR ANY FORM ARE EITHER EXPRESSED OR IMPLIED
  **************************************************************************/
 
-require_once  "$phpInc/ckinc/http.php";
-require_once  "$phpInc/ckinc/objstoredb.php";
+require_once  cAppGlobals::$phpInc . "/ckinc/http.php";
+require_once  cAppGlobals::$phpInc . "/ckinc/objstoredb.php";
 require_once  cAppGlobals::$spaceInc . "/misc/indexes.php";
 require_once  cAppGlobals::$spaceInc . "/misc/realms.php";
 

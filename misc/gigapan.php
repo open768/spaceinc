@@ -4,17 +4,15 @@
 // to go to a gigapan http://www.gigapan.com/gigapans/157774
 // browse image : http://static.gigapan.org/gigapans0/158338/images/158338-500x279.jpg
 
-require_once  "$phpInc/ckinc/debug.php";
-require_once  "$phpInc/ckinc/cached_http.php";
+require_once  cAppGlobals::$phpInc . "/ckinc/debug.php";
+require_once  cAppGlobals::$phpInc . "/ckinc/cached_http.php";
 
-class cGigapan
-{
+class cGigapan {
     const USER_EXPR = "http://api.gigapan.org/beta/gigapans/page/%d/per_page/60/username/%s/most_recent.json";
     const GIGAPAN_CACHE = 86400; //one day
 
     //***********************************************************************************************
-    public static function get_all_gigapans($psUser)
-    {
+    public static function get_all_gigapans($psUser) {
         $iPage = 1;
         $aOutput = [];
 
@@ -38,8 +36,7 @@ class cGigapan
     }
 
     //***********************************************************************************************
-    public static function get_gigapans($psUser, $piPage)
-    {
+    public static function get_gigapans($psUser, $piPage) {
         cDebug::enter();
         $oCache = new cCachedHttp();
         $oCache->CACHE_EXPIRY = self::GIGAPAN_CACHE;

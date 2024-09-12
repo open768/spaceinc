@@ -14,12 +14,11 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 
 // USE AT YOUR OWN RISK - NO GUARANTEES OR ANY FORM ARE EITHER EXPRESSED OR IMPLIED
  **************************************************************************/
-require_once  "$phpInc/ckinc/debug.php";
-require_once  "$phpInc/ckinc/http.php";
-require_once  "$phpInc/ckinc/cached_http.php";
+require_once  cAppGlobals::$phpInc . "/ckinc/debug.php";
+require_once  cAppGlobals::$phpInc . "/ckinc/http.php";
+require_once  cAppGlobals::$phpInc . "/ckinc/cached_http.php";
 
-class cNasaOpenMarsAPI
-{
+class cNasaOpenMarsAPI {
     public static $API_KEY = null;
     const BASE_URL = "https://api.nasa.gov/mars-photos/api/v1/rovers";
     const API_KEY_FIELD = "api_key";
@@ -28,15 +27,13 @@ class cNasaOpenMarsAPI
     //#####################################################################
     //# PUBLIC functions
     //#####################################################################
-    public static function get_missions()
-    {
+    public static function get_missions() {
         $aData = self::pr_get_all_mission_data();
         return  $aData->rovers;
     }
 
     //*********************************************************************
-    public static function get_mission_instruments($psMission)
-    {
+    public static function get_mission_instruments($psMission) {
         $aMissions = self::get_missions();
 
         $bFound = false;
@@ -58,8 +55,7 @@ class cNasaOpenMarsAPI
     //#####################################################################
     //# PRIVATES
     //#####################################################################
-    private static function pr_get_all_mission_data()
-    {
+    private static function pr_get_all_mission_data() {
         $sUrl = self::BASE_URL . self::pr__KEY_Querystring("?");
         $oCache = new cCachedHttp();
         $oCache->USE_CURL = false;
@@ -67,8 +63,7 @@ class cNasaOpenMarsAPI
     }
 
     //*********************************************************************
-    private static function pr__KEY_Querystring($psPrefix)
-    {
+    private static function pr__KEY_Querystring($psPrefix) {
         if (!self::$API_KEY) {
             cDebug::error("API key not set in cNasaOpenMarsAPI");
         }

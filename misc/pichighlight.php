@@ -12,12 +12,12 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 //
  **************************************************************************/
 
-require_once  "$phpInc/ckinc/objstoredb.php";
-require_once  "$phpInc/ckinc/image.php";
+require_once  cAppGlobals::$phpInc . "/ckinc/objstoredb.php";
+require_once  cAppGlobals::$phpInc . "/ckinc/image.php";
 require_once  cAppGlobals::$spaceInc . "/misc/indexes.php";
 require_once  cAppGlobals::$spaceInc . "/misc/realms.php";
-require_once  "$phpInc/ckinc/http.php";
-require_once  "$phpInc/ckinc/hash.php";
+require_once  cAppGlobals::$phpInc . "/ckinc/http.php";
+require_once  cAppGlobals::$phpInc . "/ckinc/hash.php";
 require_once  cAppGlobals::$spaceInc . "/curiosity/curiosity.php";
 
 //###############################################################
@@ -57,7 +57,7 @@ class cSpaceImageMosaic {
 
     //**********************************************************************
     static private function pr_generate_mosaic($psSol, $paData) {
-        global $root;
+
         $aImgList = [];
 
         //first make sure all the thumbnails are actually there
@@ -75,7 +75,7 @@ class cSpaceImageMosaic {
         }
 
         //the folder has to be there 
-        $sFolder = $root . "/" . self::MOSAIC_FOLDER;
+        $sFolder = cAppGlobals::$root . "/" . self::MOSAIC_FOLDER;
         if (!file_exists($sFolder)) {
             cDebug::write("creating folder: $sFolder");
             mkdir($sFolder, 0755, true); //folder needs to readable by apache
@@ -98,7 +98,7 @@ class cSpaceImageMosaic {
 
         for ($i = 0; $i < $iCount; $i++) {
             //load the original image
-            $sThumbFilename = $root . "/" . $aImgList[$i];
+            $sThumbFilename = cAppGlobals::$root . "/" . $aImgList[$i];
             if (!file_exists($sThumbFilename)) continue;
 
             $oThumbImg = imagecreatefromjpeg($sThumbFilename);
@@ -121,7 +121,7 @@ class cSpaceImageMosaic {
 
         //write out the results
         $sImageFile = self::MOSAIC_FOLDER . "/$psSol.jpg";
-        $sReal = "$root/$sImageFile";
+        $sReal = cAppGlobals::$root . "/$sImageFile";
         imagejpeg($oDest, $sReal, cSpaceImageHighlight::THUMB_QUALITY);
         imagedestroy($oDest);
 
@@ -130,7 +130,7 @@ class cSpaceImageMosaic {
 
     //**********************************************************************
     static function get_sol_high_mosaic($psSol) {
-        global $root;
+
 
         $oData = cSpaceImageHighlight::get_all_highlights($psSol);
         $iCount = cSpaceImageHighlight::count_highlights($oData);
@@ -154,7 +154,7 @@ class cSpaceImageMosaic {
 
         //------------------------------------------------------------------
         $sMosaicFile = self::MOSAIC_FOLDER . "/$psSol.jpg";
-        if (!file_exists("$root/$sMosaicFile")) {
+        if (!file_exists(cAppGlobals::$root . "/$sMosaicFile")) {
             cDebug::write("regenerating missing mosaic file");
             $sMosaic = self::pr_generate_mosaic($psSol, $oData);
         }
@@ -222,16 +222,16 @@ class cSpaceImageHighlight {
 
     //**********************************************************************
     private static function pr_perform_crop($poImg, $piX, $piY, $psOutfile) {
-        global $root;
+
         cDebug::write("cropping to $piX, $piY");
-        $sFilename = "$root/$psOutfile";
+        $sFilename = cAppGlobals::$root . "/$psOutfile";
         cImageFunctions::crop($poImg, $piX, $piY, self::CROP_WIDTH, self::CROP_HEIGHT, self::THUMB_QUALITY, $sFilename);
     }
 
     //**********************************************************************
     // this function should be multithreaded when the software becomes a #product# #TBD#
     static function get_thumbs($psSol, $psInstrument, $psProduct) {
-        global $root;
+
 
         $bUpdated = false;
         $oMSLImg = null;
@@ -249,7 +249,7 @@ class cSpaceImageHighlight {
             for ($i = 0; $i < count($aHighs["d"]); $i++) {
                 //figure out where stuff should go 
                 $sOutThumbfile = self::THUMBS_FOLDER . "$psSol/$psInstrument/$psProduct/$i.jpg";
-                $sReal = "$root/$sOutThumbfile";
+                $sReal = cAppGlobals::$root . "/$sOutThumbfile";
 
                 // key that identifies the thumbnail uses coordinates
                 $oItem = $aHighs["d"][$i];

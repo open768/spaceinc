@@ -12,9 +12,9 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 // USE AT YOUR OWN RISK - NO GUARANTEES OR ANY FORM ARE EITHER EXPRESSED OR IMPLIED
  **************************************************************************/
 
-require_once  "$phpInc/ckinc/cached_http.php";
-require_once  "$phpInc/ckinc/objstoredb.php";
-require_once  "$phpInc/ckinc/geometry.php";
+require_once  cAppGlobals::$phpInc . "/ckinc/cached_http.php";
+require_once  cAppGlobals::$phpInc . "/ckinc/objstoredb.php";
+require_once  cAppGlobals::$phpInc . "/ckinc/geometry.php";
 
 //##########################################################################
 class cCuriosityLocations {

@@ -12,12 +12,11 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 // USE AT YOUR OWN RISK - NO GUARANTEES OR ANY FORM ARE EITHER EXPRESSED OR IMPLIED
  **************************************************************************/
 
-require_once  "$phpInc/ckinc/debug.php";
-require_once  "$phpInc/ckinc/cached_http.php";
-require_once  "$phpInc/ckinc/http-dir.php";
+require_once  cAppGlobals::$phpInc . "/ckinc/debug.php";
+require_once  cAppGlobals::$phpInc . "/ckinc/cached_http.php";
+require_once  cAppGlobals::$phpInc . "/ckinc/http-dir.php";
 
-class cSpice
-{
+class cSpice {
     //
     //documentation at http://naif.jpl.nasa.gov/naif/tutorials.html
     //
@@ -28,8 +27,7 @@ class cSpice
     //*******************************************************************************
     //*
     //*******************************************************************************
-    public static function get_family_list()
-    {
+    public static function get_family_list() {
         //get the directory listing from the URL
         $sURL = self::NAIF_URL . "/" . self::$sMission . "/kernels/";
         //------------------------------------------------------------------
@@ -43,8 +41,7 @@ class cSpice
     }
 
     //*******************************************************************************
-    public static function get_kernel_list($psFamily)
-    {
+    public static function get_kernel_list($psFamily) {
         //get the directory listing from the URL
         if (!self::is_valid_family($psFamily))
             cDebug::error("not a valid Kernel Family $psFamily");
@@ -62,8 +59,7 @@ class cSpice
     }
 
     //*******************************************************************************
-    public static function load_spk($psFamily, $psKernel)
-    {
+    public static function load_spk($psFamily, $psKernel) {
         if (!self::is_valid_family($psFamily))
             cDebug::error("not a valid Kernel Family $psFamily");
 
@@ -74,8 +70,7 @@ class cSpice
     }
 
     //*******************************************************************************
-    public static function is_valid_family($psFamily)
-    {
+    public static function is_valid_family($psFamily) {
         return in_array($psFamily, self::$aFamilies);
     }
 }

@@ -13,7 +13,7 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
  **************************************************************************/
 
 require_once  cAppGlobals::$spaceInc . "/misc/indexes.php";
-require_once  "$phpInc/ckinc/gz.php";
+require_once  cAppGlobals::$phpInc . "/ckinc/gz.php";
 require_once  cAppGlobals::$spaceInc . "/pds/pdsreader.php";
 require_once  cAppGlobals::$spaceInc . "/pds/pds.php";
 require_once  cAppGlobals::$spaceInc . "/curiosity/curiositypds.php";

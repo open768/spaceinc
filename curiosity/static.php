@@ -1,5 +1,5 @@
 <?php
-require_once  "$phpInc/ckinc/objstore.php";
+require_once  cAppGlobals::$phpInc . "/ckinc/objstore.php";
 cObjStore::$OBJDATA_REALM = "Curiosity";
 
 const CURL_USE_PROXY = false;

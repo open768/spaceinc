@@ -12,18 +12,16 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 // USE AT YOUR OWN RISK - NO GUARANTEES OR ANY FORM ARE EITHER EXPRESSED OR IMPLIED
  **************************************************************************/
 
-require_once  "$phpInc/ckinc/debug.php";
-require_once  "$phpInc/ckinc/cached_http.php";
+require_once  cAppGlobals::$phpInc . "/ckinc/debug.php";
+require_once  cAppGlobals::$phpInc . "/ckinc/cached_http.php";
 $count = 0;
 
-class cPDS_LBL
-{
+class cPDS_LBL {
     protected $aData = [];
     public $sName = "TOP";
 
     //*****************************************
-    public function parseFileHandle($pfHandle)
-    {
+    public function parseFileHandle($pfHandle) {
         $bInString = false;
         $bInComment = false;
         $bInBrackets = false;
@@ -121,8 +119,7 @@ class cPDS_LBL
     }
 
     //*****************************************
-    function set($psName, $psValue)
-    {
+    function set($psName, $psValue) {
         if ($psName == "") {
             cDebug::write("attempt to write empty key");
             return;
@@ -141,16 +138,14 @@ class cPDS_LBL
     }
 
     //*****************************************
-    function get($psName)
-    {
+    function get($psName) {
         if (isset($this->aData[$psName]))
             return $this->aData[$psName];
         else
             return null;
     }
 
-    protected function pr__do_dump_write($psKey, $poValue, $psPrefix)
-    {
+    protected function pr__do_dump_write($psKey, $poValue, $psPrefix) {
         $sType = gettype($poValue);
         switch ($sType) {
             case "string":
@@ -171,29 +166,25 @@ class cPDS_LBL
         }
     }
     //*****************************************
-    protected function pr__do_dump($psPrefix)
-    {
+    protected function pr__do_dump($psPrefix) {
         foreach ($this->aData as $sKey => $oValue)
             $this->pr__do_dump_write($sKey, $oValue, $psPrefix);
         echo "\n";
     }
     //*****************************************
-    function __dump($psPrefix = "")
-    {
+    function __dump($psPrefix = "") {
         echo "<hr><pre>";
         $this->pr__do_dump($psPrefix);
         echo "</pre><hr>";
     }
 
     //*****************************************
-    public function __toString()
-    {
+    public function __toString() {
         return 'LBL Object';
     }
 
     //*****************************************
-    public function parseFile($psFile)
-    {
+    public function parseFile($psFile) {
         //open the file for read only
         cDebug::write("Parsing LBL: $psFile");
         $fHandle = gzopen($psFile, 'rb');
