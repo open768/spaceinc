@@ -192,11 +192,16 @@ class cSpaceImageHighlight {
     // #	shouldnt be tied to curiosity
     // #######################################################################
 
+    static function pr_get_filename($psSol, $psInstrument, $psProduct) {
+        $sFolder = "$psSol/$psInstrument/$psProduct";
+        return "$sFolder/" . self::IMGHIGH_FILENAME;
+    }
+
     static function get($psSol, $psInstrument, $psProduct) {
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
-        $sFolder = "$psSol/$psInstrument/$psProduct";
-        $aData = $oDB->get("$sFolder/" . self::IMGHIGH_FILENAME);
+        $sFile = self::pr_get_filename($psSol, $psInstrument, $psProduct);
+        $aData = $oDB->get($sFile);
         $aOut = ["s" => $psSol, "i" => $psInstrument, "p" => $psProduct, "d" => $aData];
         return $aOut;
     }
@@ -361,29 +366,51 @@ class cSpaceImageHighlight {
     //######################################################################
     //# UPDATE functions
     //######################################################################
+    static function pr_is_duplicate($psSol, $psInstrument, $psProduct, $psTop, $psLeft) {
+        $bIsDuplicate = false;
+        $oResult = self::get($psSol, $psInstrument, $psProduct);
+        $aData = $oResult["d"];
+
+        if ($aData)
+            foreach ($aData as $oBox) {
+                $sBoxT = $oBox["t"];
+                $sBoxL = $oBox["l"];
+                if ($sBoxT === $psTop &&  $sBoxL === $psLeft) {
+                    $bIsDuplicate = true;
+                    break;
+                }
+            }
+        return $bIsDuplicate;
+    }
+
     static function set($psSol, $psInstrument, $psProduct, $psTop, $psLeft, $psUser) {
+        cDebug::enter();
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         //get the file from the object store to get the latest version
-        $sFolder = "$psSol/$psInstrument/$psProduct";
+        $sFile = self::pr_get_filename($psSol, $psInstrument, $psProduct);
         $aData = ["t" => $psTop, "l" => $psLeft, "u" => $psUser];
-        $oDB->add_to_array("$sFolder/" . self::IMGHIGH_FILENAME, $aData); //store highlight
-        cSpaceIndex::update_indexes($psSol, $psInstrument, $psProduct, 1, cSpaceIndex::HILITE_SUFFIX);
-        return "ok";
+        $bIsDuplicate = self::pr_is_duplicate($psSol, $psInstrument, $psProduct, $psTop, $psLeft);
+        if ($bIsDuplicate) {
+            cDebug::write("duplicate");
+            return "duplicate";
+        } else {
+            $oDB->add_to_array($sFile, $aData); //store highlight
+            cSpaceIndex::update_indexes($psSol, $psInstrument, $psProduct, 1, cSpaceIndex::HILITE_SUFFIX);
+            return "ok";
+        }
+        cDebug::leave();
     }
 
     //######################################################################
     //# ADMIN functions
     //######################################################################
-    static function reindex() {
-        cSpaceIndex::reindex(1, cSpaceIndex::HILITE_SUFFIX, self::IMGHIGH_FILENAME);
-    }
 
-    static function kill_highlites($psSol, $psInstr, $psProduct, $psWhich) {
+    static function kill_highlites($psSol, $psInstrument, $psProduct, $psWhich) {
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
-        $sFolder = "$psSol/$psInstr/$psProduct";
-        $oDB->kill("$sFolder/" . self::IMGHIGH_FILENAME);
+        $sFile = self::pr_get_filename($psSol, $psInstrument, $psProduct);
+        $oDB->kill($sFile);
         cDebug::write("now reindex the image highlihgts");
     }
 }
