@@ -280,8 +280,7 @@ class cSpaceTags {
             //get the top index
             $aTopIndex = cSpaceTagsIndex::get_top_sol_index();
             foreach ($aTopIndex as $sSol => $iSolCount) {
-                echo ".";
-                cDebug::flush();
+                cCommon::flushprint(".");
                 $aSolData  = cSpaceTagsIndex::get_sol_index($sSol);
                 foreach ($aSolData as $sInstr => $aProds)
                     foreach ($aProds as $sProd => $iProdCount) {
