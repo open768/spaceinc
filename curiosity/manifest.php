@@ -50,15 +50,16 @@ class cCuriosityManifestIndexStatus {
 
     static function get_last_indexed_sol() {
         $oDB = self::$oDB;
-        $sStatusSol = $oDB->get(self::INDEXING_LASTSOL_KEY);
-        return $sStatusSol;
+        $sLastSol = $oDB->get(self::INDEXING_LASTSOL_KEY);
+        return $sLastSol;
     }
-    static function put_last_indexed_sol($psSol) {
+    static function put_last_indexed_sol(string $psSol) {
         $oDB = self::$oDB;
         $oDB->put(self::INDEXING_LASTSOL_KEY, $psSol, true);
     }
 
-    static function get_sol_last_updated($psSol) {
+    //-----------------------------------------------------------
+    static function get_sol_last_updated(string $psSol) {
         $oDB = self::$oDB;
         $sKey = self::LAST_SOL_PREFIX . $psSol;
         $sLastUpdated = $oDB->get($sKey);
@@ -69,6 +70,14 @@ class cCuriosityManifestIndexStatus {
         $oDB = self::$oDB;
         $sKey = self::LAST_SOL_PREFIX . $psSol;
         $oDB->put($sKey, $psDate, true);
+    }
+
+    static function kill_sol_last_updated(string $psSol) {
+        if (cCommon::is_string_empty($psSol))
+            cDebug::error("sol must be provided");
+        $sKey = self::LAST_SOL_PREFIX . $psSol;
+        $oDB = self::$oDB;
+        $oDB->kill($sKey);
     }
 }
 cCuriosityManifestIndexStatus::init_db();
@@ -177,9 +186,9 @@ class cCuriosityManifestIndex {
         }
 
         //----------get last indexed sol  odb
-        $sStatusSol = cCuriosityManifestIndexStatus::get_last_indexed_sol();
-        if ($sStatusSol == null) $sStatusSol = -1;
-        cDebug::write("indexing starting at sol: $sStatusSol");
+        $sLastSol = cCuriosityManifestIndexStatus::get_last_indexed_sol();
+        if ($sLastSol == null) $sLastSol = -1;
+        cDebug::write("indexing starting at sol: $sLastSol");
 
 
         cDebug::write("processing sol Manifest");
@@ -210,8 +219,8 @@ class cCuriosityManifestIndex {
             if (!$bReindex)  $bReindex = $iRow >= $iMustReindexFromRow;
             if ($bReindex)
                 self::delete_sol_index($sSol);
-            elseif ($sStatusSol >= $sSol)
-                continue;
+            elseif ($sLastSol >= $sSol)
+                continue;                   //check here rather than earlier as it may have been updated
 
             //-------perform the index
             self::index_sol($sSol, $bReindex);
@@ -250,7 +259,10 @@ class cCuriosityManifestIndex {
     }
 
     //*****************************************************************************
-    static function delete_sol_index($psSol) {
+    static function delete_sol_index(string $psSol) {
+        if (cCommon::is_string_empty($psSol))
+            cDebug::error("sol must be provided");
+
         cDebug::extra_debug("deleting Sol $psSol index");
         $sSQL = "DELETE FROM `:table` where :sol_col=:sol";
         $sSQL = self::pr_replace_sql_params($sSQL);
@@ -260,6 +272,8 @@ class cCuriosityManifestIndex {
         $oStmt->bindValue(":sol", $psSol);
 
         $oSqlDB->exec_stmt($oStmt); //handles retries and errors
+
+        cCuriosityManifestIndexStatus::kill_sol_last_updated($psSol);
     }
 
     //*****************************************************************************
