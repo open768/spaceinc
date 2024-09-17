@@ -394,7 +394,7 @@ class cCuriosityManifest {
     }
 
     //*****************************************************************************
-    static function getSolJsonUrl($psSol) {
+    static function getSolEntry($psSol) {
         cDebug::enter();
         //---- get the manifest
         $oManifest = self::getManifest();
@@ -402,14 +402,28 @@ class cCuriosityManifest {
         $iSol = (int) $psSol; //make sure we have an integer
         ksort($aSols, SORT_NUMERIC);
 
+        $oMatched = null;
+
         //----array is not keyed on sol, so we have to find the sol
-        $sUrl = null;
         foreach ($aSols as $oSol) {
             if ($oSol->sol === $iSol) {
-                $sUrl = $oSol->catalog_url;
+                $oMatched = $oSol;
                 break;
             }
         }
+
+        if ($oMatched == null) cDebug::write("unable to find the SOL entry");
+        cDebug::leave();
+        return $oMatched;
+    }
+
+    //*****************************************************************************
+    static function getSolJsonUrl($psSol) {
+        cDebug::enter();
+
+        $oSol = self::getSolEntry($psSol);
+        $sUrl = $oSol->catalog_url;
+
         cDebug::leave();
         return $sUrl;
     }
