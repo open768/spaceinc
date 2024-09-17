@@ -127,11 +127,11 @@ class cSpaceTagNames {
 
         if (strlen($psPartial) < 2) cDebug::error("partial match must be at least 2 characeters");
         $aOut = [];
-        $oAllNames = self::get_top_tag_names();
+        $aAllNames = self::get_top_tag_names();
 
-        foreach ($oAllNames as $sTag => $iCount)
-            if (strstr($sTag, $psPartial))
-                $aOut[] = $sTag;
+        foreach ($aAllNames as $sTag => $iCount)
+            if (stristr($sTag, $psPartial))
+                $aOut[] = strtolower($sTag);
 
         cDebug::leave();
         return $aOut;
