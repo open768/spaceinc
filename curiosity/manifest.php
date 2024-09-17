@@ -116,9 +116,12 @@ class cCuriosityManifestIndex {
         }
         self::pr_create_table();
     }
+    static function get_db() {
+        return self::$oSQLDB;
+    }
 
     //*****************************************************************************
-    private static function pr_replace_sql_params($psSQL) {
+    static function replace_sql_params($psSQL) {
         $sSQL = str_replace(":table", self::MANIFEST_TABLE, $psSQL);
         $sSQL = str_replace(":mission_col", self::COL_MISSION, $sSQL);
         $sSQL = str_replace(":sol_col", self::COL_SOL, $sSQL);
@@ -147,19 +150,19 @@ class cCuriosityManifestIndex {
             ":mission_col TEXT not null, :sol_col TEXT not null, :instr_col TEXT not null, :product_col TEXT not null, :url_col TEXT not null, :sample_col TEXT, :date_col INTEGER, " .
             "CONSTRAINT cmanifest UNIQUE (:mission_col, :sol_col, :instr_col, :product_col) " .
             ")";
-        $sSQL = self::pr_replace_sql_params($sSQL);
+        $sSQL = self::replace_sql_params($sSQL);
         $oSqLDB->querySQL($sSQL);
         cDebug::extra_debug("table created");
 
         //-------------create INDEX
         $sSQL = "CREATE INDEX idx_manifest on ':table' ( :mission_col, :sol_col, :instr_col )";
-        $sSQL = self::pr_replace_sql_params($sSQL);
+        $sSQL = self::replace_sql_params($sSQL);
         $oSqLDB->querySQL($sSQL);
         cDebug::extra_debug("main index created");
 
         //-------------create INDEX
         $sSQL = "CREATE INDEX idx_manifest_date on ':table' ( :date_col )";
-        $sSQL = self::pr_replace_sql_params($sSQL);
+        $sSQL = self::replace_sql_params($sSQL);
         $oSqLDB->querySQL($sSQL);
         cDebug::extra_debug("secondary index created");
     }
@@ -258,7 +261,7 @@ class cCuriosityManifestIndex {
 
         cDebug::extra_debug("deleting Sol $psSol index");
         $sSQL = "DELETE FROM `:table` where :sol_col=:sol";
-        $sSQL = self::pr_replace_sql_params($sSQL);
+        $sSQL = self::replace_sql_params($sSQL);
 
         $oSqlDB = self::$oSQLDB;
         $oStmt = $oSqlDB->prepare($sSQL);
@@ -286,7 +289,7 @@ class cCuriosityManifestIndex {
         cDebug::extra_debug("adding to index: $psSol, $sInstr, $sProduct, $sSampleType");
         echo ".";
         $sSQL = "INSERT INTO `:table` (:mission_col, :sol_col, :instr_col, :product_col, :url_col, :sample_col ,:date_col) VALUES (:mission, :sol, :instr, :product, :url, :sample , :d_val)";
-        $sSQL = self::pr_replace_sql_params($sSQL);
+        $sSQL = self::replace_sql_params($sSQL);
 
         //--------------put it into the database
         /** @var cSQLLite $oSqlDB  */
@@ -312,7 +315,7 @@ class cCuriosityManifestIndex {
         //delete everything
         cDebug::write("deleting from sql");
         $sSQL = "DELETE from `:table`";
-        $sSQL = self::pr_replace_sql_params($sSQL);
+        $sSQL = self::replace_sql_params($sSQL);
         $oSqlDB = self::$oSQLDB;
         $oStmt = $oSqlDB->prepare($sSQL);
         $oSqlDB->exec_stmt($oStmt); //handles retries and errors
@@ -327,7 +330,10 @@ class cCuriosityManifestIndex {
         cDebug::write("done");
         cDebug::leave();
     }
+}
+cCuriosityManifestIndex::init_db();
 
+class cCuriosityManifestUtils {
     //******************************************************************************************* */
     /**
      * returns a random image
@@ -340,10 +346,10 @@ class cCuriosityManifestIndex {
 
         //----------------prepare statement
         $sSQL = "SELECT :mission_col,:sol_col,:instr_col,:product_col,:url_col FROM `:table` WHERE ( :mission_col=:name AND  :instr_col LIKE :pattern AND :sample_col != 'thumbnail')  ORDER BY RANDOM() LIMIT :howmany";
-        $sSQL = self::pr_replace_sql_params($sSQL);
+        $sSQL = cCuriosityManifestIndex::replace_sql_params($sSQL);
         $sSQL = str_replace(":howmany", $piHowmany, $sSQL);
 
-        $oSqlDB = self::$oSQLDB;
+        $oSqlDB = cCuriosityManifestIndex::get_db();
         $oStmt = $oSqlDB->prepare($sSQL);
         $oStmt->bindValue(":name", cSpaceMissions::CURIOSITY);
         $oStmt->bindValue(":pattern", $sIntrumentPattern);
@@ -356,11 +362,11 @@ class cCuriosityManifestIndex {
         $aResults = cSqlLiteUtils::fetch_all($oResultSet);
         $aOut = [];
         foreach ($aResults as $aRow) {
-            $sMission = $aRow[self::COL_MISSION];
-            $sSol = $aRow[self::COL_SOL];
-            $sInstr = $aRow[self::COL_INSTR];
-            $sProduct = $aRow[self::COL_PRODUCT];
-            $sUrl = $aRow[self::COL_IMAGE_URL];
+            $sMission = $aRow[cCuriosityManifestIndex::COL_MISSION];
+            $sSol = $aRow[cCuriosityManifestIndex::COL_SOL];
+            $sInstr = $aRow[cCuriosityManifestIndex::COL_INSTR];
+            $sProduct = $aRow[cCuriosityManifestIndex::COL_PRODUCT];
+            $sUrl = $aRow[cCuriosityManifestIndex::COL_IMAGE_URL];
             $oProduct = new cRoverManifestImage($sMission, $sSol, $sInstr, $sProduct, $sUrl);
             $aOut[] = $oProduct;
         }
@@ -369,7 +375,6 @@ class cCuriosityManifestIndex {
         return $aOut;
     }
 }
-cCuriosityManifestIndex::init_db();
 
 //###############################################################################
 class cCuriosityManifest {
