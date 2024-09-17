@@ -32,6 +32,7 @@ class cCuriosityManifestIndexStatus {
 
     //*****************************************************************************
     static function clear_status() {
+        cDebug::extra_debug("deleting status");
         $oDB = self::$oDB;
         $oDB->kill(self::INDEXING_STATUS_KEY);
         $oDB->kill(self::INDEXING_LASTSOL_KEY);
@@ -126,12 +127,10 @@ class cCuriosityManifestIndex {
         $oSqLDB = self::$oSQLDB;
         //-------------- check table
         $bTableExists = $oSqLDB->table_exists(self::MANIFEST_TABLE);
-        if ($bTableExists) {
-            //cDebug::extra_debug("table exists: " . self::MANIFEST_TABLE);
+        if ($bTableExists)
             return;
-        } else {
-            cDebug::extra_debug("deleting status");
-        }
+        else
+            cCuriosityManifestIndexStatus::clear_status();
 
         //-------------create TABLE
         cDebug::extra_debug("table doesnt exist " . self::MANIFEST_TABLE);
