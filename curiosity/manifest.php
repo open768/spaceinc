@@ -394,11 +394,13 @@ class cCuriosityManifest {
     }
 
     //*****************************************************************************
-    static function getSolEntry($psSol) {
+    static function getSolEntry(string $psSol) {
         cDebug::enter();
         //---- get the manifest
         $oManifest = self::getManifest();
         $aSols = $oManifest->sols;
+        if (!is_numeric($psSol)) cDebug::error("not an integer");
+
         $iSol = (int) $psSol; //make sure we have an integer
         ksort($aSols, SORT_NUMERIC);
 
