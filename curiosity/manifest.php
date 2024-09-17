@@ -97,7 +97,6 @@ class cCuriosityManifestIndex {
     const COL_DATE_ADDED = "DA";
 
     const SAMPLE_THUMB = "thumbnail";
-    const REINDEX_SOLS = 10; //how many sols to reindex (ignore cache)
 
 
     /**  @var cSQLLite $oSQLDB */
@@ -190,44 +189,31 @@ class cCuriosityManifestIndex {
         if ($sLastSol == null) $sLastSol = -1;
         cDebug::write("indexing starting at sol: $sLastSol");
 
-
         cDebug::write("processing sol Manifest");
         $aSols = $oManifest->sols;
         ksort($aSols, SORT_NUMERIC);
-        $oSqlDB = self::$oSQLDB;
 
-        $aKeys = array_keys($aSols);
-        $iKeyCount = count($aKeys);
-        $iRow = 0;
-        $iMustReindexFromRow = $iKeyCount - self::REINDEX_SOLS;
 
         //---------------iterate manifest
         foreach ($aSols as $number => $oSol) {
             $sSol = $oSol->sol;
-            $iRow++;
-
-            //get the last updated
             $bReindex = false;
+
+            //- - - - - - - - -check when SOL was  last updated
             $sStoredLastUpdated = cCuriosityManifestIndexStatus::get_sol_last_updated($sSol);
             $sManifestLastUpdated = $oSol->last_updated;
             //cDebug::write("stored lastindex:$sStoredLastUpdated, manifest date:$sManifestLastUpdated");
-            if ($sStoredLastUpdated !== null)
-                if ($sStoredLastUpdated < $sManifestLastUpdated)
-                    $bReindex = true;
+            if ($sStoredLastUpdated == null)
+                $bReindex = true;
+            elseif ($sStoredLastUpdated < $sManifestLastUpdated)
+                $bReindex = true;
 
             //---------------------check if the row needs reindexing
-            if (!$bReindex)  $bReindex = $iRow >= $iMustReindexFromRow;
-            if ($bReindex)
-                self::delete_sol_index($sSol);
-            elseif ($sLastSol >= $sSol)
-                continue;                   //check here rather than earlier as it may have been updated
+            if (!$bReindex) $bReindex = $sSol > $sLastSol;
+            if (!$bReindex) continue;
 
             //-------perform the index
-            self::index_sol($sSol, $bReindex);
-
-            //update the status
-            cCuriosityManifestIndexStatus::put_last_indexed_sol($sSol);
-            cCuriosityManifestIndexStatus::put_sol_last_updated($sSol, $sManifestLastUpdated);
+            self::index_sol($sSol, $sManifestLastUpdated, $bReindex);
         }
         cCuriosityManifestIndexStatus::put_status(cCuriosityManifestIndexStatus::STATUS_COMPLETE);
 
@@ -239,9 +225,12 @@ class cCuriosityManifestIndex {
     }
 
     //*****************************************************************************
-    static function index_sol($psSol, $pbReindex) {
+    static function index_sol(string $psSol, $sLastUpdatedValue, bool $pbReindex) {
         $oSqlDB = self::$oSQLDB;
         cDebug::write("indexing sol:$psSol");
+
+        if ($pbReindex) self::delete_sol_index($psSol);
+
         if (self::$cached_all_data == null)
             self::$cached_all_data = cCuriosityManifest::getAllSolData($psSol, $pbReindex);
         $oSolData = self::$cached_all_data;
@@ -256,6 +245,10 @@ class cCuriosityManifestIndex {
                 self::add_to_index($psSol, $oImgData);
             $oSqlDB->commit();
         }
+
+        //update the status
+        cCuriosityManifestIndexStatus::put_last_indexed_sol($psSol);
+        cCuriosityManifestIndexStatus::put_sol_last_updated($psSol, $sLastUpdatedValue);
     }
 
     //*****************************************************************************
