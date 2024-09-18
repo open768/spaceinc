@@ -56,22 +56,10 @@ class cCuriosity implements iMission {
     public static function search_product($psSearch) {
         cDebug::enter();
 
+        //check for a valid product ID - will error if not
         $aExploded = cCuriosityPDS::explode_productID($psSearch);
-        if ($aExploded != null) {
-            $sSol = $aExploded["sol"];
-            cDebug::write("$psSearch is for sol '$sSol'");
-            $oSolData = self::getAllSolData($sSol);   //TBD this should use
-            if ($oSolData) {
-                $aImages = $oSolData->images;
 
-                foreach ($aImages as $oItem)
-                    if ($oItem->itemName === $psSearch) {
-                        cDebug::write("found it");
-                        $oData = ["s" => $sSol, "d" => $oItem];
-                        break;
-                    }
-            }
-        }
+        $oData = cCuriosityManifestUtils::search_for_product($psSearch);
 
         //return the product data
         cDebug::leave();

@@ -428,7 +428,7 @@ class cCuriosityManifestUtils {
         //----------------prepare statement
         $sSQL = "SELECT :mission_col,:sol_col,:instr_col,:product_col,:url_col FROM `:table` WHERE ( :mission_col=:name AND  :instr_col LIKE :pattern AND :sample_col != 'thumbnail')  ORDER BY RANDOM() LIMIT :howmany";
         $sSQL = cCuriosityManifestIndex::replace_sql_params($sSQL);
-        $sSQL = str_replace(":howmany", $piHowmany, $sSQL);
+        $sSQL = str_replace(":howmany", $piHowmany, $sSQL);     //cant bind LIMIT values
 
         $oSqlDB = cCuriosityManifestIndex::get_db();
         $oStmt = $oSqlDB->prepare($sSQL);
@@ -454,6 +454,32 @@ class cCuriosityManifestUtils {
 
         cDebug::leave();
         return $aOut;
+    }
+
+    //********************************************************
+    static function search_for_product(string $psProduct) {
+        cDebug::enter();
+        $sSQL = "SELECT :mission_col,:sol_col,:instr_col,:product_col,:url_col FROM `:table` WHERE ( :mission_col=:name AND :product_col=:search AND :sample_col != 'thumbnail')  LIMIT 1";
+        $sSQL = cCuriosityManifestIndex::replace_sql_params($sSQL);
+
+        $oSqlDB = cCuriosityManifestIndex::get_db();
+        $oStmt = $oSqlDB->prepare($sSQL);
+        $oStmt->bindValue(":name", cSpaceMissions::CURIOSITY);
+        $oStmt->bindValue(":search", $psProduct);
+        $oResultSet = $oSqlDB->exec_stmt($oStmt); //handles retries and errors
+        $aResult = $oResultSet->fetchArray(SQLITE3_ASSOC);
+
+        if (is_bool($aResult)) cDebug::error("nothing matched");
+
+        $oOut = new cManifestProductData; {
+            $oOut->sol = $aResult[cCuriosityManifestIndex::COL_SOL];
+            $oOut->product = $aResult[cCuriosityManifestIndex::COL_PRODUCT];
+            $oOut->instr = $aResult[cCuriosityManifestIndex::COL_INSTR];
+            $oOut->image_url = $aResult[cCuriosityManifestIndex::COL_IMAGE_URL];
+        }
+
+        cDebug::leave();
+        return $oOut;
     }
 }
 
