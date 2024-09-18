@@ -88,6 +88,7 @@ class cManifestProductData {
     public string $instr;
     public string $product;
     public string $image_url;
+    public int $utc_date;
     public string $sample_type;
 }
 
@@ -144,6 +145,7 @@ class cCuriosityManifestIndex {
         $sSQL = str_replace(":product_col", self::COL_PRODUCT, $sSQL);
         $sSQL = str_replace(":url_col", self::COL_IMAGE_URL, $sSQL);
         $sSQL = str_replace(":date_col", self::COL_DATE_ADDED, $sSQL);
+
         return $sSQL;
     }
 
@@ -364,10 +366,12 @@ class cCuriosityManifestIndex {
 
         $oSqlDB = self::$oSQLDB;
 
-        $sSQL = "select :mission_col, :sol_col, :instr_col, :product_col, :url_col, :sample_col ,:date_col from `:table` where :sol_col=:sol ORDER BY :sol_col, :instr_col, :product_col";
+        $sSQL = "SELECT :mission_col, :sol_col, :instr_col, :product_col, :url_col, :sample_col, :date_col from `:table` where :sol_col=:sol ORDER BY :sol_col, :instr_col, :product_col";
         $sSQL = self::replace_sql_params($sSQL);
+        cDebug::write($sSQL);
         $oStmt = $oSqlDB->prepare($sSQL);
         $oStmt->bindValue(":sol", $psSol);
+
         $oResultSet = $oSqlDB->exec_stmt($oStmt); //handles retries and errors
         $aSQLData = cSqlLiteUtils::fetch_all($oResultSet);
 
@@ -381,6 +385,7 @@ class cCuriosityManifestIndex {
                 $oItem->product = $aItem[self::COL_PRODUCT];
                 $oItem->sample_type = $aItem[self::COL_SAMPLE_TYPE];
                 $oItem->image_url = $aItem[self::COL_IMAGE_URL];
+                $oItem->utc_date = $aItem[self::COL_DATE_ADDED];
                 $oOut->data[] = $oItem;
             }
         }
