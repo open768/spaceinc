@@ -298,10 +298,8 @@ class cCuriosityManifestIndex {
         $sInstr = $poItem->instrument;
         $sProduct = $poItem->itemName;
         $sUrl = $poItem->urlList;
-        $sUtc = $poItem->utc; {
-            $dUtc = new DateTime($sUtc, new DateTimeZone("UTC"));
-            $iUtc = $dUtc->format('U');
-        }
+        $sUtc = $poItem->utc;
+        $iUtc = cCommon::UTC_to_epoch($sUtc);
 
         //--------------get the data out of the item
         cDebug::extra_debug("adding to index: $psSol, $sInstr, $sProduct, $sSampleType");
@@ -353,15 +351,34 @@ class cCuriosityManifestIndex {
     static function get_sol_data(string $psSol) {
         cDebug::enter();
         cDebug::write("attempting to get data for $psSol");
+        $bIndexIt = false;
 
         //----------------is it in the index?
+        $oManifestData = cCuriosityManifest::getSolEntry($psSol);
+        if ($oManifestData == null) {
+            cDebug::write("$psSol is not in the manifest at all");
+            return null;
+        }
+        $sManUtc = $oManifestData->last_updated;
+
+
         $slastUpdated = cCuriosityManifestIndexStatus::get_sol_last_updated($psSol);
         if ($slastUpdated === null) {
             cDebug::write("sol $psSol is not in the index");
-            return null;
+            $bIndexIt = true;
+        } elseif ($slastUpdated < $sManUtc) {
+            cDebug::write("sol $psSol needs to be reindexed");
+            $bIndexIt = true;
+        } else
+            cDebug::write("no reindexing needed - data is up-to-date");
+
+        //----------------Not in index, then index it by jeeves
+        if ($bIndexIt) {
+            cDebug::write("indexing sol $psSol");
+            self::index_sol($psSol, $sManUtc, true);
         }
 
-        //----------------yes then retrieve it
+        //---------------- retrieve it
         cDebug::write("sol $psSol is in the index");
 
         $oSqlDB = self::$oSQLDB;
