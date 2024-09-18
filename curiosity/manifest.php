@@ -83,6 +83,20 @@ class cCuriosityManifestIndexStatus {
 cCuriosityManifestIndexStatus::init_db();
 
 //#################################################################################
+class cManifestProductData {
+    public string $sol;
+    public string $instr;
+    public string $product;
+    public string $image_url;
+    public string $sample_type;
+}
+
+class cManifestSolData {
+    public string $sol;
+    public array  $data = [];
+}
+
+//#################################################################################
 class cCuriosityManifestIndex {
     const DB_FILENAME = "curiositymanifest.db";
     const MANIFEST_TABLE = "manifest";
@@ -331,6 +345,49 @@ class cCuriosityManifestIndex {
 
         cDebug::write("done");
         cDebug::leave();
+    }
+
+    //******************************************************************************************* */
+    static function get_sol_data(string $psSol) {
+        cDebug::enter();
+        cDebug::write("attempting to get data for $psSol");
+
+        //----------------is it in the index?
+        $slastUpdated = cCuriosityManifestIndexStatus::get_sol_last_updated($psSol);
+        if ($slastUpdated === null) {
+            cDebug::write("sol $psSol is not in the index");
+            return null;
+        }
+
+        //----------------yes then retrieve it
+        cDebug::write("sol $psSol is in the index");
+
+        $oSqlDB = self::$oSQLDB;
+
+        $sSQL = "select :mission_col, :sol_col, :instr_col, :product_col, :url_col, :sample_col ,:date_col from `:table` where :sol_col=:sol ORDER BY :sol_col, :instr_col, :product_col";
+        $sSQL = self::replace_sql_params($sSQL);
+        $oStmt = $oSqlDB->prepare($sSQL);
+        $oStmt->bindValue(":sol", $psSol);
+        $oResultSet = $oSqlDB->exec_stmt($oStmt); //handles retries and errors
+        $aSQLData = cSqlLiteUtils::fetch_all($oResultSet);
+
+        //-------------organise the data
+        $oOut = new cManifestSolData;
+        $oOut->sol = $psSol;
+        foreach ($aSQLData as $aItem) {
+            $oItem = new cManifestProductData; {
+                $oItem->sol = $aItem[self::COL_SOL];
+                $oItem->instr = $aItem[self::COL_INSTR];
+                $oItem->product = $aItem[self::COL_PRODUCT];
+                $oItem->sample_type = $aItem[self::COL_SAMPLE_TYPE];
+                $oItem->image_url = $aItem[self::COL_IMAGE_URL];
+                $oOut->data[] = $oItem;
+            }
+        }
+
+
+        cDebug::leave();
+        return $oOut;
     }
 }
 cCuriosityManifestIndex::init_db();

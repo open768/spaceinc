@@ -60,7 +60,7 @@ class cCuriosity implements iMission {
         if ($aExploded != null) {
             $sSol = $aExploded["sol"];
             cDebug::write("$psSearch is for sol '$sSol'");
-            $oSolData = self::getAllSolData($sSol);
+            $oSolData = self::getAllSolData($sSol);   //TBD this should use
             if ($oSolData) {
                 $aImages = $oSolData->images;
 
@@ -99,7 +99,7 @@ class cCuriosity implements iMission {
     //*****************************************************************************
     public static function getSolRawData($psSol, $psInstrument = null, $pbThumbs = false) {
         cDebug::enter();
-        $oJson = self::getAllSolData($psSol);
+        $oJson = self::getAllSolData($psSol);       //fine to use as RAW data is needed
         $oData = new cInstrument($psInstrument);  //put all images under a single instrument
 
         //get the images from the json response
