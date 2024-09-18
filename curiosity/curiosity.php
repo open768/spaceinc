@@ -49,7 +49,7 @@ class cCuriosity implements iMission {
 
     //*****************************************************************************
     public static function getAllSolData($psSol) {
-        return cCuriosityManifest::getAllSolData($psSol);
+        return cCuriosityManifest::getSolData($psSol);
     }
 
     //*****************************************************************************

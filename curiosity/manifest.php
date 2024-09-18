@@ -234,14 +234,11 @@ class cCuriosityManifestIndex {
 
         if ($pbReindex) self::delete_sol_index($psSol);
 
-        if (self::$cached_all_data == null)
-            self::$cached_all_data = cCuriosityManifest::getAllSolData($psSol, $pbReindex);
-        $oSolData = self::$cached_all_data;
+        $bCheckExpiry = !$pbReindex;
+        $oSolData = cCuriosityManifest::getSolData($psSol, $bCheckExpiry);
 
         $aImages = $oSolData->images;
-        if ($aImages === null) {
-            cDebug::error("no image data");
-        }
+        if ($aImages === null) cDebug::error("no image data");
 
         $oSqlDB->begin_transaction(); {
             foreach ($aImages as $sKey => $oImgData)
@@ -436,7 +433,7 @@ class cCuriosityManifest {
     }
 
     //*****************************************************************************
-    public static function getAllSolData($psSol, $pbCheckExpiry = true) {
+    public static function getSolData($psSol, $pbCheckExpiry = true) {
         cDebug::enter();
 
         $sUrl = self::getSolJsonUrl($psSol);
