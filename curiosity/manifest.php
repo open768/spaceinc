@@ -230,7 +230,7 @@ class cCuriosityManifestIndex {
     //*****************************************************************************
     static function index_sol(string $psSol, $sLastUpdatedValue, bool $pbReindex) {
         $oSqlDB = self::$oSQLDB;
-        cDebug::write("indexing sol:$psSol");
+        cDebug::extra_debug("indexing sol:$psSol");
 
         if ($pbReindex) self::delete_sol_index($psSol);
 
@@ -245,6 +245,11 @@ class cCuriosityManifestIndex {
                 self::add_to_index($psSol, $oImgData);
             $oSqlDB->commit();
         }
+
+
+        if (cDebug::is_debugging())
+            cPageOutput::scroll_to_bottom();
+
 
         //update the status
         cCuriosityManifestIndexStatus::put_last_indexed_sol($psSol);
@@ -380,6 +385,7 @@ class cCuriosityManifest {
     const SOL_URL = "https://mars.jpl.nasa.gov/msl-raw-images/image/images_sol";
     const SOL_CACHE = 604800;    //1 week
     const FEED_SLEEP = 200; //milliseconds
+    static $cached_manifest = null;
 
 
     //*****************************************************************************
@@ -387,9 +393,13 @@ class cCuriosityManifest {
         $oResult = null;
         cDebug::enter();
 
-        $oCache = new cCachedHttp(); {
-            $oCache->CACHE_EXPIRY = self::MANIFEST_CACHE;
-            $oResult = $oCache->getCachedJson(self::FEED_URL);
+        $oResult = self::$cached_manifest;
+        if ($oResult == null) {
+            $oCache = new cCachedHttp(); {
+                $oCache->CACHE_EXPIRY = self::MANIFEST_CACHE;
+                $oResult = $oCache->getCachedJson(self::FEED_URL);
+            }
+            self::$cached_manifest = $oResult;
         }
         cDebug::leave();
         return $oResult;
@@ -439,7 +449,7 @@ class cCuriosityManifest {
         $sUrl = self::getSolJsonUrl($psSol);
         if (cCommon::is_string_empty($sUrl)) cDebug::error("empty url for $psSol");
 
-        cDebug::write("Getting all sol data for sol $psSol");
+        cDebug::extra_debug("Getting all sol data for sol $psSol");
 
         $oCache = new cCachedHttp(); {
             $oCache->CACHE_EXPIRY = self::SOL_CACHE;
