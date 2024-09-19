@@ -88,7 +88,7 @@ class cCuriosity implements iMission {
     public static function getSolRawData($psSol, $psInstrument = null, $pbThumbs = false) {
         cDebug::enter();
         $oJson = self::getAllSolData($psSol);       //fine to use as RAW data is needed
-        $oData = new cInstrument($psInstrument);  //put all images under a single instrument
+        $oData = new cCuriosityInstrument($psInstrument);  //put all images under a single instrument
 
         //get the images from the json response
         $aImages = $oJson->images;
@@ -172,7 +172,7 @@ class cCuriosity implements iMission {
         cDebug::enter();
 
         //check if the instrument might be an abbreviation
-        $sInstr = cInstrument::getInstrumentName($psInstrument);
+        $sInstr = cCuriosityInstrument::getInstrumentName($psInstrument);
         $aOutput = ["s" => $psSol, "i" => $sInstr, "p" => $psProduct, "d" => null, "max" => null, "item" => null, "migrate" => null];
 
         //get the data

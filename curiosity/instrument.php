@@ -15,12 +15,12 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 require_once  cAppGlobals::$phpInc . "/ckinc/cached_http.php";
 
 //##########################################################################
-class cInstrumentData {
+class cCuriosityInstrumentData {
     public $du, $dm, $i, $p, $data;
 }
 
 //##########################################################################
-class cInstrument {
+class cCuriosityInstrument {
     public $instrument;
     public $data;
     public $product;

@@ -12,6 +12,7 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
  **************************************************************************/
 
 require_once cAppGlobals::$spaceInc . "/missions/rover.php";
+require_once cAppGlobals::$spaceInc . "/curiosity/instrument.php";
 
 //#################################################################################
 class cCuriosityManifestIndexStatus {
@@ -120,6 +121,8 @@ class cCuriosityManifestIndex {
 
 
     //*****************************************************************************
+    //* DB stuff
+    //*****************************************************************************
     static function init_db() {
         //-------------- open SQLlite DB
         /** @var cSQLLite $oSqLDB  */
@@ -183,6 +186,8 @@ class cCuriosityManifestIndex {
         cDebug::extra_debug("secondary index created");
     }
 
+    //*****************************************************************************
+    // Index functions
     //*****************************************************************************
     static function indexManifest() {
         cDebug::enter();
@@ -326,7 +331,7 @@ class cCuriosityManifestIndex {
     }
 
     //******************************************************************************************* */
-    static function deleteIndex() {
+    static function deleteEntireIndex() {
         cDebug::enter();
         //delete everything
         cDebug::write("deleting from sql");
@@ -347,7 +352,9 @@ class cCuriosityManifestIndex {
         cDebug::leave();
     }
 
-    //******************************************************************************************* */
+    //*****************************************************************************
+    // getters functions
+    //*****************************************************************************
     static function get_sol_data(string $psSol) {
         cDebug::enter();
         cDebug::write("attempting to get data for $psSol");
@@ -414,8 +421,13 @@ class cCuriosityManifestIndex {
 }
 cCuriosityManifestIndex::init_db();
 
+//###################################################################################
+//#
+//###################################################################################
 class cCuriosityManifestUtils {
-    //******************************************************************************************* */
+    const TIMESLOT = 10;
+
+    //******************************************************************************
     /**
      * returns a random image
      * @param string $sIntrumentPattern 
@@ -480,6 +492,61 @@ class cCuriosityManifestUtils {
 
         cDebug::leave();
         return $oOut;
+    }
+
+    //********************************************************
+    static function get_calendar(string $psSol) {
+        cDebug::write("getting instruments");
+
+        $oInstruments = cCuriosityInstrument::getInstrumentList();
+        /** @var cManifestSolData $oData */
+        $oData = cCuriosityManifestIndex::get_sol_data($psSol);
+        $aManData = $oData->data;
+
+        $oData = (object) [
+            "sol" => $psSol,
+            "cal" => [],
+            "instr" => $oInstruments
+        ];
+
+        cDebug::write("processing images");
+        $aCal = [];
+        /** @var cManifestProductData $oItem */
+        foreach ($aManData as $oItem) {
+            //ignore thumbnails
+            if ($oItem->sample_type === "thumbnail")
+                continue;
+
+            //Get instruments
+            $sInstr = $oItem->instr;
+            $sInstrAbbr = cCuriosityInstrument::getInstrumentAbbr($sInstr);
+
+            //work out the date
+            $epoch = $oItem->utc_date;
+            $dDate = new DateTime("@$epoch");
+            $sDate = $dDate->format("d-m-y");
+            if (!array_key_exists($sDate, $aCal)) $aCal[$sDate] = [];
+
+            //work out the time key
+            $sHour = $dDate->format("H");
+            $sMin = $dDate->format("i");
+            $sMin =  intdiv($sMin, self::TIMESLOT) * self::TIMESLOT;
+            $sMin = str_pad($sMin, 2, "0", STR_PAD_LEFT);
+            $sTimeKey = "$sHour:$sMin";
+
+            //debug
+            /*
+            $sOriginal = $dDate->format("d-m-y H:i");
+            cDebug::write("original: $sOriginal -> $sDate $sTimeKey");
+            */
+
+            //add the entry to the array
+            if (!array_key_exists($sTimeKey, $aCal[$sDate])) $aCal[$sDate][$sTimeKey] = [];
+            $aCal[$sDate][$sTimeKey][] = (object)["i" => $sInstrAbbr, "d" => $epoch, "p" => $oItem->product];
+        }
+        $oData->cal = $aCal;
+
+        return $oData;
     }
 }
 
@@ -562,7 +629,7 @@ class cCuriosityManifest {
             $oResult = $oCache->getCachedJson($sUrl, $pbCheckExpiry);
         }
 
-        if (!$bIsCached) {
+        if (cDebug::is_debugging() && !$bIsCached) {
             cDebug::write("<p> -- sleeping for " . self::FEED_SLEEP . " ms\n");
             usleep(self::FEED_SLEEP);
         }

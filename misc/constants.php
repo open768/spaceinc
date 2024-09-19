@@ -9,4 +9,7 @@ class cSpaceUrlParams {
     const PRODUCT = "p";
     const MISSION = "m";
     const URL = "u";
+
+    const HIGHLIGHT_TOP = "t";
+    const HIGHLIGHT_LEFT = "l";
 }
