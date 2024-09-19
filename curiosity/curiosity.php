@@ -149,23 +149,13 @@ class cCuriosity implements iMission {
         $aResults = [];
         cDebug::enter();
 
-
         cDebug::write("Getting instrument list for sol " . $piSol);
-        $oData = self::getAllSolData($piSol);
-        $aImages = $oData->images;
 
-        foreach ($aImages as $oItem)
-            if ($oItem->sampleType !== "thumbnail")
-                if (!in_array($oItem->instrument, $aResults))
-                    $aResults[] = $oItem->instrument;
+        $aData = cCuriosityManifestUtils::get_instruments_for_sol($piSol);
 
         cDebug::leave();
-        return $aResults;
+        return $aData;
     }
-
-
-
-
 
     //*****************************************************************************
     public static function getProductDetails($psSol, $psInstrument, $psProduct) {

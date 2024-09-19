@@ -355,9 +355,10 @@ class cCuriosityManifestIndex {
     //*****************************************************************************
     // getters functions
     //*****************************************************************************
-    static function get_sol_data(string $psSol) {
+    static function reindex_if_needed(string $psSol) {
         cDebug::enter();
-        cDebug::write("attempting to get data for $psSol");
+
+        cDebug::write("checking Sol $psSol");
         $bIndexIt = false;
 
         //----------------is it in the index?
@@ -384,6 +385,15 @@ class cCuriosityManifestIndex {
             cDebug::write("indexing sol $psSol");
             self::index_sol($psSol, $sManUtc, true);
         }
+        cDebug::leave();
+    }
+
+    //*****************************************************************************
+    static function get_sol_data(string $psSol) {
+        cDebug::enter();
+        cDebug::write("attempting to get data for $psSol");
+
+        self::reindex_if_needed(($psSol));
 
         //---------------- retrieve it
         cDebug::write("sol $psSol is in the index");
@@ -402,15 +412,16 @@ class cCuriosityManifestIndex {
         //-------------organise the data
         $oOut = new cManifestSolData;
         $oOut->sol = $psSol;
-        foreach ($aSQLData as $aItem) {
-            $oItem = new cManifestProductData; {
-                $oItem->sol = $aItem[self::COL_SOL];
-                $oItem->instr = $aItem[self::COL_INSTR];
-                $oItem->product = $aItem[self::COL_PRODUCT];
-                $oItem->sample_type = $aItem[self::COL_SAMPLE_TYPE];
-                $oItem->image_url = $aItem[self::COL_IMAGE_URL];
-                $oItem->utc_date = $aItem[self::COL_DATE_ADDED];
-                $oOut->data[] = $oItem;
+        foreach ($aSQLData as $oItem) {
+            $aItem = (array)$oItem;
+            $oNewItem = new cManifestProductData; {
+                $oNewItem->sol = $aItem[self::COL_SOL];
+                $oNewItem->instr = $aItem[self::COL_INSTR];
+                $oNewItem->product = $aItem[self::COL_PRODUCT];
+                $oNewItem->sample_type = $aItem[self::COL_SAMPLE_TYPE];
+                $oNewItem->image_url = $aItem[self::COL_IMAGE_URL];
+                $oNewItem->utc_date = $aItem[self::COL_DATE_ADDED];
+                $oOut->data[] = $oNewItem;
             }
         }
 
@@ -547,6 +558,28 @@ class cCuriosityManifestUtils {
         $oData->cal = $aCal;
 
         return $oData;
+    }
+
+    //********************************************************
+    static function get_instruments_for_sol($psSol) {
+        cCuriosityManifestIndex::reindex_if_needed($psSol);
+
+        $sSQL = "SELECT DISTINCT :instr_col from `:table` WHERE :mission_col=:mission  AND :sol_col=:sol ORDER BY :sol_col";
+        $sSQL = cCuriosityManifestIndex::replace_sql_params($sSQL);
+        $oSqlDB = cCuriosityManifestIndex::get_db();
+        $oStmt = $oSqlDB->prepare($sSQL);
+        $oStmt->bindValue(":mission", cSpaceMissions::CURIOSITY);
+        $oStmt->bindValue(":sol", $psSol);
+        $oResultset = $oSqlDB->exec_stmt($oStmt);
+        $aSQLData = cSqlLiteUtils::fetch_all($oResultset);
+
+        $aData = [];
+        foreach ($aSQLData as $oItem) {
+            $aItem = (array) $oItem;
+            $aData[] = $aItem[cCuriosityManifestIndex::COL_INSTR];
+        }
+
+        return $aData;
     }
 }
 
