@@ -1,6 +1,8 @@
 <?php
 
 class cSpaceConstants {
+    const DIRECTION_NEXT = "n";
+    const DIRECTION_PREVIOUS = "p";
 }
 
 class cSpaceUrlParams {
