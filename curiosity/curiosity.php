@@ -67,25 +67,8 @@ class cCuriosity implements iMission {
     }
 
 
-
     //*****************************************************************************
-    public static function getNoThumbnails($psSol) {
-        cDebug::enter();
-
-        $aData = [];
-
-        $oSolData =  self::getAllSolData($psSol);
-        $aImages = $oSolData->images;
-        foreach ($aImages as $oItem)
-            if ($oItem->sampleType !== "thumbnail")
-                $aData[] = $oItem;
-
-        cDebug::leave();
-        return $aData;
-    }
-
-    //*****************************************************************************
-    public static function getSolRawData($psSol, $psInstrument = null, $pbThumbs = false) {
+    public static function getSolRawData($psSol, $psInstrument = null, $pbThumbs = false): cCuriosityInstrument {
         cDebug::enter();
         $oJson = self::getAllSolData($psSol);       //fine to use as RAW data is needed
         $oData = new cCuriosityInstrument($psInstrument);  //put all images under a single instrument
