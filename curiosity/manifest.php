@@ -184,6 +184,12 @@ class cCuriosityManifestIndex {
         $sSQL = self::replace_sql_params($sSQL);
         $oSqLDB->querySQL($sSQL);
         cDebug::extra_debug("secondary index created");
+
+        //-------------create INDEX
+        $sSQL = "CREATE INDEX idx_product on ':table' ( :mission_col, :product_col )";
+        $sSQL = self::replace_sql_params($sSQL);
+        $oSqLDB->querySQL($sSQL);
+        cDebug::extra_debug("secondary index created");
     }
 
     //*****************************************************************************
@@ -437,6 +443,10 @@ cCuriosityManifestIndex::init_db();
 //###################################################################################
 class cCuriosityManifestUtils {
     const TIMESLOT = 10;
+    const SAMPLE_ALL = 1;
+    const SAMPLE_THUMBS = 2;
+    const SAMPLE_NONTHUMBS = 3;
+
 
     //******************************************************************************
     /**
@@ -449,16 +459,16 @@ class cCuriosityManifestUtils {
         cDebug::enter();
 
         //----------------prepare statement
-        $sSQL = "SELECT :mission_col,:sol_col,:instr_col,:product_col,:url_col FROM `:table` WHERE ( :mission_col=:name AND  :instr_col LIKE :pattern AND :sample_col != 'thumbnail')  ORDER BY RANDOM() LIMIT :howmany";
+        $sSQL = "SELECT :mission_col,:sol_col,:instr_col,:product_col,:url_col FROM `:table` WHERE ( :mission_col=:mission AND  :instr_col LIKE :pattern AND :sample_col != 'thumbnail')  ORDER BY RANDOM() LIMIT :howmany";
         $sSQL = cCuriosityManifestIndex::replace_sql_params($sSQL);
         $sSQL = str_replace(":howmany", $piHowmany, $sSQL);     //cant bind LIMIT values
 
         $oSqlDB = cCuriosityManifestIndex::get_db();
         $oStmt = $oSqlDB->prepare($sSQL);
-        $oStmt->bindValue(":name", cSpaceMissions::CURIOSITY);
+        $oStmt->bindValue(":mission", cSpaceMissions::CURIOSITY);
         $oStmt->bindValue(":pattern", $sIntrumentPattern);
-        $sSQL = $oStmt->getSQL(true);
-        cDebug::extra_debug("SQL: $sSQL");
+        //$sSQL = $oStmt->getSQL(true);
+        //cDebug::extra_debug("SQL: $sSQL");
 
         $oResultSet = $oSqlDB->exec_stmt($oStmt); //handles retries and errors
 
@@ -482,12 +492,12 @@ class cCuriosityManifestUtils {
     //********************************************************
     static function search_for_product(string $psProduct) {
         cDebug::enter();
-        $sSQL = "SELECT :mission_col,:sol_col,:instr_col,:product_col,:url_col FROM `:table` WHERE ( :mission_col=:name AND :product_col=:search AND :sample_col != 'thumbnail')  LIMIT 1";
+        $sSQL = "SELECT :mission_col,:sol_col,:instr_col,:product_col,:url_col FROM `:table` WHERE ( :mission_col=:mission AND :product_col=:search AND :sample_col != 'thumbnail')  LIMIT 1";
         $sSQL = cCuriosityManifestIndex::replace_sql_params($sSQL);
 
         $oSqlDB = cCuriosityManifestIndex::get_db();
         $oStmt = $oSqlDB->prepare($sSQL);
-        $oStmt->bindValue(":name", cSpaceMissions::CURIOSITY);
+        $oStmt->bindValue(":mission", cSpaceMissions::CURIOSITY);
         $oStmt->bindValue(":search", $psProduct);
         $oResultSet = $oSqlDB->exec_stmt($oStmt); //handles retries and errors
         $aResult = $oResultSet->fetchArray(SQLITE3_ASSOC);
@@ -581,6 +591,169 @@ class cCuriosityManifestUtils {
 
         return $aData;
     }
+
+    //*********************************************************************
+    static function count_products_in_sol($psSol, $piSampleType) {
+        cDebug::enter();
+
+        //-----------------------build SQL
+        $sSQL = "SELECT count(*) as count from `:table` WHERE :mission_col=:mission AND :sol_col=:sol";
+        $bBindsample = false;
+        switch ($piSampleType) {
+            case self::SAMPLE_NONTHUMBS:
+                $sSQL = "$sSQL AND :sample_col != :sample_type";
+                $bBindsample = true;
+                break;
+            case self::SAMPLE_THUMBS:
+                $sSQL = "$sSQL AND :sample_col = :sample_type";
+                $bBindsample = true;
+        }
+
+        $sSQL = cCuriosityManifestIndex::replace_sql_params($sSQL);
+
+        //-----------------------execute SQL
+        $oSqlDB = cCuriosityManifestIndex::get_db();
+        $oStmt = $oSqlDB->prepare($sSQL);
+        $oStmt->bindValue(":mission", cSpaceMissions::CURIOSITY);
+        $oStmt->bindValue(":sol", $psSol);
+        if ($bBindsample)
+            $oStmt->bindValue(":sample_type", cCuriosityManifest::SAMPLE_TYPE_THUMBNAIL);
+        //cDebug::write($oStmt->getSQL(true));
+        $oResultset = $oSqlDB->exec_stmt($oStmt);
+
+        //-----------------------get results
+        $aRow  = $oResultset->fetchArray(SQLITE3_ASSOC);
+        $iCount = $aRow["count"];
+        //cDebug::write("there are $iCount matching rows");
+
+        cDebug::leave();
+        return $iCount;
+    }
+
+    //*********************************************************************
+    static function get_sol_product_index($psSol, $psProduct, $piSampleType) {
+        cDebug::enter();
+        //change from using subselects
+        //-----------------------build SQL
+        $sSQL = "SELECT :product_col FROM `:table` where :mission_col=:mission AND :sol_col=:sol ORDER BY :product_col";
+        switch ($piSampleType) {
+            case self::SAMPLE_NONTHUMBS:
+                $sSQL = "$sSQL AND :sample_col != :sample_type";
+                break;
+            case self::SAMPLE_THUMBS:
+                $sSQL = "$sSQL AND :sample_col = :sample_type";
+        }
+        $sSQL = cCuriosityManifestIndex::replace_sql_params($sSQL);
+
+        //-----------------------execute SQL
+        $oSqlDB = cCuriosityManifestIndex::get_db();
+        $oStmt = $oSqlDB->prepare($sSQL);
+        $oStmt->bindValue(":mission", cSpaceMissions::CURIOSITY);
+        $oStmt->bindValue(":sol", $psSol);
+        $oStmt->bindValue(":sample_type", cCuriosityManifest::SAMPLE_TYPE_THUMBNAIL);
+        $oResultset = $oSqlDB->exec_stmt($oStmt);
+
+        //-----------------------get results
+        $aSQLData = cSqlLiteUtils::fetch_all($oResultset);
+        if (count($aSQLData) == 0) cDebug::error("no results returned");
+
+        //-----------------------iterate results
+        $iIndex = 0;
+        $bFound = false;
+        foreach ($aSQLData as $oItem) {
+            $iIndex++;
+            $aItem = (array)$oItem;
+            $sSqlProduct = $aItem[cCuriosityManifestIndex::COL_PRODUCT];
+            if ($sSqlProduct === $psProduct) {
+                $bFound = true;
+                break;
+            }
+        }
+
+        if (!$bFound)
+            cDebug::error("no match for product $psProduct");
+
+        cDebug::write("row: $iIndex");
+
+        cDebug::leave();
+        return $iIndex;
+    }
+
+    //*********************************************************************
+    static function get_sol_indexed_product($psSol, $piIndex, $piSampleType) {
+        cDebug::enter();
+        $bBindsample = false;
+
+        //-----------------------build SQL
+        $sWhere = ":mission_col=:mission AND :sol_col=:sol ORDER BY :product_col";
+        switch ($piSampleType) {
+            case self::SAMPLE_NONTHUMBS:
+                $sWhere = "$sWhere AND :sample_col != :sample_type";
+                $bBindsample = true;
+                break;
+            case self::SAMPLE_THUMBS:
+                $sWhere = "$sWhere AND :sample_col = :sample_type";
+                $bBindsample = true;
+        }
+        $sSQL = "SELECT :sol_col,:instr_col,:product_col FROM `:table` WHERE $sWhere  LIMIT 1 OFFSET $piIndex";
+        $sSQL = cCuriosityManifestIndex::replace_sql_params($sSQL);
+
+        //-----------------------execute SQL
+        $oSqlDB = cCuriosityManifestIndex::get_db();
+        $oStmt = $oSqlDB->prepare($sSQL);
+        $oStmt->bindValue(":mission", cSpaceMissions::CURIOSITY);
+        $oStmt->bindValue(":sol", $psSol);
+        $oStmt->bindValue(":sample_type", cCuriosityManifest::SAMPLE_TYPE_THUMBNAIL);
+        //cDebug::write($oStmt->getSQL(true));
+        $oResultset = $oSqlDB->exec_stmt($oStmt);
+
+        //-----------------------get results
+        $aRow  = $oResultset->fetchArray(SQLITE3_ASSOC);
+        if (!$aRow) cDebug::error("no results returned");
+
+        $oProduct = new cManifestProductData;
+        $oProduct->sol = $aRow[cCuriosityManifestIndex::COL_SOL];
+        $oProduct->instr = $aRow[cCuriosityManifestIndex::COL_INSTR];
+        $oProduct->product = $aRow[cCuriosityManifestIndex::COL_PRODUCT];
+
+        cDebug::leave();
+        return $oProduct;
+    }
+
+    //*********************************************************************
+    static function find_time_sequential_product($psSol, $psProduct, $psDirection) {
+        cDebug::enter();
+        $iFoundIndex = -1;
+        $oData = null;
+
+        $iCount = self::count_products_in_sol($psSol, self::SAMPLE_NONTHUMBS);
+        $iRow = self::get_sol_product_index($psSol, $psProduct, self::SAMPLE_NONTHUMBS);
+        $iOutRow = $iRow;
+        $sOutSol = $psSol;
+        switch ($psDirection) {
+            case cSpaceConstants::DIRECTION_PREVIOUS:
+                $iOutRow--;
+                if ($iOutRow < 1) {
+                    $sOutSol--;
+                    $iCount = self::count_products_in_sol($sOutSol, self::SAMPLE_NONTHUMBS);
+                    $iOutRow = $iCount;
+                }
+                break;
+            case cSpaceConstants::DIRECTION_NEXT:
+                $iOutRow++;
+                if ($iOutRow > $iCount) {
+                    $sOutSol++;
+                    $iOutRow = 1;
+                }
+                break;
+            default:
+                cDebug::error("unknown direction");
+        }
+        cDebug::write("sol:$sOutSol, row:$iOutRow");
+        $oOut = self::get_sol_indexed_product($sOutSol, $iOutRow, self::SAMPLE_NONTHUMBS);
+        cDebug::leave();
+        return $oOut;
+    }
 }
 
 //###############################################################################
@@ -590,7 +763,9 @@ class cCuriosityManifest {
     const SOL_URL = "https://mars.jpl.nasa.gov/msl-raw-images/image/images_sol";
     const SOL_CACHE = 604800;    //1 week
     const FEED_SLEEP = 200; //milliseconds
+    const SAMPLE_TYPE_THUMBNAIL = "thumbnail";
     static $cached_manifest = null;
+
 
 
     //*****************************************************************************
