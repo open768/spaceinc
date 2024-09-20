@@ -113,6 +113,9 @@ class cCuriosityManifestIndex {
     const COL_DATE_ADDED = "DA";
 
     const SAMPLE_THUMB = "thumbnail";
+    const SAMPLE_ALL = 1;
+    const SAMPLE_THUMBS = 2;
+    const SAMPLE_NONTHUMBS = 3;
 
 
     /**  @var cSQLLite $oSQLDB */
@@ -186,7 +189,7 @@ class cCuriosityManifestIndex {
         cDebug::extra_debug("secondary index created");
 
         //-------------create INDEX
-        $sSQL = "CREATE INDEX idx_product on ':table' ( :mission_col, :product_col )";
+        $sSQL = "CREATE INDEX idx_product on ':table' ( :mission_col, :sol_col, :product_col )";
         $sSQL = self::replace_sql_params($sSQL);
         $oSqLDB->querySQL($sSQL);
         cDebug::extra_debug("secondary index created");
@@ -395,27 +398,35 @@ class cCuriosityManifestIndex {
     }
 
     //*****************************************************************************
-    static function get_sol_data(string $psSol) {
+    static function get_sol_data(string $psSol, string $piSampleType = self::SAMPLE_ALL) {
         cDebug::enter();
         cDebug::write("attempting to get data for $psSol");
 
-        self::reindex_if_needed(($psSol));
-
-        //---------------- retrieve it
+        self::reindex_if_needed($psSol);
         cDebug::write("sol $psSol is in the index");
 
+        //---------------- build SQL
         $oSqlDB = self::$oSQLDB;
-
-        $sSQL = "SELECT :mission_col, :sol_col, :instr_col, :product_col, :url_col, :sample_col, :date_col from `:table` where :sol_col=:sol ORDER BY :sol_col, :instr_col, :product_col";
+        $sWhere = ":mission_col=:mission AND :sol_col=:sol";
+        switch ($piSampleType) {
+            case self::SAMPLE_NONTHUMBS:
+                $sWhere = "$sWhere AND :sample_col != :sample_type";
+                break;
+            case self::SAMPLE_THUMBS:
+                $sWhere = "$sWhere AND :sample_col = :sample_type";
+        }
+        $sSQL = "SELECT :mission_col, :sol_col, :instr_col, :product_col, :url_col, :sample_col, :date_col from `:table` where $sWhere ORDER BY :sol_col, :instr_col, :product_col";
         $sSQL = self::replace_sql_params($sSQL);
-        cDebug::write($sSQL);
         $oStmt = $oSqlDB->prepare($sSQL);
         $oStmt->bindValue(":sol", $psSol);
+        $oStmt->bindValue(":mission", cSpaceMissions::CURIOSITY);
+        $oStmt->bindValue(":sample_type", cCuriosityManifest::SAMPLE_TYPE_THUMBNAIL);
 
+        //---------------- exec SQL
         $oResultSet = $oSqlDB->exec_stmt($oStmt); //handles retries and errors
         $aSQLData = cSqlLiteUtils::fetch_all($oResultSet);
 
-        //-------------organise the data
+        //-------------organise the datacuriosity/manifest.php
         $oOut = new cManifestSolData;
         $oOut->sol = $psSol;
         foreach ($aSQLData as $oItem) {
@@ -443,9 +454,6 @@ cCuriosityManifestIndex::init_db();
 //###################################################################################
 class cCuriosityManifestUtils {
     const TIMESLOT = 10;
-    const SAMPLE_ALL = 1;
-    const SAMPLE_THUMBS = 2;
-    const SAMPLE_NONTHUMBS = 3;
 
 
     //******************************************************************************
@@ -574,7 +582,7 @@ class cCuriosityManifestUtils {
     static function get_instruments_for_sol($psSol) {
         cCuriosityManifestIndex::reindex_if_needed($psSol);
 
-        $sSQL = "SELECT DISTINCT :instr_col from `:table` WHERE :mission_col=:mission  AND :sol_col=:sol ORDER BY :sol_col";
+        $sSQL = "SELECT DISTINCT :instr_col from `:table` WHERE :mission_col=:mission  AND :sol_col=:sol ORDER BY :instr_col";
         $sSQL = cCuriosityManifestIndex::replace_sql_params($sSQL);
         $oSqlDB = cCuriosityManifestIndex::get_db();
         $oStmt = $oSqlDB->prepare($sSQL);
@@ -598,15 +606,12 @@ class cCuriosityManifestUtils {
 
         //-----------------------build SQL
         $sSQL = "SELECT count(*) as count from `:table` WHERE :mission_col=:mission AND :sol_col=:sol";
-        $bBindsample = false;
         switch ($piSampleType) {
-            case self::SAMPLE_NONTHUMBS:
+            case cCuriosityManifestIndex::SAMPLE_NONTHUMBS:
                 $sSQL = "$sSQL AND :sample_col != :sample_type";
-                $bBindsample = true;
                 break;
-            case self::SAMPLE_THUMBS:
+            case cCuriosityManifestIndex::SAMPLE_THUMBS:
                 $sSQL = "$sSQL AND :sample_col = :sample_type";
-                $bBindsample = true;
         }
 
         $sSQL = cCuriosityManifestIndex::replace_sql_params($sSQL);
@@ -616,8 +621,7 @@ class cCuriosityManifestUtils {
         $oStmt = $oSqlDB->prepare($sSQL);
         $oStmt->bindValue(":mission", cSpaceMissions::CURIOSITY);
         $oStmt->bindValue(":sol", $psSol);
-        if ($bBindsample)
-            $oStmt->bindValue(":sample_type", cCuriosityManifest::SAMPLE_TYPE_THUMBNAIL);
+        $oStmt->bindValue(":sample_type", cCuriosityManifest::SAMPLE_TYPE_THUMBNAIL);
         //cDebug::write($oStmt->getSQL(true));
         $oResultset = $oSqlDB->exec_stmt($oStmt);
 
@@ -635,14 +639,15 @@ class cCuriosityManifestUtils {
         cDebug::enter();
         //change from using subselects
         //-----------------------build SQL
-        $sSQL = "SELECT :product_col FROM `:table` where :mission_col=:mission AND :sol_col=:sol ORDER BY :product_col";
+        $sWhere = ":mission_col=:mission AND :sol_col=:sol";
         switch ($piSampleType) {
-            case self::SAMPLE_NONTHUMBS:
-                $sSQL = "$sSQL AND :sample_col != :sample_type";
+            case cCuriosityManifestIndex::SAMPLE_NONTHUMBS:
+                $sWhere = "$sWhere AND :sample_col != :sample_type";
                 break;
-            case self::SAMPLE_THUMBS:
-                $sSQL = "$sSQL AND :sample_col = :sample_type";
+            case cCuriosityManifestIndex::SAMPLE_THUMBS:
+                $sWhere = "$sWhere AND :sample_col = :sample_type";
         }
+        $sSQL = "SELECT :product_col FROM `:table` WHERE $sWhere  ORDER BY :product_col";
         $sSQL = cCuriosityManifestIndex::replace_sql_params($sSQL);
 
         //-----------------------execute SQL
@@ -673,7 +678,7 @@ class cCuriosityManifestUtils {
         if (!$bFound)
             cDebug::error("no match for product $psProduct");
 
-        cDebug::write("row: $iIndex");
+        cDebug::write("$psProduct found at row: $iIndex");
 
         cDebug::leave();
         return $iIndex;
@@ -682,20 +687,18 @@ class cCuriosityManifestUtils {
     //*********************************************************************
     static function get_sol_indexed_product($psSol, $piIndex, $piSampleType) {
         cDebug::enter();
-        $bBindsample = false;
 
         //-----------------------build SQL
-        $sWhere = ":mission_col=:mission AND :sol_col=:sol ORDER BY :product_col";
+        $sWhere = ":mission_col=:mission AND :sol_col=:sol";
         switch ($piSampleType) {
-            case self::SAMPLE_NONTHUMBS:
+            case cCuriosityManifestIndex::SAMPLE_NONTHUMBS:
                 $sWhere = "$sWhere AND :sample_col != :sample_type";
-                $bBindsample = true;
                 break;
-            case self::SAMPLE_THUMBS:
+            case cCuriosityManifestIndex::SAMPLE_THUMBS:
                 $sWhere = "$sWhere AND :sample_col = :sample_type";
-                $bBindsample = true;
         }
-        $sSQL = "SELECT :sol_col,:instr_col,:product_col FROM `:table` WHERE $sWhere  LIMIT 1 OFFSET $piIndex";
+        $iOffset = $piIndex - 1;
+        $sSQL = "SELECT :sol_col,:instr_col,:product_col FROM `:table` WHERE $sWhere ORDER BY :product_col LIMIT 1 OFFSET $iOffset";
         $sSQL = cCuriosityManifestIndex::replace_sql_params($sSQL);
 
         //-----------------------execute SQL
@@ -726,8 +729,11 @@ class cCuriosityManifestUtils {
         $iFoundIndex = -1;
         $oData = null;
 
-        $iCount = self::count_products_in_sol($psSol, self::SAMPLE_NONTHUMBS);
-        $iRow = self::get_sol_product_index($psSol, $psProduct, self::SAMPLE_NONTHUMBS);
+        $iSolCount = self::count_products_in_sol($psSol, cCuriosityManifestIndex::SAMPLE_NONTHUMBS);
+        cDebug::write("there are $iSolCount products in sol $psSol");
+        $iRow = self::get_sol_product_index($psSol, $psProduct, cCuriosityManifestIndex::SAMPLE_NONTHUMBS);
+        if ($iRow > $iSolCount)
+            cDebug::error("the product cant be at row $iRow. There are only $iSolCount rows");
         $iOutRow = $iRow;
         $sOutSol = $psSol;
         switch ($psDirection) {
@@ -735,13 +741,13 @@ class cCuriosityManifestUtils {
                 $iOutRow--;
                 if ($iOutRow < 1) {
                     $sOutSol--;
-                    $iCount = self::count_products_in_sol($sOutSol, self::SAMPLE_NONTHUMBS);
-                    $iOutRow = $iCount;
+                    $iSolCount = self::count_products_in_sol($sOutSol, cCuriosityManifestIndex::SAMPLE_NONTHUMBS);
+                    $iOutRow = $iSolCount;
                 }
                 break;
             case cSpaceConstants::DIRECTION_NEXT:
                 $iOutRow++;
-                if ($iOutRow > $iCount) {
+                if ($iOutRow > $iSolCount) {
                     $sOutSol++;
                     $iOutRow = 1;
                 }
@@ -749,8 +755,11 @@ class cCuriosityManifestUtils {
             default:
                 cDebug::error("unknown direction");
         }
-        cDebug::write("sol:$sOutSol, row:$iOutRow");
-        $oOut = self::get_sol_indexed_product($sOutSol, $iOutRow, self::SAMPLE_NONTHUMBS);
+        cDebug::write("from $psSol row $iRow >> $sOutSol row $iOutRow");
+        $oOut = self::get_sol_indexed_product($sOutSol, $iOutRow, cCuriosityManifestIndex::SAMPLE_NONTHUMBS);
+        if ($oOut->product === $psProduct)
+            cDebug::error("the same product $psProduct returned!");
+
         cDebug::leave();
         return $oOut;
     }
