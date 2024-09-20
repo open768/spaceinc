@@ -12,4 +12,8 @@ class cSpaceUrlParams {
 
     const HIGHLIGHT_TOP = "t";
     const HIGHLIGHT_LEFT = "l";
+    const TAG = "t";
+    const PDS_VOLUME = "v";
+    const EDR_INDEX = "i";
+    const VALUE = "v";
 }

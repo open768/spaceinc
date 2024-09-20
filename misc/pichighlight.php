@@ -406,7 +406,7 @@ class cSpaceImageHighlight {
     //# ADMIN functions
     //######################################################################
 
-    static function kill_highlites($psSol, $psInstrument, $psProduct, $psWhich) {
+    static function kill_highlites($psSol, $psInstrument, $psProduct) {
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         $sFile = self::pr_get_filename($psSol, $psInstrument, $psProduct);
