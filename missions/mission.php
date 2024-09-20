@@ -16,7 +16,6 @@ interface iMission {
     static function get_mission_name();
     static function get_mission_id();
     static function get_mission_url();
-    static function getAllSolData($psSol);
     static function getSolRawData($psSol, $psInstrument = null, $pbThumbs = false);
     static function getSolList();
     static function search_product($psSearch);
