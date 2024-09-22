@@ -85,7 +85,9 @@ class cCuriosity implements iMission {
     //*****************************************************************************
     public static function getSolData($psSol, $psInstrument = null, $pbThumbs = false): cCuriosityInstrument {
         cDebug::enter();
+        $oData = new cCuriosityInstrument($psInstrument);  //put all images under a single instrument
         cDebug::leave();
+        return $oData;
     }
 
     //*****************************************************************************

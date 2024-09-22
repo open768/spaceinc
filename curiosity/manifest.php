@@ -398,15 +398,14 @@ class cCuriosityManifestIndex {
     }
 
     //*****************************************************************************
-    static function get_sol_data(string $psSol, string $piSampleType = self::SAMPLE_ALL) {
+    static function get_all_sol_data(string $psSol, string $psInstrument = null, string $piSampleType = self::SAMPLE_ALL) {
         cDebug::enter();
         cDebug::write("attempting to get data for $psSol");
 
         self::reindex_if_needed($psSol);
         cDebug::write("sol $psSol is in the index");
 
-        //---------------- build SQL
-        $oSqlDB = self::$oSQLDB;
+        //---------------- build SQL where
         $sWhere = ":mission_col=:mission AND :sol_col=:sol";
         switch ($piSampleType) {
             case self::SAMPLE_NONTHUMBS:
@@ -415,10 +414,18 @@ class cCuriosityManifestIndex {
             case self::SAMPLE_THUMBS:
                 $sWhere = "$sWhere AND :sample_col = :sample_type";
         }
+
+        if ($psInstrument !== null)
+            $sWhere = "$sWhere AND :instr_col = :instr";
+
+        //---------------- build SQL Statement
+        $oSqlDB = self::$oSQLDB;
         $sSQL = "SELECT :mission_col, :sol_col, :instr_col, :product_col, :url_col, :sample_col, :date_col from `:table` where $sWhere ORDER BY :sol_col, :instr_col, :product_col";
         $sSQL = self::replace_sql_params($sSQL);
         $oStmt = $oSqlDB->prepare($sSQL);
         $oStmt->bindValue(":sol", $psSol);
+        $oStmt->bindValue(":mission", cSpaceMissions::CURIOSITY);
+        if ($psInstrument !== null) $oStmt->bindValue(":instr", $psInstrument);
         $oStmt->bindValue(":mission", cSpaceMissions::CURIOSITY);
         $oStmt->bindValue(":sample_type", cCuriosityManifest::SAMPLE_TYPE_THUMBNAIL);
 
@@ -426,7 +433,7 @@ class cCuriosityManifestIndex {
         $oResultSet = $oSqlDB->exec_stmt($oStmt); //handles retries and errors
         $aSQLData = cSqlLiteUtils::fetch_all($oResultSet);
 
-        //-------------organise the datacuriosity/manifest.php
+        //-------------return cManifestProductData
         $oOut = new cManifestSolData;
         $oOut->sol = $psSol;
         foreach ($aSQLData as $oItem) {
@@ -529,7 +536,7 @@ class cCuriosityManifestUtils {
 
         $oInstruments = cCuriosityInstrument::getInstrumentList();
         /** @var cManifestSolData $oData */
-        $oData = cCuriosityManifestIndex::get_sol_data($psSol);
+        $oData = cCuriosityManifestIndex::get_all_sol_data($psSol, null, cCuriosityManifestIndex::SAMPLE_NONTHUMBS);
         $aManData = $oData->data;
 
         $oData = (object) [
