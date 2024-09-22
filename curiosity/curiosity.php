@@ -61,7 +61,6 @@ class cCuriosity implements iMission {
         return $oData;
     }
 
-
     //*****************************************************************************
     public static function getSolRawData($psSol, $psInstrument = null, $pbThumbs = false): cCuriosityInstrument {
         cDebug::enter();
@@ -83,6 +82,11 @@ class cCuriosity implements iMission {
         return $oData;
     }
 
+    //*****************************************************************************
+    public static function getSolData($psSol, $psInstrument = null, $pbThumbs = false): cCuriosityInstrument {
+        cDebug::enter();
+        cDebug::leave();
+    }
 
     //*****************************************************************************
     public static function getSolList() {
@@ -144,7 +148,7 @@ class cCuriosity implements iMission {
         $aOutput = ["s" => $psSol, "i" => $sInstr, "p" => $psProduct, "d" => null, "max" => null, "item" => null, "migrate" => null];
 
         //get the data
-        $oInstrumentData = self::getSolRawData($psSol, $sInstr);
+        $oInstrumentData = self::getSolRawData($psSol, $sInstr); //does need raw data
         $aInstrumentImages = $oInstrumentData->data;
         $oDetails = cCuriosityImages::getInstrumentImageDetails($aInstrumentImages, $psProduct);
 
@@ -250,7 +254,7 @@ class cCuriosityImages implements iMissionImages {
     //*****************************************************************************
     public static function getAllSolThumbs($psSol) {
         cDebug::enter();
-        $oResult = cCuriosity::getSolRawData($psSol, null, true);
+        $oResult = cCuriosity::getSolRawData($psSol, null, true); //doesnt need to use raw data
         cDebug::leave();
         return $oResult;
     }
@@ -258,7 +262,7 @@ class cCuriosityImages implements iMissionImages {
     //*****************************************************************************
     public static function getSolThumbs($psSol, $psInstrument) {
         cDebug::enter();
-        $oResult = cCuriosity::getSolRawData($psSol, $psInstrument, true);
+        $oResult = cCuriosity::getSolRawData($psSol, $psInstrument, true); //doesnt need to use raw data
 
         cDebug::leave();
         return $oResult;
@@ -274,7 +278,7 @@ class cCuriosityImages implements iMissionImages {
         else {
             // read the img files for the products
             cDebug::write("Found $iThumbCount thumbnails: ");
-            $oRawData = cCuriosity::getSolRawData($psSol, $psInstrument);
+            $oRawData = cCuriosity::getSolRawData($psSol, $psInstrument); //doesnt need to use raw data
             $aIData = $oRawData->data;
             $iICount = count($aIData);
 

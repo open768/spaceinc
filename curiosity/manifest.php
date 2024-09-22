@@ -198,7 +198,7 @@ class cCuriosityManifestIndex {
     //*****************************************************************************
     // Index functions
     //*****************************************************************************
-    static function indexManifest() {
+    static function updateIndex() {
         cDebug::enter();
         cDebug::on(); //turn off extra debugging
 
