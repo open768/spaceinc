@@ -644,39 +644,15 @@ class cCuriosityManifestUtils {
     //*********************************************************************
     static function get_sol_product_index($psSol, $psProduct, $piSampleType) {
         cDebug::enter();
-        //change from using subselects
-        //-----------------------build SQL
-        $sWhere = ":mission_col=:mission AND :sol_col=:sol";
-        switch ($piSampleType) {
-            case cCuriosityManifestIndex::SAMPLE_NONTHUMBS:
-                $sWhere = "$sWhere AND :sample_col != :sample_type";
-                break;
-            case cCuriosityManifestIndex::SAMPLE_THUMBS:
-                $sWhere = "$sWhere AND :sample_col = :sample_type";
-        }
-        $sSQL = "SELECT :product_col FROM `:table` WHERE $sWhere  ORDER BY :product_col";
-        $sSQL = cCuriosityManifestIndex::replace_sql_params($sSQL);
 
-        //-----------------------execute SQL
-        $oSqlDB = cCuriosityManifestIndex::get_db();
-        $oStmt = $oSqlDB->prepare($sSQL);
-        $oStmt->bindValue(":mission", cSpaceMissions::CURIOSITY);
-        $oStmt->bindValue(":sol", $psSol);
-        $oStmt->bindValue(":sample_type", cCuriosityManifest::SAMPLE_TYPE_THUMBNAIL);
-        $oResultset = $oSqlDB->exec_stmt($oStmt);
-
-        //-----------------------get results
-        $aSQLData = cSqlLiteUtils::fetch_all($oResultset);
-        if (count($aSQLData) == 0) cDebug::error("no results returned");
+        $aSolData = cCuriosityManifestIndex::get_all_sol_data($psSol, null, $piSampleType);
 
         //-----------------------iterate results
         $iIndex = 0;
         $bFound = false;
-        foreach ($aSQLData as $oItem) {
+        foreach ($aSolData->data as $oItem) {
             $iIndex++;
-            $aItem = (array)$oItem;
-            $sSqlProduct = $aItem[cCuriosityManifestIndex::COL_PRODUCT];
-            if ($sSqlProduct === $psProduct) {
+            if ($psProduct === $oItem->product) {
                 $bFound = true;
                 break;
             }
