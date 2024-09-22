@@ -398,10 +398,11 @@ class cCuriosityManifestIndex {
     }
 
     //*****************************************************************************
-    static function get_all_sol_data(string $psSol, string $psInstrument = null, string $piSampleType = self::SAMPLE_ALL) {
+    static function get_all_sol_data(string $psSol, ?string $psInstrument = null, string $piSampleType = self::SAMPLE_ALL) {
         cDebug::enter();
         cDebug::write("attempting to get data for $psSol");
 
+        //---------------- check if Sol is in the index or needs updating
         self::reindex_if_needed($psSol);
         cDebug::write("sol $psSol is in the index");
 
@@ -418,20 +419,24 @@ class cCuriosityManifestIndex {
         if ($psInstrument !== null)
             $sWhere = "$sWhere AND :instr_col = :instr";
 
-        //---------------- build SQL Statement
-        $oSqlDB = self::$oSQLDB;
+        //---------------- build SQL
         $sSQL = "SELECT :mission_col, :sol_col, :instr_col, :product_col, :url_col, :sample_col, :date_col from `:table` where $sWhere ORDER BY :sol_col, :instr_col, :product_col";
         $sSQL = self::replace_sql_params($sSQL);
-        $oStmt = $oSqlDB->prepare($sSQL);
-        $oStmt->bindValue(":sol", $psSol);
-        $oStmt->bindValue(":mission", cSpaceMissions::CURIOSITY);
-        if ($psInstrument !== null) $oStmt->bindValue(":instr", $psInstrument);
-        $oStmt->bindValue(":mission", cSpaceMissions::CURIOSITY);
-        $oStmt->bindValue(":sample_type", cCuriosityManifest::SAMPLE_TYPE_THUMBNAIL);
+
+        //---------------- get SQL Statement
+        $oSqlDB = self::$oSQLDB;
+        $oBinds = new cSqlBinds(); {
+            $oBinds->add_bind(":sol", $psSol);
+
+            $oBinds->add_bind(":sol", $psSol);
+            $oBinds->add_bind(":mission", cSpaceMissions::CURIOSITY);
+            if ($psInstrument !== null) $oBinds->add_bind(":instr", $psInstrument);
+            $oBinds->add_bind(":mission", cSpaceMissions::CURIOSITY);
+            $oBinds->add_bind(":sample_type", cCuriosityManifest::SAMPLE_TYPE_THUMBNAIL);
+        }
 
         //---------------- exec SQL
-        $oResultSet = $oSqlDB->exec_stmt($oStmt); //handles retries and errors
-        $aSQLData = cSqlLiteUtils::fetch_all($oResultSet);
+        $aSQLData = $oSqlDB->prep_exec_fetch($sSQL, $oBinds);
 
         //-------------return cManifestProductData
         $oOut = new cManifestSolData;
@@ -479,16 +484,13 @@ class cCuriosityManifestUtils {
         $sSQL = str_replace(":howmany", $piHowmany, $sSQL);     //cant bind LIMIT values
 
         $oSqlDB = cCuriosityManifestIndex::get_db();
-        $oStmt = $oSqlDB->prepare($sSQL);
-        $oStmt->bindValue(":mission", cSpaceMissions::CURIOSITY);
-        $oStmt->bindValue(":pattern", $sIntrumentPattern);
-        //$sSQL = $oStmt->getSQL(true);
-        //cDebug::extra_debug("SQL: $sSQL");
-
-        $oResultSet = $oSqlDB->exec_stmt($oStmt); //handles retries and errors
+        $oBinds = new cSqlBinds; {
+            $oBinds->add_bind(":mission", cSpaceMissions::CURIOSITY);
+            $oBinds->add_bind(":pattern", $sIntrumentPattern);
+        }
 
         //----------------fetch results
-        $aResults = cSqlLiteUtils::fetch_all($oResultSet);
+        $aResults = $oSqlDB->prep_exec_fetch($sSQL, $oBinds);
         $aOut = [];
         foreach ($aResults as $aRow) {
             $sMission = $aRow[cCuriosityManifestIndex::COL_MISSION];
@@ -587,23 +589,31 @@ class cCuriosityManifestUtils {
 
     //********************************************************
     static function get_instruments_for_sol($psSol) {
+        cDebug::enter();
+
         cCuriosityManifestIndex::reindex_if_needed($psSol);
 
+        // build SQL
         $sSQL = "SELECT DISTINCT :instr_col from `:table` WHERE :mission_col=:mission  AND :sol_col=:sol ORDER BY :instr_col";
         $sSQL = cCuriosityManifestIndex::replace_sql_params($sSQL);
-        $oSqlDB = cCuriosityManifestIndex::get_db();
-        $oStmt = $oSqlDB->prepare($sSQL);
-        $oStmt->bindValue(":mission", cSpaceMissions::CURIOSITY);
-        $oStmt->bindValue(":sol", $psSol);
-        $oResultset = $oSqlDB->exec_stmt($oStmt);
-        $aSQLData = cSqlLiteUtils::fetch_all($oResultset);
 
+        //build stmt
+        $oBinds = new cSqlBinds; {
+            $oBinds->add_bind(":mission", cSpaceMissions::CURIOSITY);
+            $oBinds->add_bind(":sol", $psSol);
+        }
+
+        $oSqlDB = cCuriosityManifestIndex::get_db();
+        $aSQLData = $oSqlDB->prep_exec_fetch($sSQL, $oBinds);
+
+        //process results
         $aData = [];
         foreach ($aSQLData as $oItem) {
             $aItem = (array) $oItem;
             $aData[] = $aItem[cCuriosityManifestIndex::COL_INSTR];
         }
 
+        cDebug::leave();
         return $aData;
     }
 
