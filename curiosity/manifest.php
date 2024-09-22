@@ -706,7 +706,7 @@ class cCuriosityManifestUtils {
 
         //-----------------------get results
         $aResults  = $oSqlDB->prep_exec_fetch($sSQL, $oBinds);
-        if (!aResults) cDebug::error("no results returned");
+        if (!$aResults) cDebug::error("no results returned");
         $aRow = $aResults[0];
         $oProduct = new cManifestProductData;
         $oProduct->sol = $aRow[cCuriosityManifestIndex::COL_SOL];
