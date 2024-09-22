@@ -513,19 +513,19 @@ class cCuriosityManifestUtils {
         $sSQL = cCuriosityManifestIndex::replace_sql_params($sSQL);
 
         $oSqlDB = cCuriosityManifestIndex::get_db();
-        $oStmt = $oSqlDB->prepare($sSQL);
-        $oStmt->bindValue(":mission", cSpaceMissions::CURIOSITY);
-        $oStmt->bindValue(":search", $psProduct);
-        $oResultSet = $oSqlDB->exec_stmt($oStmt); //handles retries and errors
-        $aResult = $oResultSet->fetchArray(SQLITE3_ASSOC);
+        $oBinds = new cSqlBinds; {
+            $oBinds->add_bind(":mission", cSpaceMissions::CURIOSITY);
+            $oBinds->add_bind(":search", $psProduct);
+        }
+        $aResult = $oSqlDB->prep_exec_fetch($sSQL, $oBinds);
+        if ($aResult == null) cDebug::error("nothing matched");
 
-        if (is_bool($aResult)) cDebug::error("nothing matched");
-
+        $aRow = $aResult[0];
         $oOut = new cManifestProductData; {
-            $oOut->sol = $aResult[cCuriosityManifestIndex::COL_SOL];
-            $oOut->product = $aResult[cCuriosityManifestIndex::COL_PRODUCT];
-            $oOut->instr = $aResult[cCuriosityManifestIndex::COL_INSTR];
-            $oOut->image_url = $aResult[cCuriosityManifestIndex::COL_IMAGE_URL];
+            $oOut->sol = $aRow[cCuriosityManifestIndex::COL_SOL];
+            $oOut->product = $aRow[cCuriosityManifestIndex::COL_PRODUCT];
+            $oOut->instr = $aRow[cCuriosityManifestIndex::COL_INSTR];
+            $oOut->image_url = $aRow[cCuriosityManifestIndex::COL_IMAGE_URL];
         }
 
         cDebug::leave();
@@ -634,16 +634,18 @@ class cCuriosityManifestUtils {
         $sSQL = cCuriosityManifestIndex::replace_sql_params($sSQL);
 
         //-----------------------execute SQL
-        $oSqlDB = cCuriosityManifestIndex::get_db();
-        $oStmt = $oSqlDB->prepare($sSQL);
-        $oStmt->bindValue(":mission", cSpaceMissions::CURIOSITY);
-        $oStmt->bindValue(":sol", $psSol);
-        $oStmt->bindValue(":sample_type", cCuriosityManifest::SAMPLE_TYPE_THUMBNAIL);
-        //cDebug::write($oStmt->getSQL(true));
-        $oResultset = $oSqlDB->exec_stmt($oStmt);
+        $oBinds = new cSqlBinds; {
+            $oBinds->add_bind(":mission", cSpaceMissions::CURIOSITY);
+            $oBinds->add_bind(":sol", $psSol);
+            $oBinds->add_bind(":sample_type", cCuriosityManifest::SAMPLE_TYPE_THUMBNAIL);
+        }
 
-        //-----------------------get results
-        $aRow  = $oResultset->fetchArray(SQLITE3_ASSOC);
+        //-----------------------execute SQL
+        $oSqlDB = cCuriosityManifestIndex::get_db();
+        $aResults = $oSqlDB->prep_exec_fetch($sSQL, $oBinds);
+        if ($aResults == null)
+            cDebug::error("no products found");
+        $aRow = $aResults[0];
         $iCount = $aRow["count"];
         //cDebug::write("there are $iCount matching rows");
 
@@ -695,18 +697,17 @@ class cCuriosityManifestUtils {
         $sSQL = cCuriosityManifestIndex::replace_sql_params($sSQL);
 
         //-----------------------execute SQL
+        $oBinds = new cSqlBinds; {
+            $oBinds->add_bind(":mission", cSpaceMissions::CURIOSITY);
+            $oBinds->add_bind(":sol", $psSol);
+            $oBinds->add_bind(":sample_type", cCuriosityManifest::SAMPLE_TYPE_THUMBNAIL);
+        }
         $oSqlDB = cCuriosityManifestIndex::get_db();
-        $oStmt = $oSqlDB->prepare($sSQL);
-        $oStmt->bindValue(":mission", cSpaceMissions::CURIOSITY);
-        $oStmt->bindValue(":sol", $psSol);
-        $oStmt->bindValue(":sample_type", cCuriosityManifest::SAMPLE_TYPE_THUMBNAIL);
-        //cDebug::write($oStmt->getSQL(true));
-        $oResultset = $oSqlDB->exec_stmt($oStmt);
 
         //-----------------------get results
-        $aRow  = $oResultset->fetchArray(SQLITE3_ASSOC);
-        if (!$aRow) cDebug::error("no results returned");
-
+        $aResults  = $oSqlDB->prep_exec_fetch($sSQL, $oBinds);
+        if (!aResults) cDebug::error("no results returned");
+        $aRow = $aResults[0];
         $oProduct = new cManifestProductData;
         $oProduct->sol = $aRow[cCuriosityManifestIndex::COL_SOL];
         $oProduct->instr = $aRow[cCuriosityManifestIndex::COL_INSTR];
