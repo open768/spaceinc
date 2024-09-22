@@ -85,6 +85,7 @@ cCuriosityManifestIndexStatus::init_db();
 
 //#################################################################################
 class cManifestProductData {
+    public string $mission;
     public string $sol;
     public string $instr;
     public string $product;
@@ -444,6 +445,7 @@ class cCuriosityManifestIndex {
         foreach ($aSQLData as $oItem) {
             $aItem = (array)$oItem;
             $oNewItem = new cManifestProductData; {
+                $oNewItem->mission = $aItem[self::COL_MISSION];
                 $oNewItem->sol = $aItem[self::COL_SOL];
                 $oNewItem->instr = $aItem[self::COL_INSTR];
                 $oNewItem->product = $aItem[self::COL_PRODUCT];
