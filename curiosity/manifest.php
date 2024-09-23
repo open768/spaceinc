@@ -307,7 +307,7 @@ class cCuriosityManifestIndex {
 
         //--------------get the data out of the item
         cDebug::extra_debug("adding to index: $psSol, $sInstr, $sProduct, $sSampleType");
-        if (cDebug::is_debugging())   echo ".";
+        if (cDebug::is_debugging())   cCommon::flushprint(".");
         $sSQL = "INSERT INTO `:table` (:mission_col, :sol_col, :instr_col, :product_col, :url_col, :sample_col ,:date_col) VALUES (:mission, :sol, :instr, :product, :url, :sample , :d_val)";
         $sSQL = self::replace_sql_params($sSQL);
 
