@@ -307,7 +307,7 @@ class cCuriosityManifestIndex {
 
         //--------------get the data out of the item
         cDebug::extra_debug("adding to index: $psSol, $sInstr, $sProduct, $sSampleType");
-        if (cDebug::is_debugging())   ".";
+        if (cDebug::is_debugging())   echo ".";
         $sSQL = "INSERT INTO `:table` (:mission_col, :sol_col, :instr_col, :product_col, :url_col, :sample_col ,:date_col) VALUES (:mission, :sol, :instr, :product, :url, :sample , :d_val)";
         $sSQL = self::replace_sql_params($sSQL);
 
@@ -766,7 +766,7 @@ class cCuriosityManifestUtils {
         $aRows = $oDB->prep_exec_fetch($sSQL, $oBinds);
 
         //parse the results
-        if ($aRows == null || count($aRows) == 0) cDebug::error("nothing found");
+        if ($aRows == null || count($aRows) == 0) cDebug::error("nothing found - reached the end of the index?");
         $aRow = (array) $aRows[0];
         $sOutProduct = $aRow[cCuriosityManifestIndex::COL_PRODUCT];
         if ($sOutProduct == $psProduct) cDebug::error("same product returned $psProduct");
