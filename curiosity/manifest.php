@@ -735,7 +735,7 @@ class cCuriosityManifestUtils {
         $sInstrument = $oRow->instr;
 
         //prepare the sql
-        $sWhere = ":mission_col=:mission ";
+        $sWhere = ":mission_col=:mission AND :sample_col <> :thumbnail";
         if (! $pbAnyInstrument)
             $sWhere = "$sWhere AND :instr_col=:instr";
 
@@ -755,6 +755,8 @@ class cCuriosityManifestUtils {
         //bind data
         $oBinds = new cSqlBinds; {
             $oBinds->add_bind(":mission", cSpaceMissions::CURIOSITY);
+            $oBinds->add_bind(":thumbnail", cCuriosityManifest::SAMPLE_TYPE_THUMBNAIL);
+
             if (!$pbAnyInstrument)
                 $oBinds->add_bind(":instr", $sInstrument);
         }
