@@ -19,3 +19,15 @@ class cSpaceUrlParams {
     const EDR_INDEX = "i";
     const VALUE = "v";
 }
+
+//#################################################################################
+class cSpaceProductData {
+    public string $mission;
+    public string $sol;
+    public string $instr;
+    public string $product;
+    public string $image_url;
+    public int $utc_date;
+    public string $sample_type;
+    public int $rowid;
+}

@@ -83,17 +83,6 @@ class cCuriosityManifestIndexStatus {
 }
 cCuriosityManifestIndexStatus::init_db();
 
-//#################################################################################
-class cManifestProductData {
-    public string $mission;
-    public string $sol;
-    public string $instr;
-    public string $product;
-    public string $image_url;
-    public int $utc_date;
-    public string $sample_type;
-}
-
 class cManifestSolData {
     public string $sol;
     public array  $data = [];
@@ -170,7 +159,7 @@ class cCuriosityManifestIndex {
         cDebug::extra_debug("table doesnt exist " . self::MANIFEST_TABLE);
         $sSQL =
             "CREATE TABLE `:table` ( " .
-            ":mission_col TEXT not null, :sol_col TEXT not null, :instr_col TEXT not null, :product_col TEXT not null, :url_col TEXT not null, :sample_col TEXT, :date_col INTEGER, " .
+            "rowid INTEGER PRIMARY KEY, :mission_col TEXT not null, :sol_col TEXT not null, :instr_col TEXT not null, :product_col TEXT not null, :url_col TEXT not null, :sample_col TEXT, :date_col INTEGER, " .
             "CONSTRAINT cmanifest UNIQUE (:mission_col, :sol_col, :instr_col, :product_col) " .
             ")";
         $sSQL = self::replace_sql_params($sSQL);
@@ -439,12 +428,12 @@ class cCuriosityManifestIndex {
         //---------------- exec SQL
         $aSQLData = $oSqlDB->prep_exec_fetch($sSQL, $oBinds);
 
-        //-------------return cManifestProductData
+        //-------------return cSpaceProductData
         $oOut = new cManifestSolData;
         $oOut->sol = $psSol;
         foreach ($aSQLData as $oItem) {
             $aItem = (array)$oItem;
-            $oNewItem = new cManifestProductData; {
+            $oNewItem = new cSpaceProductData; {
                 $oNewItem->mission = $aItem[self::COL_MISSION];
                 $oNewItem->sol = $aItem[self::COL_SOL];
                 $oNewItem->instr = $aItem[self::COL_INSTR];
@@ -523,7 +512,7 @@ class cCuriosityManifestUtils {
         if ($aResult == null) cDebug::error("nothing matched");
 
         $aRow = $aResult[0];
-        $oOut = new cManifestProductData; {
+        $oOut = new cSpaceProductData; {
             $oOut->sol = $aRow[cCuriosityManifestIndex::COL_SOL];
             $oOut->product = $aRow[cCuriosityManifestIndex::COL_PRODUCT];
             $oOut->instr = $aRow[cCuriosityManifestIndex::COL_INSTR];
@@ -551,7 +540,7 @@ class cCuriosityManifestUtils {
 
         cDebug::write("processing images");
         $aCal = [];
-        /** @var cManifestProductData $oItem */
+        /** @var cSpaceProductData $oItem */
         foreach ($aManData as $oItem) {
             //ignore thumbnails
             if ($oItem->sample_type === "thumbnail")
@@ -590,7 +579,7 @@ class cCuriosityManifestUtils {
     }
 
     //********************************************************
-    static function get_instruments_for_sol($psSol) {
+    static function get_instruments_for_sol($psSol): array {
         cDebug::enter();
 
         cCuriosityManifestIndex::reindex_if_needed($psSol);
@@ -620,7 +609,7 @@ class cCuriosityManifestUtils {
     }
 
     //*********************************************************************
-    static function get_products(string $psSol, ?string $psInstr = null) {
+    static function get_products(string $psSol, ?string $psInstr = null): array {
         // read the img files for the products
         cDebug::enter();
         $oRawData = cCuriosityManifestIndex::get_all_sol_data($psSol, $psInstr, cCuriosityManifestIndex::SAMPLE_NONTHUMBS);
@@ -632,7 +621,7 @@ class cCuriosityManifestUtils {
     }
 
     //*********************************************************************
-    static function count_products_in_sol($psSol, $piSampleType) {
+    static function count_products_in_sol($psSol, ?string $psInstr, $piSampleType): int {
         cDebug::enter();
 
         //-----------------------build SQL
@@ -668,33 +657,38 @@ class cCuriosityManifestUtils {
     }
 
     //*********************************************************************
-    static function get_sol_product_index($psSol, $psProduct, $piSampleType) {
+    static function get_product_index(string $psProduct): cSpaceProductData {
         cDebug::enter();
 
-        $aSolData = cCuriosityManifestIndex::get_all_sol_data($psSol, null, $piSampleType);
+        $sSQL = "SELECT rowid,:mission_col,:instr_col,:product_col FROM `:table` WHERE :mission_col=:mission AND :product_col=:product";
+        $sSQL = cCuriosityManifestIndex::replace_sql_params($sSQL);
 
-        //-----------------------iterate results
-        $iIndex = 0;
-        $bFound = false;
-        foreach ($aSolData->data as $oItem) {
-            $iIndex++;
-            if ($psProduct === $oItem->product) {
-                $bFound = true;
-                break;
-            }
+        $oBind = new cSqlBinds; {
+            $oBind->add_bind(":mission", cSpaceMissions::CURIOSITY);
+            $oBind->add_bind(":product", $psProduct);
+        }
+        $oDB = cCuriosityManifestIndex::get_db();
+        $aResults = $oDB->prep_exec_fetch($sSQL, $oBind);
+
+        if ($aResults == null || count($aResults) == 0)
+            cDebug::error("unable to find product $psProduct");
+        $aRow = (array) $aResults[0];
+        $iRowID = $aRow["rowid"];
+        cDebug::write("rowid for $psProduct is $iRowID");
+
+        $oData = new cSpaceProductData; {
+            $oData->rowid = $iRowID;
+            $oData->mission = $aRow[cCuriosityManifestIndex::COL_MISSION];
+            $oData->instr = $aRow[cCuriosityManifestIndex::COL_INSTR];
+            $oData->product = $aRow[cCuriosityManifestIndex::COL_PRODUCT];
         }
 
-        if (!$bFound)
-            cDebug::error("no match for product $psProduct");
-
-        cDebug::write("$psProduct found at row: $iIndex");
-
         cDebug::leave();
-        return $iIndex;
+        return $oData;
     }
 
     //*********************************************************************
-    static function get_sol_indexed_product($psSol, $piIndex, $piSampleType) {
+    static function get_sol_indexed_product(string $psSol, string $piIndex, int $piSampleType) {
         cDebug::enter();
 
         //-----------------------build SQL
@@ -707,7 +701,7 @@ class cCuriosityManifestUtils {
                 $sWhere = "$sWhere AND :sample_col = :sample_type";
         }
         $iOffset = $piIndex - 1;
-        $sSQL = "SELECT :sol_col,:instr_col,:product_col FROM `:table` WHERE $sWhere ORDER BY :product_col LIMIT 1 OFFSET $iOffset";
+        $sSQL = "SELECT :mission_col,:sol_col,:instr_col,:product_col FROM `:table` WHERE $sWhere ORDER BY :product_col LIMIT 1 OFFSET $iOffset";
         $sSQL = cCuriosityManifestIndex::replace_sql_params($sSQL);
 
         //-----------------------execute SQL
@@ -722,7 +716,7 @@ class cCuriosityManifestUtils {
         $aResults  = $oSqlDB->prep_exec_fetch($sSQL, $oBinds);
         if (!$aResults) cDebug::error("no results returned");
         $aRow = $aResults[0];
-        $oProduct = new cManifestProductData;
+        $oProduct = new cSpaceProductData;
         $oProduct->sol = $aRow[cCuriosityManifestIndex::COL_SOL];
         $oProduct->instr = $aRow[cCuriosityManifestIndex::COL_INSTR];
         $oProduct->product = $aRow[cCuriosityManifestIndex::COL_PRODUCT];
@@ -732,44 +726,72 @@ class cCuriosityManifestUtils {
     }
 
     //*********************************************************************
-    static function find_time_sequential_product($psSol, $psProduct, $psDirection) {
+    static function find_sequential_product(string $psProduct, string $psDirection, bool $pbAnyInstrument = false) {
         cDebug::enter();
-        $iFoundIndex = -1;
-        $oData = null;
 
-        $iSolCount = self::count_products_in_sol($psSol, cCuriosityManifestIndex::SAMPLE_NONTHUMBS);
-        cDebug::write("there are $iSolCount products in sol $psSol");
-        $iRow = self::get_sol_product_index($psSol, $psProduct, cCuriosityManifestIndex::SAMPLE_NONTHUMBS);
-        if ($iRow > $iSolCount)
-            cDebug::error("the product cant be at row $iRow. There are only $iSolCount rows");
-        $iOutRow = $iRow;
-        $sOutSol = $psSol;
+        //get the table row number of the input product 
+        $oRow = self::get_product_index($psProduct);
+        $iProductRow = $oRow->rowid;
+        $sInstrument = $oRow->instr;
+
+        //prepare the sql
+        $sWhere = ":mission_col=:mission ";
+        if (! $pbAnyInstrument)
+            $sWhere = "$sWhere AND :instr_col=:instr";
+
         switch ($psDirection) {
             case cSpaceConstants::DIRECTION_PREVIOUS:
-                $iOutRow--;
-                if ($iOutRow < 1) {
-                    $sOutSol--;
-                    $iSolCount = self::count_products_in_sol($sOutSol, cCuriosityManifestIndex::SAMPLE_NONTHUMBS);
-                    $iOutRow = $iSolCount;
-                }
+                $sWhere = "$sWhere AND rowid < $iProductRow ORDER BY :date_col DESC";
                 break;
             case cSpaceConstants::DIRECTION_NEXT:
-                $iOutRow++;
-                if ($iOutRow > $iSolCount) {
-                    $sOutSol++;
-                    $iOutRow = 1;
-                }
+                $sWhere = "$sWhere AND rowid > $iProductRow ORDER BY :date_col ASC";
                 break;
             default:
-                cDebug::error("unknown direction");
+                cDebug::error("unknown direction $psDirection");
         }
-        cDebug::write("from $psSol row $iRow >> $sOutSol row $iOutRow");
-        $oOut = self::get_sol_indexed_product($sOutSol, $iOutRow, cCuriosityManifestIndex::SAMPLE_NONTHUMBS);
-        if ($oOut->product === $psProduct)
-            cDebug::error("the same product $psProduct returned!");
+        $sSQL = "SELECT rowid,:mission_col,:sol_col,:instr_col,:product_col from `:table` WHERE $sWhere LIMIT 1";
+        $sSQL = cCuriosityManifestIndex::replace_sql_params($sSQL);
+
+        //bind data
+        $oBinds = new cSqlBinds; {
+            $oBinds->add_bind(":mission", cSpaceMissions::CURIOSITY);
+            if (!$pbAnyInstrument)
+                $oBinds->add_bind(":instr", $sInstrument);
+        }
+
+        //-----------exec the SQL
+        $oDB = cCuriosityManifestIndex::get_db();
+        $aRows = $oDB->prep_exec_fetch($sSQL, $oBinds);
+
+        //parse the results
+        if ($aRows == null || count($aRows) == 0) cDebug::error("nothing found");
+        $aRow = (array) $aRows[0];
+        $sOutProduct = $aRow[cCuriosityManifestIndex::COL_PRODUCT];
+        if ($sOutProduct == $psProduct) cDebug::error("same product returned $psProduct");
+
+        $oProduct = new cSpaceProductData;
+        $oProduct->mission = $aRow[cCuriosityManifestIndex::COL_MISSION];
+        $oProduct->sol = $aRow[cCuriosityManifestIndex::COL_SOL];
+        $oProduct->instr = $aRow[cCuriosityManifestIndex::COL_INSTR];
+        $oProduct->product = $aRow[cCuriosityManifestIndex::COL_PRODUCT];
+        $oProduct->rowid = $aRow["rowid"];
 
         cDebug::leave();
-        return $oOut;
+        return $oProduct;
+    }
+
+    //*************************************************************************
+    /**
+     * this function attempts to find the next or previous product for a particular instrument
+     * its similar to find_time_sequential_product() but more challenging as adjacent sols may not have the same instrument.
+     * 
+     * @param string $psSol 
+     * @param string $psInstr 
+     * @param string $psProduct 
+     * @param string $psDirection 
+     * @return void 
+     */
+    static function find_instr_sequential_product(string $psSol, string $psInstr, string $psProduct, string $psDirection) {
     }
 }
 
