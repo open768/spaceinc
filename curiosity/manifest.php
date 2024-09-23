@@ -620,6 +620,18 @@ class cCuriosityManifestUtils {
     }
 
     //*********************************************************************
+    static function get_products(string $psSol, ?string $psInstr = null) {
+        // read the img files for the products
+        cDebug::enter();
+        $oRawData = cCuriosityManifestIndex::get_all_sol_data($psSol, $psInstr, cCuriosityManifestIndex::SAMPLE_NONTHUMBS);
+        $aProducts = [];
+        foreach ($oRawData->data as $oItem)
+            $aProducts[] = $oItem->product;
+        cDebug::leave();
+        return $aProducts;
+    }
+
+    //*********************************************************************
     static function count_products_in_sol($psSol, $piSampleType) {
         cDebug::enter();
 
