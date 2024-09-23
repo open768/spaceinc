@@ -150,7 +150,7 @@ class cCuriosity implements iMission {
         $aOutput = ["s" => $psSol, "i" => $sInstr, "p" => $psProduct, "d" => null, "max" => null, "item" => null, "migrate" => null];
 
         //get the data
-        $oInstrumentData = self::getSolRawData($psSol, $sInstr); //does need raw data
+        $oInstrumentData = self::getSolRawData($psSol, $sInstr); //using raw details is fine as it does need raw data
         $aInstrumentImages = $oInstrumentData->data;
         $oDetails = cCuriosityImages::getInstrumentImageDetails($aInstrumentImages, $psProduct);
 

@@ -255,7 +255,7 @@ class cCuriosityManifestIndex {
         if ($pbReindex) self::delete_sol_index($psSol);
 
         $bCheckExpiry = !$pbReindex;
-        $oSolData = cCuriosityManifest::getSolData($psSol, $bCheckExpiry);
+        $oSolData = cCuriosityManifest::getSolData($psSol, $bCheckExpiry); //this is needed
 
         $aImages = $oSolData->images;
         if ($aImages === null) cDebug::error("no image data");
@@ -799,10 +799,10 @@ class cCuriosityManifestUtils {
 
 //###############################################################################
 class cCuriosityManifest {
-    const MANIFEST_CACHE = 3600;    //1 hour
+    const MANIFEST_CACHE = 2 * 3600;    //2 hour
     const FEED_URL = "https://mars.jpl.nasa.gov/msl-raw-images/image/image_manifest.json";
     const SOL_URL = "https://mars.jpl.nasa.gov/msl-raw-images/image/images_sol";
-    const SOL_CACHE = 604800;    //1 week
+    const SOL_CACHE = 7 * 24 * 3600;    //1 week
     const FEED_SLEEP = 200; //milliseconds
     const SAMPLE_TYPE_THUMBNAIL = "thumbnail";
     static $cached_manifest = null;
