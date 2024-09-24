@@ -179,7 +179,13 @@ class cCuriosityManifestIndex {
         cDebug::extra_debug("secondary index created");
 
         //-------------create INDEX
-        $sSQL = "CREATE INDEX idx_product on ':table' ( :mission_col, :sol_col, :product_col )";
+        $sSQL = "CREATE INDEX idx_msproduct on ':table' ( :mission_col, :sol_col, :product_col )";
+        $sSQL = self::replace_sql_params($sSQL);
+        $oSqLDB->querySQL($sSQL);
+        cDebug::extra_debug("secondary index created");
+
+        //-------------create INDEX
+        $sSQL = "CREATE INDEX idx_mproduct on ':table' ( :mission_col, :product_col )";
         $sSQL = self::replace_sql_params($sSQL);
         $oSqLDB->querySQL($sSQL);
         cDebug::extra_debug("secondary index created");
@@ -512,7 +518,7 @@ class cCuriosityManifestUtils {
         $aResult = $oSqlDB->prep_exec_fetch($sSQL, $oBinds);
         if ($aResult == null) cDebug::error("nothing matched");
 
-        $aRow = $aResult[0];
+        $aRow = (array)$aResult[0];
         $oOut = new cSpaceProductData; {
             $oOut->sol = $aRow[cCuriosityManifestIndex::COL_SOL];
             $oOut->product = $aRow[cCuriosityManifestIndex::COL_PRODUCT];
