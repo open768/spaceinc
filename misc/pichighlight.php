@@ -206,6 +206,21 @@ class cSpaceImageHighlight {
         return $aOut;
     }
 
+    static function put(string $psSol, string $psInstrument, string $psProduct, array $paData) {
+        cDebug::enter();
+        if (!cAuth::is_role(cAuth::ADMIN_ROLE)) cDebug::error("put can only be done by admin");
+        $oDB = self::$objstoreDB;
+        $sFile = self::pr_get_filename($psSol, $psInstrument, $psProduct);
+        $oDB->put($sFile, $paData);
+
+        cDebug::leave();
+    }
+
+    static function get_db(): cObjStoreDB {
+        if (!cAuth::is_role(cAuth::ADMIN_ROLE)) cDebug::error("admin function");
+        return self::$objstoreDB;
+    }
+
     //**********************************************************************
     private static function pr_get_image($psSol, $psInstrument, $psProduct) {
         //get the original image once 
