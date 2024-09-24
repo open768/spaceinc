@@ -483,7 +483,8 @@ class cCuriosityManifestUtils {
         //----------------fetch results
         $aResults = $oSqlDB->prep_exec_fetch($sSQL, $oBinds);
         $aOut = [];
-        foreach ($aResults as $aRow) {
+        foreach ($aResults as $oRow) {
+            $aRow = (array) $oRow;
             $sMission = $aRow[cCuriosityManifestIndex::COL_MISSION];
             $sSol = $aRow[cCuriosityManifestIndex::COL_SOL];
             $sInstr = $aRow[cCuriosityManifestIndex::COL_INSTR];
