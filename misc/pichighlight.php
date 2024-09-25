@@ -245,7 +245,7 @@ class cSpaceImageHighlight {
 
         cDebug::write("cropping to $piX, $piY");
         $sFilename = cAppGlobals::$root . "/$psOutfile";
-        cCropper::crop($poImg, $piX, $piY, self::CROP_WIDTH, self::CROP_HEIGHT, self::THUMB_QUALITY, $sFilename);
+        cCropper::crop_to_file($poImg, $piX, $piY, self::CROP_WIDTH, self::CROP_HEIGHT, self::THUMB_QUALITY, $sFilename);
     }
 
     //**********************************************************************
