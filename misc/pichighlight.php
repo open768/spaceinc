@@ -222,7 +222,7 @@ class cSpaceImageHighlight {
     }
 
     //**********************************************************************
-    private static function pr_get_image($psSol, $psInstrument, $psProduct) {
+    private static function pr_get_image($psSol, $psInstrument, $psProduct): \GdImage {
         //get the original image once 
         $oInstrumentData = cCuriosity::getProductDetails($psSol, $psInstrument, $psProduct);
         $sImageUrl = null;
@@ -241,11 +241,11 @@ class cSpaceImageHighlight {
     }
 
     //**********************************************************************
-    private static function pr_perform_crop($poImg, $piX, $piY, $psOutfile) {
+    private static function pr_perform_crop(\GdImage $poImg, int $piX, int $piY, string $psOutfile) {
 
         cDebug::write("cropping to $piX, $piY");
         $sFilename = cAppGlobals::$root . "/$psOutfile";
-        cImageFunctions::crop($poImg, $piX, $piY, self::CROP_WIDTH, self::CROP_HEIGHT, self::THUMB_QUALITY, $sFilename);
+        cCropper::crop($poImg, $piX, $piY, self::CROP_WIDTH, self::CROP_HEIGHT, self::THUMB_QUALITY, $sFilename);
     }
 
     //**********************************************************************
@@ -280,7 +280,7 @@ class cSpaceImageHighlight {
                     if (file_exists($sReal)) continue;
 
                 //---------------split this out---------------------
-                //if you got here something wasnt there - regenerate the thumbnail
+                //if you got here something wasnt there - regenerate the thumbnail from cached image
                 cDebug::write("creating thumbnail ");
                 if (!$oMSLImg) $oMSLImg = self::pr_get_image($psSol, $psInstrument, $psProduct);
 

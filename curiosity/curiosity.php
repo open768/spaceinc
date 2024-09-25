@@ -192,7 +192,7 @@ class cCuriosityImages implements iMissionImages {
         $sImgUrl = cCuriosityImages::getImageUrl($psSol, $psInstr, $psProduct);
         if ($sImgUrl == null)
             cDebug::error("unable to find image for $psSol, $psInstr, $psProduct");
-        $aData = cImageFunctions::get_thumbnail_blob_data($sImgUrl, self::THUMBNAIL_HEIGHT, self::THUMBNAIL_QUALITY);
+        $aData = cThumbNailer::get_thumbnail_blob_data($sImgUrl, self::THUMBNAIL_HEIGHT, self::THUMBNAIL_QUALITY);
 
         cDebug::leave();
         return $aData;
