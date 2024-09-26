@@ -250,7 +250,7 @@ class cSpaceImageHighlight {
 
     //**********************************************************************
     // this function should be multithreaded when the software becomes a #product# #TBD#
-    static function get_thumbs($psSol, $psInstrument, $psProduct) {
+    static function get_thumb_data($psSol, $psInstrument, $psProduct) {
 
 
         $bUpdated = false;
