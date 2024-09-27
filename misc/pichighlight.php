@@ -86,8 +86,8 @@ class cSpaceImageMosaic {
         cDebug::write("combining $iCount thumbnails");
         $iRows = ceil($iCount / self::MOSAIC_WIDTH);
         cDebug::write("into a Mosaic with size " . self::MOSAIC_WIDTH . " x $iRows");
-        $iWidth = self::BORDER_WIDTH + self::MOSAIC_WIDTH * (cSpaceImageHighlight::CROP_WIDTH + self::BORDER_WIDTH);
-        $iHeight = self::BORDER_WIDTH + $iRows * (cSpaceImageHighlight::CROP_HEIGHT + self::BORDER_WIDTH);
+        $iWidth = self::BORDER_WIDTH + self::MOSAIC_WIDTH * (cAppConsts::CROP_WIDTH + self::BORDER_WIDTH);
+        $iHeight = self::BORDER_WIDTH + $iRows * (cAppConsts::CROP_HEIGHT + self::BORDER_WIDTH);
 
         $oDest = imagecreatetruecolor($iWidth, $iHeight);
 
@@ -105,24 +105,24 @@ class cSpaceImageMosaic {
 
             //copy it into the mosaic
             //cDebug::write("copying image into $iX, $iY");
-            imagecopy($oDest, $oThumbImg, $iX, $iY, 0, 0,  cSpaceImageHighlight::CROP_WIDTH, cSpaceImageHighlight::CROP_HEIGHT);
+            imagecopy($oDest, $oThumbImg, $iX, $iY, 0, 0,  cAppConsts::CROP_WIDTH, cAppConsts::CROP_HEIGHT);
 
             //next
             imagedestroy($oThumbImg);
             $iCol++;
-            $iX += (self::BORDER_WIDTH + cSpaceImageHighlight::CROP_WIDTH);
+            $iX += (self::BORDER_WIDTH + cAppConsts::CROP_WIDTH);
             if ($iCol >= self::MOSAIC_WIDTH) {
                 $iRow++;
                 $iCol = 0;
                 $iX = self::BORDER_WIDTH;
-                $iY += (self::BORDER_WIDTH + cSpaceImageHighlight::CROP_HEIGHT);
+                $iY += (self::BORDER_WIDTH + cAppConsts::CROP_HEIGHT);
             }
         }
 
         //write out the results
         $sImageFile = self::MOSAIC_FOLDER . "/$psSol.jpg";
         $sReal = cAppGlobals::$root . "/$sImageFile";
-        imagejpeg($oDest, $sReal, cSpaceImageHighlight::THUMB_QUALITY);
+        imagejpeg($oDest, $sReal, cAppConsts::THUMB_QUALITY);
         imagedestroy($oDest);
 
         return $sImageFile;
@@ -170,9 +170,6 @@ class cSpaceImageHighlight {
     const IMGHIGH_FILENAME = "[imgbox].txt";
     const THUMBS_FILENAME = "[thumbs].txt";
     const THUMBS_FOLDER = "images/[highs]/";
-    const CROP_WIDTH = 120;
-    const CROP_HEIGHT = 120;
-    const THUMB_QUALITY = 90;
     private static $objstoreDB = null;
 
 
@@ -197,15 +194,32 @@ class cSpaceImageHighlight {
         return "$sFolder/" . self::IMGHIGH_FILENAME;
     }
 
-    static function get($psSol, $psInstrument, $psProduct) {
+    //****************************************************************
+    static function get(string $psSol, string $psInstrument, string $psProduct, bool $pbGetImgUrl = false) {
+        cDebug::enter();
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         $sFile = self::pr_get_filename($psSol, $psInstrument, $psProduct);
         $aData = $oDB->get($sFile);
-        $aOut = ["s" => $psSol, "i" => $psInstrument, "p" => $psProduct, "d" => $aData];
-        return $aOut;
+
+        $oOut = new cSpaceProductData; {
+            $oOut->mission = cSpaceMissions::CURIOSITY;
+            $oOut->sol = $psSol;
+            $oOut->instr = $psInstrument;
+            $oOut->product = $psProduct;
+            $oOut->data = $aData;
+        }
+        
+        if ($pbGetImgUrl) {
+            $oProduct = cCuriosityManifestUtils::search_for_product($psProduct);
+            $oOut->image_url = $oProduct->image_url;
+        }
+
+        cDebug::leave();
+        return $oOut;
     }
 
+    //****************************************************************
     static function put(string $psSol, string $psInstrument, string $psProduct, array $paData) {
         cDebug::enter();
         if (!cAuth::is_role(cAuth::ADMIN_ROLE)) cDebug::error("put can only be done by admin");
@@ -216,104 +230,10 @@ class cSpaceImageHighlight {
         cDebug::leave();
     }
 
+    //****************************************************************
     static function get_db(): cObjStoreDB {
         if (!cAuth::is_role(cAuth::ADMIN_ROLE)) cDebug::error("admin function");
         return self::$objstoreDB;
-    }
-
-    //**********************************************************************
-    private static function pr_get_image($psSol, $psInstrument, $psProduct): \GdImage {
-        //get the original image once 
-        $oInstrumentData = cCuriosity::getProductDetails($psSol, $psInstrument, $psProduct);
-        $sImageUrl = null;
-
-        if (isset($oInstrumentData["d"]["i"]))
-            $sImageUrl = $oInstrumentData["d"]["i"];
-        else {
-            cDebug::write("no image found");
-            return null;
-        }
-
-        cDebug::write("fetching image from '$sImageUrl'");
-        $oHttp = new cHttp();
-        $oMSLImg = $oHttp->fetch_image($sImageUrl);
-        return $oMSLImg;
-    }
-
-    //**********************************************************************
-    private static function pr_perform_crop(\GdImage $poImg, int $piX, int $piY, string $psOutfile) {
-
-        cDebug::write("cropping to $piX, $piY");
-        $sFilename = cAppGlobals::$root . "/$psOutfile";
-        cCropper::crop_to_file($poImg, $piX, $piY, self::CROP_WIDTH, self::CROP_HEIGHT, self::THUMB_QUALITY, $sFilename);
-    }
-
-    //**********************************************************************
-    // this function should be multithreaded when the software becomes a #product# #TBD#
-    static function get_thumb_data($psSol, $psInstrument, $psProduct) {
-
-
-        $bUpdated = false;
-        $oMSLImg = null;
-
-        //get existing thumbnail details  
-        $sPath = "$psSol/$psInstrument/$psProduct/" . self::THUMBS_FILENAME;
-        $aThumbs = cHash::get($sPath);
-        if ($aThumbs == null)    $aThumbs = [];
-
-        //get the highlights for the selected product
-        $aHighs = self::get($psSol, $psInstrument, $psProduct);
-        if ($aHighs["d"]) {
-
-            //work through each checking if the thumbnail is present
-            for ($i = 0; $i < count($aHighs["d"]); $i++) {
-                //figure out where stuff should go 
-                $sOutThumbfile = self::THUMBS_FOLDER . "$psSol/$psInstrument/$psProduct/$i.jpg";
-                $sReal = cAppGlobals::$root . "/$sOutThumbfile";
-
-                // key that identifies the thumbnail uses coordinates
-                $oItem = $aHighs["d"][$i];
-                $sKey = $psProduct . $oItem["t"] . $oItem["l"];
-
-                //check if the array entry exists and the thumbnail exists
-                if (isset($aThumbs[$sKey]))
-                    if (file_exists($sReal)) continue;
-
-                //---------------split this out---------------------
-                //if you got here something wasnt there - regenerate the thumbnail from cached image
-                cDebug::write("creating thumbnail ");
-                if (!$oMSLImg) $oMSLImg = self::pr_get_image($psSol, $psInstrument, $psProduct);
-
-                //get the coordinates of the box
-                preg_match("/^(\d*)/", $oItem["l"], $aMatches);
-                $iX = $aMatches[0];
-                if ($iX < 0) $iX = 0;
-                preg_match("/^(\d*)/", $oItem["t"], $aMatches);
-                $iY = $aMatches[0];
-                if ($iY < 0) $iY = 0;
-
-                //perform the crop
-                self::pr_perform_crop($oMSLImg, $iX, $iY, $sOutThumbfile);
-
-                //update the structure
-                $aThumbs[$sKey] = $sOutThumbfile;
-                $bUpdated = true;
-            }
-
-            //update the objstore if necessary
-            if ($bUpdated)
-                cHash::put($sPath, $aThumbs, true);
-
-            //we dont want to hang onto the original jpeg
-            if ($oMSLImg) {
-                cDebug::write("destroying image");
-                imagedestroy($oMSLImg);
-            }
-        }
-
-        //return the data
-        $aData = ["s" => $psSol, "i" => $psInstrument, "p" => $psProduct, "u" => array_values($aThumbs)];
-        return $aData;
     }
 
 
