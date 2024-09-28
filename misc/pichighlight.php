@@ -195,7 +195,7 @@ class cSpaceImageHighlight {
     }
 
     //****************************************************************
-    static function get(string $psSol, string $psInstrument, string $psProduct, bool $pbGetImgUrl = false) {
+    static function get(string $psSol, string $psInstrument, string $psProduct, bool $pbGetImgUrl = false): cSpaceProductData {
         cDebug::enter();
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
@@ -209,7 +209,7 @@ class cSpaceImageHighlight {
             $oOut->product = $psProduct;
             $oOut->data = $aData;
         }
-        
+
         if ($pbGetImgUrl) {
             $oProduct = cCuriosityManifestUtils::search_for_product($psProduct);
             $oOut->image_url = $oProduct->image_url;
@@ -220,7 +220,7 @@ class cSpaceImageHighlight {
     }
 
     //****************************************************************
-    static function put(string $psSol, string $psInstrument, string $psProduct, array $paData) {
+    static function put(string $psSol, string $psInstrument, string $psProduct, array $paData): void {
         cDebug::enter();
         if (!cAuth::is_role(cAuth::ADMIN_ROLE)) cDebug::error("put can only be done by admin");
         $oDB = self::$objstoreDB;
@@ -243,7 +243,7 @@ class cSpaceImageHighlight {
      * @param string $psSol 
      * @return array
      */
-    static function get_all_highlights($psSol) {
+    static function get_all_highlights($psSol): array {
         //get which products have highlights
         cDebug::write("getting highlights for sol $psSol");
         $aData = self::get_sol_highlighted_products($psSol);
@@ -263,7 +263,7 @@ class cSpaceImageHighlight {
     }
 
     //**********************************************************************
-    static function count_highlights($paData) {
+    static function count_highlights($paData): int {
         $iCount = 0;
 
         if ($paData == null)     return 0;
@@ -301,10 +301,11 @@ class cSpaceImageHighlight {
     //######################################################################
     //# UPDATE functions
     //######################################################################
-    static function pr_is_duplicate($psSol, $psInstrument, $psProduct, $psTop, $psLeft) {
+    static function pr_is_duplicate($psSol, $psInstrument, $psProduct, $psTop, $psLeft): bool {
+        cDebug::enter();
         $bIsDuplicate = false;
         $oResult = self::get($psSol, $psInstrument, $psProduct);
-        $aData = $oResult["d"];
+        $aData = $oResult->data;
 
         if ($aData)
             foreach ($aData as $oBox) {
@@ -316,9 +317,11 @@ class cSpaceImageHighlight {
                 }
             }
         return $bIsDuplicate;
+        cDebug::leave();
     }
 
-    static function set($psSol, $psInstrument, $psProduct, $psTop, $psLeft, $psUser) {
+    //****************************************************************************
+    static function set($psSol, $psInstrument, $psProduct, $psTop, $psLeft, $psUser): string {
         cDebug::enter();
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
