@@ -748,10 +748,10 @@ class cCuriosityManifestUtils {
 
         switch ($psDirection) {
             case cSpaceConstants::DIRECTION_PREVIOUS:
-                $sWhere = "$sWhere AND rowid < $iProductRow ORDER BY :date_col DESC";
+                $sWhere = "$sWhere AND rowid < $iProductRow ORDER BY rowid DESC";
                 break;
             case cSpaceConstants::DIRECTION_NEXT:
-                $sWhere = "$sWhere AND rowid > $iProductRow ORDER BY :date_col ASC";
+                $sWhere = "$sWhere AND rowid > $iProductRow ORDER BY rowid ASC";
                 break;
             default:
                 cDebug::error("unknown direction $psDirection");
