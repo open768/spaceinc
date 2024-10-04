@@ -47,6 +47,7 @@ class cSpaceImageMosaic {
         cDebug::leave();
         return $iCount;
     }
+
     //**********************************************************************
     static private function pr_put_mosaic_sol_hilight_count($psSol, $piCount) {
         /** @var cObjStoreDB $oDB **/
@@ -56,7 +57,8 @@ class cSpaceImageMosaic {
     }
 
     //**********************************************************************
-    static private function pr_generate_mosaic($psSol, $paData) {
+    static private function pr_generate_mosaic(string $psSol, array $paData): string {
+        cDebug::enter();
 
         $aImgList = [];
 
@@ -125,15 +127,17 @@ class cSpaceImageMosaic {
         imagejpeg($oDest, $sReal, cAppConsts::THUMB_QUALITY);
         imagedestroy($oDest);
 
+        cDebug::leave();
         return $sImageFile;
     }
 
     //**********************************************************************
+    //@TODO convert to using blobber
     static function get_sol_high_mosaic($psSol) {
+        cDebug::enter();
 
-
-        $oData = cSpaceImageHighlight::get_all_highlights($psSol);
-        $iCount = cSpaceImageHighlight::count_highlights($oData);
+        $aData = cSpaceImageHighlight::get_all_highlights($psSol, true);
+        $iCount = cSpaceImageHighlight::count_highlights($aData);
         cDebug::write("there were $iCount highlights");
         if ($iCount == 0) {
             cDebug::write("no highlights to create a mosaic from");
@@ -144,9 +148,9 @@ class cSpaceImageMosaic {
         //does the count match what is stored - in that case the mosaic has allready been produced
         $iStoredCount = self::get_mosaic_sol_highlight_count($psSol);
         if ($iStoredCount != $iCount) {
-            cDebug::write("but only $iStoredCount were previously known");
+            if ($iStoredCount > 0) cDebug::write("but only $iStoredCount were previously known");
             //generate the mosaic
-            $sMosaic = self::pr_generate_mosaic($psSol, $oData);
+            $sMosaic = self::pr_generate_mosaic($psSol, $aData);
 
             //write out the count 
             self::pr_put_mosaic_sol_hilight_count($psSol, $iCount);
@@ -156,10 +160,11 @@ class cSpaceImageMosaic {
         $sMosaicFile = self::MOSAIC_FOLDER . "/$psSol.jpg";
         if (!file_exists(cAppGlobals::$root . "/$sMosaicFile")) {
             cDebug::write("regenerating missing mosaic file");
-            $sMosaic = self::pr_generate_mosaic($psSol, $oData);
+            $sMosaic = self::pr_generate_mosaic($psSol, $aData);
         }
 
 
+        cDebug::leave();
         return self::MOSAIC_FOLDER . "/$psSol.jpg";
     }
 }
@@ -243,7 +248,9 @@ class cSpaceImageHighlight {
      * @param string $psSol 
      * @return array
      */
-    static function get_all_highlights($psSol): array {
+    static function get_all_highlights(string $psSol, bool $pbGetImageUrls = false): array {
+        cDebug::enter();
+
         //get which products have highlights
         cDebug::write("getting highlights for sol $psSol");
         $aData = self::get_sol_highlighted_products($psSol);
@@ -255,22 +262,23 @@ class cSpaceImageHighlight {
         //get all the highlights
         foreach ($aData as $sInstrument => $aProducts) {
             foreach ($aProducts as $sProduct => $iCount) {
-                $oHighlites = self::get($psSol, $sInstrument, $sProduct);
-                $aData[$sInstrument][$sProduct] = $oHighlites["d"];
+                $oHighlites = self::get($psSol, $sInstrument, $sProduct, $pbGetImageUrls);
+                $aData[$sInstrument][$sProduct] = $oHighlites;
             }
         }
+        cDebug::leave();
         return $aData;
     }
 
     //**********************************************************************
-    static function count_highlights($paData): int {
+    static function count_highlights(array $paData): int {
         $iCount = 0;
 
         if ($paData == null)     return 0;
 
         foreach ($paData as $sInstr => $aInstrData)
-            foreach ($aInstrData as $sProduct => $aProdData)
-                $iCount += count($aProdData);
+            foreach ($aInstrData as $sProduct => $oProdData)
+                $iCount += count($oProdData->data);
         return $iCount;
     }
 
