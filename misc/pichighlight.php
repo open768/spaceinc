@@ -65,8 +65,10 @@ class cSpaceImageMosaic {
         //first make sure all the thumbnails are actually there
         foreach ($paData as $sInstr => $aInstrData) {
             foreach ($aInstrData as $sProd => $oProdData)
-                foreach ($oProdData->data as $oBox)
-                    $sImg = cSpaceImageHighlight::get_box_blob($oProdData, $oBox);
+                foreach ($oProdData->data as $oBox) {
+                    $oBlob = cSpaceImageHighlight::get_box_blob($oProdData, $oBox);
+                    cDebug::vardump($oBlob);
+                }
         }
 
         //the folder has to be there 
@@ -344,41 +346,26 @@ class cSpaceImageHighlight {
         cDebug::leave();
     }
 
+
     //************************************************************************
-    static function get_box_key(cSpaceProductData $poHighlight, array $oBox): string {
+    static function get_box_blob(cSpaceProductData $poHighlight, array $poBox): cCropData {
         cDebug::enter();
-        cDebug::vardump($poHighlight);
-        if ($poHighlight->sol == null || $poHighlight->instr == null || $poHighlight->product == null || $poHighlight->image_url == null)
-            cDebug::error("insufficient params");
 
         //'img' + sProduct + '_' + sTop + '_' + sLeft
-        $sTop = $oBox[cAppUrlParams::HIGHLIGHT_TOP];
+        $sTop = $poBox[cAppUrlParams::HIGHLIGHT_TOP];
         if (substr($sTop, -2) === "px") $sTop = substr($sTop, 0, -2);
         $sTop = floor($sTop);
 
-        $sLeft = $oBox[cAppUrlParams::HIGHLIGHT_LEFT];
+        $sLeft = $poBox[cAppUrlParams::HIGHLIGHT_LEFT];
         if (substr($sLeft, -2) === "px") $sLeft = substr($sLeft, 0, -2);
         $sLeft = substr($sLeft, 0, -2);
         $sLeft = floor($sLeft);
         $sProduct = $poHighlight->product;
 
-        $sKey = "img_{$sProduct}_{$sTop}_{$sLeft}";
-        cDebug::extra_debug("key: $sKey");
+        $oCropData = cCropper::get_crop_blob_data($poHighlight->image_url, $sLeft, $sTop, cAppConsts::CROP_WIDTH, cAppConsts::CROP_HEIGHT);
 
         cDebug::leave();
-        return $sKey;
-    }
-
-    //************************************************************************
-    static function get_box_blob(cSpaceProductData $poHighlight, array $oBox): ?string {
-        cDebug::enter();
-
-        $sKey = self::get_box_key($poHighlight, $oBox);
-
-        cDebug::error("stop");
-
-        cDebug::leave();
-        return null;
+        return $oCropData;
     }
 
     //######################################################################
