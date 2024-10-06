@@ -507,6 +507,7 @@ class cCuriosityManifestUtils {
     //********************************************************
     static function search_for_product(string $psProduct) {
         cDebug::enter();
+        cDebug::extra_debug("looking for product: $psProduct");
         $sSQL = "SELECT :mission_col,:sol_col,:instr_col,:product_col,:url_col FROM `:table` WHERE ( :mission_col=:mission AND :product_col=:search AND :sample_col != 'thumbnail')  LIMIT 1";
         $sSQL = cCuriosityManifestIndex::replace_sql_params($sSQL);
 
