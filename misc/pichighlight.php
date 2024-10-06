@@ -64,16 +64,9 @@ class cSpaceImageMosaic {
 
         //first make sure all the thumbnails are actually there
         foreach ($paData as $sInstr => $aInstrData) {
-            cDebug::write("processing thumbs for $sInstr");
-            foreach ($aInstrData as $sProd => $sProdData) {
-                try {
-                    $aData = cSpaceImageHighlight::get_thumbs($psSol, $sInstr, $sProd);
-                } catch (Exception $e) {
-                    continue;
-                }
-                foreach ($aData["u"] as $sPath)
-                    $aImgList[] = $sPath;
-            }
+            foreach ($aInstrData as $sProd => $oProdData)
+                foreach ($oProdData->data as $oBox)
+                    $sImg = cSpaceImageHighlight::get_box_blob($oProdData, $oBox);
         }
 
         //the folder has to be there 
@@ -147,21 +140,23 @@ class cSpaceImageMosaic {
         //------------------------------------------------------------------
         //does the count match what is stored - in that case the mosaic has allready been produced
         $iStoredCount = self::get_mosaic_sol_highlight_count($psSol);
-        if ($iStoredCount != $iCount) {
+        if ($iStoredCount != $iCount || cDebug::$IGNORE_CACHE) {
             if ($iStoredCount > 0) cDebug::write("but only $iStoredCount were previously known");
             //generate the mosaic
             $sMosaic = self::pr_generate_mosaic($psSol, $aData);
 
             //write out the count 
             self::pr_put_mosaic_sol_hilight_count($psSol, $iCount);
-        }
+        } else
+            cDebug::extra_debug("no need to regenerate mosaic - count matches");
 
         //------------------------------------------------------------------
         $sMosaicFile = self::MOSAIC_FOLDER . "/$psSol.jpg";
         if (!file_exists(cAppGlobals::$root . "/$sMosaicFile")) {
             cDebug::write("regenerating missing mosaic file");
             $sMosaic = self::pr_generate_mosaic($psSol, $aData);
-        }
+        } else
+            cDebug::extra_debug("no need to regenerate mosaic - file exists");
 
 
         cDebug::leave();
@@ -202,6 +197,7 @@ class cSpaceImageHighlight {
     //****************************************************************
     static function get(string $psSol, string $psInstrument, string $psProduct, bool $pbGetImgUrl = false): cSpaceProductData {
         cDebug::enter();
+        cDebug::extra_debug("s:$psSol, i:$psInstrument, p:$psProduct");
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         $sFile = self::pr_get_filename($psSol, $psInstrument, $psProduct);
@@ -346,6 +342,43 @@ class cSpaceImageHighlight {
             return "ok";
         }
         cDebug::leave();
+    }
+
+    //************************************************************************
+    static function get_box_key(cSpaceProductData $poHighlight, array $oBox): string {
+        cDebug::enter();
+        cDebug::vardump($poHighlight);
+        if ($poHighlight->sol == null || $poHighlight->instr == null || $poHighlight->product == null || $poHighlight->image_url == null)
+            cDebug::error("insufficient params");
+
+        //'img' + sProduct + '_' + sTop + '_' + sLeft
+        $sTop = $oBox[cAppUrlParams::HIGHLIGHT_TOP];
+        if (substr($sTop, -2) === "px") $sTop = substr($sTop, 0, -2);
+        $sTop = floor($sTop);
+
+        $sLeft = $oBox[cAppUrlParams::HIGHLIGHT_LEFT];
+        if (substr($sLeft, -2) === "px") $sLeft = substr($sLeft, 0, -2);
+        $sLeft = substr($sLeft, 0, -2);
+        $sLeft = floor($sLeft);
+        $sProduct = $poHighlight->product;
+
+        $sKey = "img_{$sProduct}_{$sTop}_{$sLeft}";
+        cDebug::extra_debug("key: $sKey");
+
+        cDebug::leave();
+        return $sKey;
+    }
+
+    //************************************************************************
+    static function get_box_blob(cSpaceProductData $poHighlight, array $oBox): ?string {
+        cDebug::enter();
+
+        $sKey = self::get_box_key($poHighlight, $oBox);
+
+        cDebug::error("stop");
+
+        cDebug::leave();
+        return null;
     }
 
     //######################################################################
