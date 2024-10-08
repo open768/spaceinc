@@ -62,21 +62,13 @@ class cSpaceImageMosaic {
 
         $aImgList = [];
 
-        //first make sure all the thumbnails are actually there
+        //generate blobs
         foreach ($paData as $sInstr => $aInstrData) {
             foreach ($aInstrData as $sProd => $oProdData)
-                foreach ($oProdData->data as $oBox) {
+                foreach ($oProdData->data as $oBox)
                     $oBlob = cSpaceImageHighlight::get_box_blob($oProdData, $oBox);
-                    cDebug::vardump($oBlob);
-                }
         }
 
-        //the folder has to be there 
-        $sFolder = cAppGlobals::$root . "/" . self::MOSAIC_FOLDER;
-        if (!file_exists($sFolder)) {
-            cDebug::write("creating folder: $sFolder");
-            mkdir($sFolder, 0755, true); //folder needs to readable by apache
-        }
 
         //now combine the highlights into a single mosaic
         $iCount = count($aImgList);
@@ -131,8 +123,8 @@ class cSpaceImageMosaic {
     static function get_sol_high_mosaic($psSol) {
         cDebug::enter();
 
-        $aData = cSpaceImageHighlight::get_all_highlights($psSol, true);
-        $iCount = cSpaceImageHighlight::count_highlights($aData);
+        $aHighData = cSpaceImageHighlight::get_all_highlights($psSol, true);
+        $iCount = cSpaceImageHighlight::count_highlights($aHighData);
         cDebug::write("there were $iCount highlights");
         if ($iCount == 0) {
             cDebug::write("no highlights to create a mosaic from");
@@ -145,7 +137,7 @@ class cSpaceImageMosaic {
         if ($iStoredCount != $iCount || cDebug::$IGNORE_CACHE) {
             if ($iStoredCount > 0) cDebug::write("but only $iStoredCount were previously known");
             //generate the mosaic
-            $sMosaic = self::pr_generate_mosaic($psSol, $aData);
+            $sMosaic = self::pr_generate_mosaic($psSol, $aHighData);
 
             //write out the count 
             self::pr_put_mosaic_sol_hilight_count($psSol, $iCount);
@@ -156,7 +148,7 @@ class cSpaceImageMosaic {
         $sMosaicFile = self::MOSAIC_FOLDER . "/$psSol.jpg";
         if (!file_exists(cAppGlobals::$root . "/$sMosaicFile")) {
             cDebug::write("regenerating missing mosaic file");
-            $sMosaic = self::pr_generate_mosaic($psSol, $aData);
+            $sMosaic = self::pr_generate_mosaic($psSol, $aHighData);
         } else
             cDebug::extra_debug("no need to regenerate mosaic - file exists");
 
@@ -184,13 +176,6 @@ class cSpaceImageHighlight {
     //######################################################################
     //# GETTERS functions
     //######################################################################
-    // #######################################################################
-    // # TODO: TODO: TODO: TODO: TODO: TODO: TODO: TODO: TODO: TODO: TODO: 
-    // #	make this generic can use take any image as its input
-    // #	should need a "Key" and "image url" to do its work
-    // #	shouldnt be tied to curiosity
-    // #######################################################################
-
     static function pr_get_filename($psSol, $psInstrument, $psProduct) {
         $sFolder = "$psSol/$psInstrument/$psProduct";
         return "$sFolder/" . self::IMGHIGH_FILENAME;
