@@ -12,8 +12,8 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 // USE AT YOUR OWN RISK - NO GUARANTEES OR ANY FORM ARE EITHER EXPRESSED OR IMPLIED
  **************************************************************************/
 
-require_once  cAppGlobals::$phpInc . "/ckinc/debug.php";
-require_once  cAppGlobals::$phpInc . "/ckinc/cached_http.php";
+require_once  cAppGlobals::$ckPhpInc . "/debug.php";
+require_once  cAppGlobals::$ckPhpInc . "/cached_http.php";
 $count = 0;
 
 class cPDS_LBL {

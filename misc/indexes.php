@@ -1,6 +1,6 @@
 <?php
 require_once  cAppGlobals::$spaceInc . "/misc/realms.php";
-require_once  cAppGlobals::$phpInc . "/ckinc/objstoredb.php";
+require_once  cAppGlobals::$ckPhpInc . "/objstoredb.php";
 
 /**
  * slight problem this indexes as Sol,Instr,Product when it should have been Sol,Product,Instr

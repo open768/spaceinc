@@ -1,8 +1,8 @@
 <?php
 //panorama data form the marvellous work of Nev Thompson http://www.gigapan.com/profiles/pencilnev
 
-require_once  cAppGlobals::$phpInc . "/ckinc/debug.php";
-require_once  cAppGlobals::$phpInc . "/ckinc/objstoredb.php";
+require_once  cAppGlobals::$ckPhpInc . "/debug.php";
+require_once  cAppGlobals::$ckPhpInc . "/objstoredb.php";
 require_once  cAppGlobals::$spaceInc . "/misc/realms.php";
 static $objstoreDB = null;
 

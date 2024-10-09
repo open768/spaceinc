@@ -18,7 +18,7 @@ or leave a message on github
  **************************************************************************/
 
 
-require_once  cAppGlobals::$phpInc . "/ckinc/objstoredb.php";
+require_once  cAppGlobals::$ckPhpInc . "/objstoredb.php";
 require_once  cAppGlobals::$spaceInc . "/misc/realms.php";
 
 class cSpaceComments {

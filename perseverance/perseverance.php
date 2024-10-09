@@ -28,7 +28,7 @@ example of RSS requests reverse engineered from
  **************************************************************************/
 
 require_once  cAppGlobals::$spaceInc . "/missions/rover.php";
-require_once  cAppGlobals::$phpInc . "/ckinc/cached_http.php";
+require_once  cAppGlobals::$ckPhpInc . "/cached_http.php";
 
 class cPerseverance extends cRoverManifest {
 
