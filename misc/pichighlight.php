@@ -12,12 +12,12 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 //
  **************************************************************************/
 
-require_once  cAppGlobals::$phpInc . "/ckinc/objstoredb.php";
-require_once  cAppGlobals::$phpInc . "/ckinc/image.php";
+require_once  cAppGlobals::$ckPhpInc . "/objstoredb.php";
+require_once  cAppGlobals::$ckPhpInc . "/image.php";
 require_once  cAppGlobals::$spaceInc . "/misc/indexes.php";
 require_once  cAppGlobals::$spaceInc . "/misc/realms.php";
-require_once  cAppGlobals::$phpInc . "/ckinc/http.php";
-require_once  cAppGlobals::$phpInc . "/ckinc/hash.php";
+require_once  cAppGlobals::$ckPhpInc . "/http.php";
+require_once  cAppGlobals::$ckPhpInc . "/hash.php";
 require_once  cAppGlobals::$spaceInc . "/curiosity/curiosity.php";
 
 //###############################################################
@@ -25,7 +25,6 @@ class cSpaceImageMosaic {
     const MOSAIC_COUNT_FILENAME = "[moscount].txt";
     const MOSAIC_FOLDER = "images/[mosaics]";
     const MOSAIC_WIDTH = 8;
-    const BORDER_WIDTH = 5;
 
     private static $objstoreDB = null;
 
@@ -57,70 +56,40 @@ class cSpaceImageMosaic {
     }
 
     //**********************************************************************
-    static private function pr_generate_mosaic(string $psSol, array $paData): string {
+    static private function pr_get_mosaic(string $psSol): cBlobData {
+        cDebug::enter();
+        $sKey = "mos-$psSol";
+        cDebug::leave();
+        return cMosaicer::get($sKey);
+    }
+
+    static private function pr_generate_mosaic(string $psSol, array $paData): cBlobData {
         cDebug::enter();
 
-        $aImgList = [];
+        $aBlobs = [];
 
         //generate blobs
         foreach ($paData as $sInstr => $aInstrData) {
             foreach ($aInstrData as $sProd => $oProdData)
-                foreach ($oProdData->data as $oBox)
+                foreach ($oProdData->data as $oBox) {
                     $oBlob = cSpaceImageHighlight::get_box_blob($oProdData, $oBox);
+                    $aBlobs[] = $oBlob;
+                }
         }
 
-
-        //now combine the highlights into a single mosaic
-        $iCount = count($aImgList);
-        cDebug::write("combining $iCount thumbnails");
-        $iRows = ceil($iCount / self::MOSAIC_WIDTH);
-        cDebug::write("into a Mosaic with size " . self::MOSAIC_WIDTH . " x $iRows");
-        $iWidth = self::BORDER_WIDTH + self::MOSAIC_WIDTH * (cAppConsts::CROP_WIDTH + self::BORDER_WIDTH);
-        $iHeight = self::BORDER_WIDTH + $iRows * (cAppConsts::CROP_HEIGHT + self::BORDER_WIDTH);
-
-        $oDest = imagecreatetruecolor($iWidth, $iHeight);
-
-        $iRow = 0;
-        $iCol = 0;
-        $iX = self::BORDER_WIDTH;
-        $iY = self::BORDER_WIDTH;
-
-        for ($i = 0; $i < $iCount; $i++) {
-            //load the original image
-            $sThumbFilename = cAppGlobals::$root . "/" . $aImgList[$i];
-            if (!file_exists($sThumbFilename)) continue;
-
-            $oThumbImg = imagecreatefromjpeg($sThumbFilename);
-
-            //copy it into the mosaic
-            //cDebug::write("copying image into $iX, $iY");
-            imagecopy($oDest, $oThumbImg, $iX, $iY, 0, 0,  cAppConsts::CROP_WIDTH, cAppConsts::CROP_HEIGHT);
-
-            //next
-            imagedestroy($oThumbImg);
-            $iCol++;
-            $iX += (self::BORDER_WIDTH + cAppConsts::CROP_WIDTH);
-            if ($iCol >= self::MOSAIC_WIDTH) {
-                $iRow++;
-                $iCol = 0;
-                $iX = self::BORDER_WIDTH;
-                $iY += (self::BORDER_WIDTH + cAppConsts::CROP_HEIGHT);
-            }
-        }
-
-        //write out the results
-        $sImageFile = self::MOSAIC_FOLDER . "/$psSol.jpg";
-        $sReal = cAppGlobals::$root . "/$sImageFile";
-        imagejpeg($oDest, $sReal, cAppConsts::THUMB_QUALITY);
-        imagedestroy($oDest);
-
+        $sKey = self::pr_mosaic_key($psSol);
+        $oBlob = cMosaicer::make($sKey, $aBlobs, cAppConsts::CROP_WIDTH, cAppConsts::CROP_HEIGHT, self::MOSAIC_WIDTH);
         cDebug::leave();
-        return $sImageFile;
+        return $oBlob;
+    }
+
+    private static function pr_mosaic_key(string $psSol): string {
+        return "mos-$psSol";
     }
 
     //**********************************************************************
     //@TODO convert to using blobber
-    static function get_sol_high_mosaic($psSol) {
+    static function get_sol_high_mosaic($psSol): cBlobData {
         cDebug::enter();
 
         $aHighData = cSpaceImageHighlight::get_all_highlights($psSol, true);
@@ -133,28 +102,24 @@ class cSpaceImageMosaic {
 
         //------------------------------------------------------------------
         //does the count match what is stored - in that case the mosaic has allready been produced
+        $sKey = self::pr_mosaic_key($psSol);
         $iStoredCount = self::get_mosaic_sol_highlight_count($psSol);
-        if ($iStoredCount != $iCount || cDebug::$IGNORE_CACHE) {
+        $bMosaicExists = cMosaicer::exists($sKey);
+
+        if ($iStoredCount != $iCount || cDebug::$IGNORE_CACHE || !$bMosaicExists) {
             if ($iStoredCount > 0) cDebug::write("but only $iStoredCount were previously known");
             //generate the mosaic
-            $sMosaic = self::pr_generate_mosaic($psSol, $aHighData);
+            $oMosaic = self::pr_generate_mosaic($psSol, $aHighData);
 
             //write out the count 
             self::pr_put_mosaic_sol_hilight_count($psSol, $iCount);
-        } else
+        } else {
             cDebug::extra_debug("no need to regenerate mosaic - count matches");
-
-        //------------------------------------------------------------------
-        $sMosaicFile = self::MOSAIC_FOLDER . "/$psSol.jpg";
-        if (!file_exists(cAppGlobals::$root . "/$sMosaicFile")) {
-            cDebug::write("regenerating missing mosaic file");
-            $sMosaic = self::pr_generate_mosaic($psSol, $aHighData);
-        } else
-            cDebug::extra_debug("no need to regenerate mosaic - file exists");
-
+            $oMosaic = self::pr_get_mosaic($psSol);
+        }
 
         cDebug::leave();
-        return self::MOSAIC_FOLDER . "/$psSol.jpg";
+        return $oMosaic;
     }
 }
 cSpaceImageMosaic::init_obj_store_db();
@@ -334,22 +299,23 @@ class cSpaceImageHighlight {
 
     //************************************************************************
     static function get_box_blob(cSpaceProductData $poHighlight, array $poBox): cCropData {
-        cDebug::enter();
+        //cDebug::enter();
 
         //'img' + sProduct + '_' + sTop + '_' + sLeft
+        cDebug::vardump($poBox);
         $sTop = $poBox[cAppUrlParams::HIGHLIGHT_TOP];
         if (substr($sTop, -2) === "px") $sTop = substr($sTop, 0, -2);
-        $sTop = floor($sTop);
+        $sTop = floor((int)$sTop);
 
         $sLeft = $poBox[cAppUrlParams::HIGHLIGHT_LEFT];
         if (substr($sLeft, -2) === "px") $sLeft = substr($sLeft, 0, -2);
         $sLeft = substr($sLeft, 0, -2);
-        $sLeft = floor($sLeft);
+        $sLeft = floor((int)$sLeft);
         $sProduct = $poHighlight->product;
 
         $oCropData = cCropper::get_crop_blob_data($poHighlight->image_url, $sLeft, $sTop, cAppConsts::CROP_WIDTH, cAppConsts::CROP_HEIGHT);
 
-        cDebug::leave();
+        //cDebug::leave();
         return $oCropData;
     }
 
