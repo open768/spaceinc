@@ -89,7 +89,7 @@ class cSpaceImageMosaic {
 
     //**********************************************************************
     //@TODO convert to using blobber
-    static function get_sol_high_mosaic($psSol): cBlobData {
+    static function get_sol_high_mosaic($psSol): ?cBlobData {
         cDebug::enter();
 
         $aHighData = cSpaceImageHighlight::get_all_highlights($psSol, true);
@@ -196,7 +196,7 @@ class cSpaceImageHighlight {
      * @param string $psSol 
      * @return array
      */
-    static function get_all_highlights(string $psSol, bool $pbGetImageUrls = false): array {
+    static function get_all_highlights(string $psSol, bool $pbGetImageUrls = false): ?array {
         cDebug::enter();
 
         //get which products have highlights
@@ -219,7 +219,7 @@ class cSpaceImageHighlight {
     }
 
     //**********************************************************************
-    static function count_highlights(array $paData): int {
+    static function count_highlights(?array $paData): int {
         $iCount = 0;
 
         if ($paData == null)     return 0;
