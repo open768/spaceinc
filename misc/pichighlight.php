@@ -63,6 +63,7 @@ class cSpaceImageMosaic {
         return cMosaicer::get($sKey);
     }
 
+    //**********************************************************************
     static private function pr_generate_mosaic(string $psSol, array $paData): cBlobData {
         cDebug::enter();
 
