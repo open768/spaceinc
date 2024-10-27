@@ -107,11 +107,8 @@ class cCuriosityManifestIndex {
     const SAMPLE_THUMBS = 2;
     const SAMPLE_NONTHUMBS = 3;
 
-
     /**  @var cSQLLite $oSQLDB */
     private static $oSQLDB = null;
-    private static $cached_all_data = null;
-
 
     //*****************************************************************************
     //* DB stuff
@@ -261,7 +258,7 @@ class cCuriosityManifestIndex {
         if ($pbReindex) self::delete_sol_index($psSol);
 
         $bCheckExpiry = !$pbReindex;
-        $oSolData = cCuriosityManifest::getSolData($psSol, $bCheckExpiry); //this is needed
+        $oSolData = cCuriosityManifest::getSolRawData($psSol, $bCheckExpiry); //this is needed
 
         $aImages = $oSolData->images;
         if ($aImages === null) cDebug::error("no image data");
@@ -359,6 +356,21 @@ class cCuriosityManifestIndex {
 
     //*****************************************************************************
     // getters functions
+    //*****************************************************************************
+    static function is_sol_in_index(string $psSol) {
+        cDebug::enter();
+
+        $slastUpdated = cCuriosityManifestIndexStatus::get_sol_last_updated($psSol);
+        $bResult = true;
+        if ($slastUpdated === null) {
+            cDebug::write("sol $psSol is not in the index");
+            $bResult = false;
+        }
+
+        cDebug::leave();
+        return $bResult;
+    }
+
     //*****************************************************************************
     static function reindex_if_needed(string $psSol) {
         cDebug::enter();
@@ -668,6 +680,7 @@ class cCuriosityManifestUtils {
     static function get_product_index(string $psProduct): cSpaceProductData {
         cDebug::enter();
 
+        //********** construct SQL
         $sSQL = "SELECT rowid,:mission_col,:instr_col,:product_col FROM `:table` WHERE :mission_col=:mission AND :product_col=:product";
         $sSQL = cCuriosityManifestIndex::replace_sql_params($sSQL);
 
@@ -675,11 +688,16 @@ class cCuriosityManifestUtils {
             $oBind->add_bind(":mission", cSpaceMissions::CURIOSITY);
             $oBind->add_bind(":product", $psProduct);
         }
+
+        //********** exec SQL
         $oDB = cCuriosityManifestIndex::get_db();
         $aResults = $oDB->prep_exec_fetch($sSQL, $oBind);
 
+        //********** no results(how did i get here if the product is not known?)
         if ($aResults == null || count($aResults) == 0)
             cDebug::error("unable to find product $psProduct");
+
+        //********** return result
         $aRow = (array) $aResults[0];
         $iRowID = $aRow["rowid"];
         cDebug::write("rowid for $psProduct is $iRowID");
@@ -814,6 +832,7 @@ class cCuriosityManifest {
     const FEED_SLEEP = 200; //milliseconds
     const SAMPLE_TYPE_THUMBNAIL = "thumbnail";
     static $cached_manifest = null;
+    private static $dont_check_sol_index = false;
 
 
 
@@ -872,19 +891,35 @@ class cCuriosityManifest {
     }
 
     //*****************************************************************************
-    public static function getSolData($psSol, $pbCheckExpiry = true) {
+    public static function getSolRawData($psSol, $pbCheckExpiry = true) {
         cDebug::enter();
 
         $sUrl = self::getSolJsonUrl($psSol);
         if (cCommon::is_string_empty($sUrl)) cDebug::error("empty url for $psSol");
 
         cDebug::extra_debug("Getting all sol data for sol $psSol");
-
         $oCache = new cCachedHttp(); {
             $oCache->CACHE_EXPIRY = self::SOL_CACHE;
             $bIsCached = $oCache->is_cached($sUrl, $pbCheckExpiry);
             $oResult = $oCache->getCachedJson($sUrl, $pbCheckExpiry);
         }
+
+        if ($oResult === null)
+            cDebug::write("nothing found - sol doesnt exist at $sUrl");
+        elseif (! self::$dont_check_sol_index) {
+            $bInIndex = cCuriosityManifestIndex::is_sol_in_index($psSol);
+            if (!$bInIndex) {
+                self::$dont_check_sol_index = true;
+                cDebug::extra_debug_warning("sol found, but isnt in manifestindex.. ");
+                try {
+                    cCuriosityManifestIndex::reindex_if_needed($psSol);
+                } finally {
+                    self::$dont_check_sol_index = false;
+                }
+            }
+        }
+
+
 
         if (cDebug::is_debugging() && !$bIsCached) {
             cDebug::write("<p> -- sleeping for " . self::FEED_SLEEP . " ms\n");

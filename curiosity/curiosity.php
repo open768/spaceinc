@@ -64,7 +64,7 @@ class cCuriosity implements iMission {
     //*****************************************************************************
     public static function getSolRawData($psSol, $psInstrument = null, $pbThumbs = false): cCuriosityInstrument {
         cDebug::enter();
-        $oJson = cCuriosityManifest::getSolData($psSol);
+        $oJson = cCuriosityManifest::getSolRawData($psSol);
         $oData = new cCuriosityInstrument($psInstrument);  //put all images under a single instrument
 
         //get the images from the json response
