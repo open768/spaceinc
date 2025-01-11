@@ -5,41 +5,34 @@ use Illuminate\Database\Capsule\Manager as CapsuleManager;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Schema\Blueprint;
 
-class cEloquentORM {
-    static function create_table(string $psTableName, Closure $pfnCreate) {
-        $oManager = cMissionManifest::$capsuleManager;
-        $oSchemaBuilder = $oManager->schema();
-
-        cDebug::extra_debug("checking table exists  " . $psTableName);
-        $bHasTable = $oSchemaBuilder->hasTable($psTableName);
-        if (!$bHasTable) {
-            //create table
-            $oSchemaBuilder->create($psTableName, function ($table) use ($pfnCreate) {
-                $pfnCreate($table);
-            });
-            cDebug::extra_debug("created table " . $psTableName);
-        }
-    }
-}
+require_once cAppGlobals::$ckPhpInc . "/eloquentorm.php";
 
 //#############################################################################################
 class tblSols extends Model {
-    static function create_table(Blueprint $table) {
-        $table->integer('sol')->index();
-        $table->date('last_updated');
-        $table->integer('catalog_url');
+    static function create_table(Blueprint $poTable) {
+        $poTable->integer('sol')->index();
+        $poTable->date('last_updated');
+        $poTable->integer('catalog_url');
 
-        $table->unique(['sol']);
+        $poTable->unique(['sol']);
     }
 }
 
 //#############################################################################################
 class tblID extends Model {
-    static function create_table(Blueprint $table) {
-        $table->integer('id')->index();
-        $table->string('name');
-        $table->unique(['name']);
+    static function create_table(Blueprint $poTable) {
+        $poTable->integer('id')->index();
+        $poTable->string('name');
+        $poTable->unique(['name']);
+
+        $sTableName = get_called_class();
+        if ($sTableName !== "tblMissions") {
+            $poTable->integer('mission_id')->index();
+            $poTable->foreign('mission_id')->references('id')->on('tblMissions');
+        }
     }
+}
+class tblMissions extends tblID {
 }
 class tblInstruments extends tblID {
 }
@@ -49,21 +42,23 @@ class tblSampleType extends tblID {
 //#############################################################################################
 //https://mars.nasa.gov/msl-raw-images/image/images_sol4413.json
 class tblProducts extends Model {
-    static function create_table(Blueprint $table) {
+    static function create_table(Blueprint $poTable) {
         //create table structure
-        $table->integer('id');
-        $table->integer('sol')->index();
-        $table->integer('instrument_id')->index();
-        $table->integer('sample_type_id')->index();
-        $table->integer('site')->index();
-        $table->text('image_url');
-        $table->text('product')->index();
-        $table->dateTime('utc-date');
-        $table->integer('drive')->index();
+        $poTable->integer('mission_id');
+        $poTable->integer('id');
+        $poTable->integer('sol')->index();
+        $poTable->integer('instrument_id')->index();
+        $poTable->integer('sample_type_id')->index();
+        $poTable->integer('site')->index();
+        $poTable->text('image_url');
+        $poTable->text('product')->index();
+        $poTable->dateTime('utc-date');
+        $poTable->integer('drive')->index();
 
         //add relationships
-        $table->foreign('instrument_id')->references('id')->on('tblInstruments');
-        $table->unique(['sol', 'instrument_id', 'product', 'sample_type_id']);
+        $poTable->foreign('mission_id')->references('id')->on('tblMissions');
+        $poTable->foreign('instrument_id')->references('id')->on('tblInstruments');
+        $poTable->unique(['sol', 'instrument_id', 'product', 'sample_type_id']);
     }
 }
 
@@ -82,17 +77,20 @@ class cMissionManifest {
         $oSchemaBuilder = $oManager->schema();
 
         //check SOLS_TABLE_NAME table exists
-        cEloquentORM::create_table("tblSols", function ($table) {
-            tblSols::create_table($table);
+        cEloquentORM::create_table("tblSols", function ($poTable) {
+            tblSols::create_table($poTable);
         });
-        cEloquentORM::create_table("tblProducts", function ($table) {
-            tblProducts::create_table($table);
+        cEloquentORM::create_table("tblProducts", function ($poTable) {
+            tblProducts::create_table($poTable);
         });
-        cEloquentORM::create_table("tblInstruments", function ($table) {
-            tblInstruments::create_table($table);
+        cEloquentORM::create_table("tblInstruments", function ($poTable) {
+            tblInstruments::create_table($poTable);
         });
-        cEloquentORM::create_table("tblSampleType", function ($table) {
-            tblSampleType::create_table($table);
+        cEloquentORM::create_table("tblSampleType", function ($poTable) {
+            tblSampleType::create_table($poTable);
+        });
+        cEloquentORM::create_table("tblMissions", function ($poTable) {
+            tblMissions::create_table($poTable);
         });
 
         cDebug::leave();
