@@ -3,6 +3,7 @@
 //ORM is eloquent: https://github.com/illuminate/database
 use Illuminate\Database\Capsule\Manager as CapsuleManager;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Schema\Blueprint;
 
 class cEloquentORM {
     static function create_table(string $psTableName, Closure $pfnCreate) {
@@ -23,18 +24,21 @@ class cEloquentORM {
 
 //#############################################################################################
 class tblSols extends Model {
-    static function create_table($table) {
-        $table->integer('sol');
+    static function create_table(Blueprint $table) {
+        $table->integer('sol')->index();
         $table->date('last_updated');
         $table->integer('catalog_url');
+
+        $table->unique(['sol']);
     }
 }
 
 //#############################################################################################
 class tblID extends Model {
-    static function create_table($table) {
-        $table->integer('id');
+    static function create_table(Blueprint $table) {
+        $table->integer('id')->index();
         $table->string('name');
+        $table->unique(['name']);
     }
 }
 class tblInstruments extends tblID {
@@ -45,13 +49,21 @@ class tblSampleType extends tblID {
 //#############################################################################################
 //https://mars.nasa.gov/msl-raw-images/image/images_sol4413.json
 class tblProducts extends Model {
-    static function create_table($table) {
-        $table->integer('sol');
-        $table->integer('instrument_id');
-        $table->integer('sample_type_id');
-        $table->integer('site_id');
-        $table->text('urlList');
-        $table->text('itemName');
+    static function create_table(Blueprint $table) {
+        //create table structure
+        $table->integer('id');
+        $table->integer('sol')->index();
+        $table->integer('instrument_id')->index();
+        $table->integer('sample_type_id')->index();
+        $table->integer('site')->index();
+        $table->text('image_url');
+        $table->text('product')->index();
+        $table->dateTime('utc-date');
+        $table->integer('drive')->index();
+
+        //add relationships
+        $table->foreign('instrument_id')->references('id')->on('tblInstruments');
+        $table->unique(['sol', 'instrument_id', 'product', 'sample_type_id']);
     }
 }
 
