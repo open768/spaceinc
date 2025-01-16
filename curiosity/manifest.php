@@ -176,13 +176,13 @@ class cCuriosityManifestIndex {
         cDebug::extra_debug("secondary index created");
 
         //-------------create INDEX
-        $sSQL = "CREATE INDEX idx_msproduct on ':table' ( :mission_col, :sol_col, :product_col )";
+        $sSQL = "CREATE INDEX idx_mission_sol_product on ':table' ( :mission_col, :sol_col, :product_col )";
         $sSQL = self::replace_sql_params($sSQL);
         $oSqLDB->querySQL($sSQL);
         cDebug::extra_debug("secondary index created");
 
         //-------------create INDEX
-        $sSQL = "CREATE INDEX idx_mproduct on ':table' ( :mission_col, :product_col )";
+        $sSQL = "CREATE INDEX idx_mission_product on ':table' ( :mission_col, :product_col )";
         $sSQL = self::replace_sql_params($sSQL);
         $oSqLDB->querySQL($sSQL);
         cDebug::extra_debug("secondary index created");

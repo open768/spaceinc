@@ -1,7 +1,7 @@
 <?php
+require_once  cAppGlobals::$ckPhpInc . "/debug.php";
 require_once  cAppGlobals::$spaceInc . "/curiosity/curiosity.php";
 require_once  cAppGlobals::$spaceInc . "/misc/pichighlight.php";
-require_once  cAppGlobals::$ckPhpInc . "/debug.php";
 require_once  cAppGlobals::$ckPhpInc . "/common.php";
 require_once  cAppGlobals::$ckPhpInc . "/facebook.php";
 
@@ -11,7 +11,6 @@ require_once  cAppGlobals::$ckPhpInc . "/facebook.php";
 class cFacebookTags {
     //*******************************************************************
     public static function make_fb_detail_tags() {
-        cDebug::check_GET_or_POST();
 
         $sSol = cHeader::get(cSpaceUrlParams::SOL);
         $sInstrument = cHeader::get(cSpaceUrlParams::INSTRUMENT);
@@ -42,8 +41,6 @@ class cFacebookTags {
 
     //*******************************************************************
     public static function make_fb_sol_high_tags() {
-        cDebug::check_GET_or_POST();
-
         $sSol = cHeader::get(cSpaceUrlParams::SOL);
 
         cDebug::write("getting highlight details for $sSol");
