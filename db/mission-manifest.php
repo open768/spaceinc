@@ -96,6 +96,18 @@ class cMissionManifest {
         cDebug::leave();
     }
 
+    static function empty_manifest() {
+        cDebug::enter();
+        $oManager = self::$capsuleManager;
+        $oManager->table("tblSols")->delete();
+        $oManager->table("tblProducts")->delete();
+        $oManager->table("tblInstruments")->delete();
+        $oManager->table("tblSampleType")->delete();
+        $oManager->table("tblMissions")->delete();
+        cDebug::leave();
+    }
+
+
     //**********************************************************************************************
     static function init() {
         //check that database class has been loaded - redundant as composer would throw an error if it wasnt
