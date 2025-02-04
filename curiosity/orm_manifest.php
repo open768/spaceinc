@@ -15,6 +15,7 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 
 class cCuriosityORMManifest {
     static function empty_ORM_tables() {
+        //drop all tables in the manifest
         cDebug::enter();
         cMissionManifest::empty_manifest();
         cDebug::leave();
@@ -25,7 +26,6 @@ class cCuriosityORMManifest {
         //reset index status for DEBUGGING PRUPOSES
         cCuriosityManifestIndexStatus::clear_status();
 
-        //drop all tables in the manifest
         cDebug::leave();
     }
 }

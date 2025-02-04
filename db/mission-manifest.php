@@ -20,23 +20,64 @@ class tblSols extends Model {
 
 //#############################################################################################
 class tblID extends Model {
+    static $cache = [];
+    protected $fillable = ['name'];
+    public $timestamps = false;
+
+    static function get_id($psName) {
+        cDebug::enter();
+
+        $row_id = null;
+        if (isset(self::$cache[$psName])) {
+            cDebug::extra_debug("$psName is in cache");
+            $row_id = self::$cache[$psName];
+        } else {
+            cDebug::extra_debug("$psName not in cache");
+            $row = static::where('name', $psName)->first();
+            if ($row !== null) {
+                cDebug::extra_debug("$psName in database");
+                $row_id = $row->id;
+            } else {
+                cDebug::extra_debug("$psName not in database");
+                $oRow = new static();
+                $oRow->name = $psName;
+                $oRow->save();
+                $row_id = $oRow->id;
+            }
+            self::$cache[$psName] = $row_id;
+        }
+        $classname = get_called_class();
+        cDebug::extra_debug("$classname:  $psName => $row_id");
+
+        cDebug::leave();
+        return $row_id;
+    }
+
     static function create_table(Blueprint $poTable) {
+        cDebug::enter();
+        $sTableName = get_called_class();
+        cDebug::extra_debug("creating table $sTableName");
+
         $poTable->integer('id')->index();
         $poTable->string('name');
         $poTable->unique(['name']);
 
-        $sTableName = get_called_class();
         if ($sTableName !== "tblMissions") {
             $poTable->integer('mission_id')->index();
             $poTable->foreign('mission_id')->references('id')->on('tblMissions');
         }
+        cDebug::leave();
     }
 }
+
 class tblMissions extends tblID {
+    protected $table = "tblMissions";
 }
 class tblInstruments extends tblID {
+    protected $table = "tblInstruments";
 }
 class tblSampleType extends tblID {
+    protected $table = "tblSampleType";
 }
 
 //#############################################################################################
@@ -74,24 +115,23 @@ class cMissionManifest {
 
         /** @var CapsuleManager $oManager*/
         $oManager = self::$capsuleManager;
-        $oSchemaBuilder = $oManager->schema();
 
         //check SOLS_TABLE_NAME table exists
-        cEloquentORM::create_table("tblSols", function ($poTable) {
-            tblSols::create_table($poTable);
-        });
-        cEloquentORM::create_table("tblProducts", function ($poTable) {
-            tblProducts::create_table($poTable);
-        });
-        cEloquentORM::create_table("tblInstruments", function ($poTable) {
-            tblInstruments::create_table($poTable);
-        });
-        cEloquentORM::create_table("tblSampleType", function ($poTable) {
-            tblSampleType::create_table($poTable);
-        });
-        cEloquentORM::create_table("tblMissions", function ($poTable) {
-            tblMissions::create_table($poTable);
-        });
+        $aClasses = [
+            tblSols::class,
+            tblProducts::class,
+            tblInstruments::class,
+            tblSampleType::class,
+            tblMissions::class
+        ];
+
+        foreach ($aClasses as $oModelClass) {
+            $oInstance = (new $oModelClass);
+            $sTableName = $oInstance->getTable();
+            cEloquentORM::create_table($sTableName, function ($poTable) use ($oModelClass) {
+                $oModelClass::create_table($poTable);
+            });
+        }
 
         cDebug::leave();
     }
