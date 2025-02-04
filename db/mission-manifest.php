@@ -26,23 +26,35 @@ class tblID extends Model {
     protected $fillable = ['name'];
     public $timestamps = false;
 
-    static function get_id($psName) {
+    static function get_table_name() {
+        return (new static())->getTable();
+    }
+
+
+    static function get_id($piMissionID, $psName) {
         cDebug::enter();
 
         $row_id = null;
-        if (isset(self::$cache[$psName])) {
+        $cache_key = "" . $piMissionID . $psName;
+        if (isset(self::$cache[$cache_key])) {
             cDebug::extra_debug("$psName is in cache");
-            $row_id = self::$cache[$psName];
+            $row_id = self::$cache[$cache_key];
         } else {
             cDebug::extra_debug("$psName not in cache");
-            $row = static::where('name', $psName)->first();
+            $row = static::where('name', $cache_key)->first();
             if ($row !== null) {
                 cDebug::extra_debug("$psName in database");
                 $row_id = $row->id;
             } else {
                 cDebug::extra_debug("$psName not in database");
                 $oRow = new static();
-                $oRow->name = $psName;
+                $sTable = $oRow->getTable();
+                $sMissionTable = tblMissions::get_table_name();
+
+                if ($sTable !== $sMissionTable) {
+                    $oRow->mission_id = $piMissionID;
+                }
+                $oRow->name = $cache_key;
                 $oRow->save();
                 $row_id = $oRow->id;
             }
@@ -57,14 +69,15 @@ class tblID extends Model {
 
     static function create_table(Blueprint $poTable) {
         cDebug::enter();
-        $sTableName = get_called_class();
+        $sTableName = static::get_table_name();
         cDebug::extra_debug("creating table $sTableName");
 
         $poTable->increments('id');
         $poTable->string('name');
         $poTable->unique(['name']);
 
-        if ($sTableName !== "tblMissions") {
+        $sMissionTable = tblMissions::get_table_id();
+        if ($sTableName !== $sMissionTable) {
             $poTable->integer('mission_id')->index();
             $poTable->foreign('mission_id')->references('id')->on('tblMissions');
         }
@@ -73,13 +86,11 @@ class tblID extends Model {
 }
 
 class tblMissions extends tblID {
-    protected $table = "tblMissions";
 }
+
 class tblInstruments extends tblID {
-    protected $table = "tblInstruments";
 }
 class tblSampleType extends tblID {
-    protected $table = "tblSampleType";
 }
 
 //#############################################################################################
