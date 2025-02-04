@@ -32,43 +32,32 @@ class tblID extends Model {
 
 
     static function get_id($piMissionID, $psName) {
-        cDebug::enter();
-
-        $row_id = null;
-        $cache_key = "" . $piMissionID . $psName;
-        if (isset(self::$cache[$cache_key])) {
-            cDebug::extra_debug("$psName is in cache");
-            $row_id = self::$cache[$cache_key];
+        $iRowID = null;
+        $sCacheKey = "$piMissionID:$psName";
+        if (isset(self::$cache[$sCacheKey])) {
+            $iRowID = self::$cache[$sCacheKey];
         } else {
-            cDebug::extra_debug("$psName not in cache");
-            $row = static::where('name', $cache_key)->first();
-            if ($row !== null) {
-                cDebug::extra_debug("$psName in database");
-                $row_id = $row->id;
-            } else {
-                cDebug::extra_debug("$psName not in database");
+            $oRow = static::where('name', $psName)->first();
+            if ($oRow !== null)
+                $iRowID = $oRow->id;
+            else {
                 $oRow = new static();
-                $sTable = $oRow->getTable();
+                $sThisTable = $oRow->getTable();
                 $sMissionTable = tblMissions::get_table_name();
 
-                if ($sTable !== $sMissionTable) {
+                if ($sThisTable !== $sMissionTable) {
                     $oRow->mission_id = $piMissionID;
                 }
-                $oRow->name = $cache_key;
+                $oRow->name = $psName;
                 $oRow->save();
-                $row_id = $oRow->id;
+                $iRowID = $oRow->id;
             }
-            self::$cache[$psName] = $row_id;
+            self::$cache[$sCacheKey] = $iRowID;
         }
-        $classname = get_called_class();
-        cDebug::extra_debug("$classname:  $psName => $row_id");
-
-        cDebug::leave();
-        return $row_id;
+        return $iRowID;
     }
 
     static function create_table(Blueprint $poTable) {
-        cDebug::enter();
         $sTableName = static::get_table_name();
         cDebug::extra_debug("creating table $sTableName");
 
@@ -81,7 +70,6 @@ class tblID extends Model {
             $poTable->integer('mission_id')->index();
             $poTable->foreign('mission_id')->references('id')->on('tblMissions');
         }
-        cDebug::leave();
     }
 }
 

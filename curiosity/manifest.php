@@ -118,7 +118,6 @@ class cCuriosityManifestIndex {
         /** @var cSQLLite $oSqLDB  */
         $oSqLDB = self::$oSQLDB;
         if ($oSqLDB == null) {
-            cDebug::extra_debug("opening cSqlLite database");
             $oSqLDB = new cSqlLite(self::DB_FILENAME);
             self::$oSQLDB = $oSqLDB;
         }
