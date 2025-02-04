@@ -2,6 +2,7 @@
 
 //ORM is eloquent: https://github.com/illuminate/database
 use Illuminate\Database\Capsule\Manager as CapsuleManager;
+use Illuminate\Database\Console\TableCommand;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Schema\Blueprint;
 
@@ -10,6 +11,7 @@ require_once cAppGlobals::$ckPhpInc . "/eloquentorm.php";
 //#############################################################################################
 class tblSols extends Model {
     static function create_table(Blueprint $poTable) {
+        $poTable->increments('id');
         $poTable->integer('sol')->index();
         $poTable->date('last_updated');
         $poTable->integer('catalog_url');
@@ -58,7 +60,7 @@ class tblID extends Model {
         $sTableName = get_called_class();
         cDebug::extra_debug("creating table $sTableName");
 
-        $poTable->integer('id')->index();
+        $poTable->increments('id');
         $poTable->string('name');
         $poTable->unique(['name']);
 
@@ -86,7 +88,7 @@ class tblProducts extends Model {
     static function create_table(Blueprint $poTable) {
         //create table structure
         $poTable->integer('mission_id');
-        $poTable->integer('id');
+        $poTable->increments('id');
         $poTable->integer('sol')->index();
         $poTable->integer('instrument_id')->index();
         $poTable->integer('sample_type_id')->index();
@@ -137,14 +139,11 @@ class cMissionManifest {
     }
 
     static function empty_manifest() {
-        cDebug::enter();
-        $oManager = self::$capsuleManager;
-        $oManager->table("tblSols")->delete();
-        $oManager->table("tblProducts")->delete();
-        $oManager->table("tblInstruments")->delete();
-        $oManager->table("tblSampleType")->delete();
-        $oManager->table("tblMissions")->delete();
-        cDebug::leave();
+        tblSols::truncate();
+        tblProducts::truncate();
+        tblInstruments::truncate();
+        tblSampleType::truncate();
+        tblMissions::truncate();
     }
 
 
