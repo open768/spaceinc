@@ -102,7 +102,6 @@ class cCuriosityManifestIndex {
     const COL_SAMPLE_TYPE = "SA";
     const COL_DATE_ADDED = "DA";
 
-    const SAMPLE_THUMB = "thumbnail";
     const SAMPLE_ALL = 1;
     const SAMPLE_THUMBS = 2;
     const SAMPLE_NONTHUMBS = 3;
@@ -419,7 +418,7 @@ class cCuriosityManifestIndex {
             case self::SAMPLE_NONTHUMBS:
                 $sWhere = "$sWhere AND :sample_col != :sample_type";
                 break;
-            case self::SAMPLE_THUMBS:
+            case cCuriosityProduct::THUMB_SAMPLE_TYPE:
                 $sWhere = "$sWhere AND :sample_col = :sample_type";
         }
 
@@ -439,7 +438,7 @@ class cCuriosityManifestIndex {
             $oBinds->add_bind(":mission", cSpaceMissions::CURIOSITY);
             if ($psInstrument !== null) $oBinds->add_bind(":instr", $psInstrument);
             $oBinds->add_bind(":mission", cSpaceMissions::CURIOSITY);
-            $oBinds->add_bind(":sample_type", cCuriosityManifest::SAMPLE_TYPE_THUMBNAIL);
+            $oBinds->add_bind(":sample_type", cCuriosityProduct::THUMB_SAMPLE_TYPE);
         }
 
         //---------------- exec SQL
@@ -562,7 +561,7 @@ class cCuriosityManifestUtils {
         /** @var cSpaceProductData $oItem */
         foreach ($aManData as $oItem) {
             //ignore thumbnails
-            if ($oItem->sample_type === "thumbnail")
+            if ($oItem->sample_type === cCuriosityProduct::THUMB_SAMPLE_TYPE)
                 continue;
 
             //Get instruments
@@ -659,7 +658,7 @@ class cCuriosityManifestUtils {
         $oBinds = new cSqlBinds; {
             $oBinds->add_bind(":mission", cSpaceMissions::CURIOSITY);
             $oBinds->add_bind(":sol", $psSol);
-            $oBinds->add_bind(":sample_type", cCuriosityManifest::SAMPLE_TYPE_THUMBNAIL);
+            $oBinds->add_bind(":sample_type", cCuriosityProduct::THUMB_SAMPLE_TYPE);
         }
 
         //-----------------------execute SQL
@@ -733,7 +732,7 @@ class cCuriosityManifestUtils {
         $oBinds = new cSqlBinds; {
             $oBinds->add_bind(":mission", cSpaceMissions::CURIOSITY);
             $oBinds->add_bind(":sol", $psSol);
-            $oBinds->add_bind(":sample_type", cCuriosityManifest::SAMPLE_TYPE_THUMBNAIL);
+            $oBinds->add_bind(":sample_type", cCuriosityProduct::THUMB_SAMPLE_TYPE);
         }
         $oSqlDB = cCuriosityManifestIndex::get_db();
 
@@ -780,7 +779,7 @@ class cCuriosityManifestUtils {
         //bind data
         $oBinds = new cSqlBinds; {
             $oBinds->add_bind(":mission", cSpaceMissions::CURIOSITY);
-            $oBinds->add_bind(":thumbnail", cCuriosityManifest::SAMPLE_TYPE_THUMBNAIL);
+            $oBinds->add_bind(":thumbnail", cCuriosityProduct::THUMB_SAMPLE_TYPE);
 
             if (!$pbAnyInstrument)
                 $oBinds->add_bind(":instr", $sInstrument);
@@ -829,7 +828,6 @@ class cCuriosityManifest {
     const SOL_URL = "https://mars.jpl.nasa.gov/msl-raw-images/image/images_sol";
     const SOL_CACHE = 7 * 24 * 3600;    //1 week
     const FEED_SLEEP = 200; //milliseconds
-    const SAMPLE_TYPE_THUMBNAIL = "thumbnail";
     static $cached_manifest = null;
     private static $dont_check_sol_index = false;
 

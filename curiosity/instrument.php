@@ -37,7 +37,7 @@ class cCuriosityInstrument {
         //dont add thumbnail products if not wanted
 
         $bProceed = false;
-        if ($poCuriosityData->sampleType === "thumbnail")
+        if ($poCuriosityData->sampleType === cCuriosityProduct::THUMB_SAMPLE_TYPE)
             $bProceed = $pbThumbs;
         else
             $bProceed = !$pbThumbs;

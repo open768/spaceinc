@@ -21,6 +21,7 @@ require_once  cAppGlobals::$spaceInc . "/curiosity/instrument.php";
 require_once  cAppGlobals::$spaceInc . "/curiosity/static.php";
 require_once  cAppGlobals::$spaceInc . "/curiosity/curiositypds.php";
 require_once  cAppGlobals::$spaceInc . "/curiosity/manifest.php";
+require_once  cAppGlobals::$spaceInc . "/curiosity/product.php";
 
 
 //##########################################################################
