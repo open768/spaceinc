@@ -87,7 +87,6 @@ class cCuriosityORMManifest {
                 TransactionsORM::rollBack();
                 cDebug::error("unable to index sol $sSol: $e ");
             }
-            cDebug::error("stopping here");
         }
         cCuriosityManifestIndexStatus::put_status(cCuriosityManifestIndexStatus::STATUS_COMPLETE);
         cDebug::leave();
@@ -102,7 +101,9 @@ class cCuriosityORMManifest {
     //*****************************************************************************
 
     static function add_to_index($pisol, $poItem) {
-        //cDebug::vardump($poItem);
+        cDebug::enter();
+
+        if (cDebug::is_debugging())   cCommon::flushprint(".");
         // Convert sampletype and instrument to integer lookups
         $iMission = self::$mission_id;
         $iSampleTypeID = tblSampleType::get_id($iMission, $poItem->sampleType);
@@ -120,6 +121,8 @@ class cCuriosityORMManifest {
         $oProduct->utc_date = $poItem->utc;
         $oProduct->drive = $poItem->drive;
         $oProduct->save();
+
+        cDebug::leave();
     }
 
     //*****************************************************************************
@@ -130,11 +133,17 @@ class cCuriosityORMManifest {
         if ($pbReindex) self::delete_sol_index($piSol);
 
         $bCheckExpiry = !$pbReindex;
-        $oSolData = cCuriosityManifest::getSolRawData($piSol, $bCheckExpiry); //this is needed
+        $oSolData = cCuriosityManifest::getSolRawData($piSol, $bCheckExpiry, false); //this is needed
 
         $aImages = $oSolData->images;
         if ($aImages === null) cDebug::error("no image data");
 
+        if (sizeof($aImages) == 0) {
+            cDebug::write("no data in sol:$piSol, but thats ok");
+            return;
+        }
+
+        cDebug::write("processing images in sol:$piSol");
         foreach ($aImages as $sKey => $oImgData)
             self::add_to_index($piSol, $oImgData);
 

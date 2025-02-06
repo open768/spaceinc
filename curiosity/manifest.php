@@ -888,7 +888,7 @@ class cCuriosityManifest {
     }
 
     //*****************************************************************************
-    public static function getSolRawData($psSol, $pbCheckExpiry = true) {
+    public static function getSolRawData($psSol, $pbCheckExpiry = true, $pbIndexMissing = false) {
         cDebug::enter();
 
         $sUrl = self::getSolJsonUrl($psSol);
@@ -905,7 +905,7 @@ class cCuriosityManifest {
             cDebug::write("nothing found - sol doesnt exist at $sUrl");
         elseif (! self::$dont_check_sol_index) {
             $bInIndex = cCuriosityManifestIndex::is_sol_in_index($psSol);
-            if (!$bInIndex) {
+            if (!$bInIndex && $pbIndexMissing) {
                 self::$dont_check_sol_index = true;
                 cDebug::extra_debug_warning("sol found, but isnt in manifestindex.. ");
                 try {
