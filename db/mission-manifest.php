@@ -103,8 +103,8 @@ class tblProducts extends tblModel {
     const IMAGE_URL = 'image_url';
     const PRODUCT = 'product';
     const UTC_DATE = 'utc_date';
-    const UPDATED_AT = 'updated_at';
     const DRIVE = 'drive';
+
 
     static function create_table(Blueprint $poTable) {
         //create table structure
@@ -117,13 +117,16 @@ class tblProducts extends tblModel {
         $poTable->text(self::IMAGE_URL);
         $poTable->text(self::PRODUCT)->index();
         $poTable->dateTime(self::UTC_DATE);
-        $poTable->dateTime(self::UPDATED_AT);
         $poTable->integer(self::DRIVE)->index();
 
         //add relationships
         $poTable->foreign(cColumns::MISSION_ID)->references(cColumns::ID)->on(tblMissions::get_table_name());
         $poTable->foreign(self::INSTRUMENT_ID)->references(cColumns::ID)->on(tblInstruments::get_table_name());
+        $poTable->foreign(self::SAMPLE_TYPE_ID)->references(cColumns::ID)->on(tblSampleType::get_table_name());
         $poTable->unique([cColumns::SOL, self::INSTRUMENT_ID, self::PRODUCT, self::SAMPLE_TYPE_ID]);
+    }
+
+    static function reduce_url($psUrl) {
     }
 }
 
@@ -175,25 +178,6 @@ class cMissionManifest {
         }
         //create the table if it does not exist
         self::check_tables();
-    }
-
-    static function add_to_index($poItem) {
-        // Convert sampletype and instrument to integer lookups
-        $iSampleTypeID = tblSampleType::get_id(null, $poItem->sampletype);
-        $iInstrumentID = tblInstruments::get_id(null, $poItem->instrument);
-
-        // Create a new row in tblProducts
-        $oProduct = new tblProducts();
-        $oProduct->{cColumns::MISSION_ID} = $poItem->mission_id;
-        $oProduct->{cColumns::SOL} = $poItem->sol;
-        $oProduct->{tblProducts::INSTRUMENT_ID} = $iInstrumentID;
-        $oProduct->{tblProducts::SAMPLE_TYPE_ID} = $iSampleTypeID;
-        $oProduct->{tblProducts::SITE} = $poItem->site;
-        $oProduct->{tblProducts::IMAGE_URL} = $poItem->image_url;
-        $oProduct->{tblProducts::PRODUCT} = $poItem->product;
-        $oProduct->{tblProducts::UTC_DATE} = $poItem->utc_date;
-        $oProduct->{tblProducts::DRIVE} = $poItem->drive;
-        $oProduct->save();
     }
 }
 cMissionManifest::init();

@@ -102,8 +102,6 @@ class cCuriosityORMManifest {
     //*****************************************************************************
 
     static function add_to_index($pisol, $poItem) {
-        cDebug::enter();
-
         //cDebug::vardump($poItem);
         // Convert sampletype and instrument to integer lookups
         $iMission = self::$mission_id;
@@ -117,19 +115,17 @@ class cCuriosityORMManifest {
         $oProduct->instrument_id = $iInstrumentID;
         $oProduct->sample_type_id = $iSampleTypeID;
         $oProduct->site = $poItem->site;
-        $oProduct->image_url = $poItem->urlList;
+        $oProduct->image_url = cCuriosity::reduce_image_url($poItem->urlList);
         $oProduct->product = $poItem->itemName;
         $oProduct->utc_date = $poItem->utc;
         $oProduct->drive = $poItem->drive;
         $oProduct->save();
-
-        cDebug::leave();
     }
 
     //*****************************************************************************
     static function index_sol(int $piSol, $sLastUpdatedValue, bool $pbReindex) {
         cDebug::enter();
-        cDebug::extra_debug("indexing sol:$piSol");
+        cDebug::write("indexing sol:$piSol");
 
         if ($pbReindex) self::delete_sol_index($piSol);
 
