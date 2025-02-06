@@ -6,27 +6,42 @@ use Illuminate\Database\Schema\Blueprint;
 
 require_once cAppGlobals::$ckPhpInc . "/eloquentorm.php";
 
-//#############################################################################################
-class tblSols extends Model {
-    static function create_table(Blueprint $poTable) {
-        $poTable->increments('id');
-        $poTable->integer('sol')->index();
-        $poTable->date('last_updated');
-        $poTable->integer('catalog_url');
+class cColumns {
+    const MISSION_ID = "mission_id";
+    const ID = 'id';
+    const SOL = 'sol';
+}
 
-        $poTable->unique(['sol']);
+class tblModel extends Model {
+    public $timestamps = false;
+    static function get_table_name() {
+        return (new static())->getTable();
     }
 }
 
 //#############################################################################################
-class tblID extends Model {
-    static $cache = [];
-    protected $fillable = ['name'];
-    public $timestamps = false;
+class tblSols extends tblModel {
+    const LAST_UPDATED = 'last_updated';
+    const CATALOG_URL = 'catalog_url';
 
-    static function get_table_name() {
-        return (new static())->getTable();
+    static function create_table(Blueprint $poTable) {
+        $poTable->increments(cColumns::ID);
+        $poTable->integer(cColumns::SOL)->index();
+        $poTable->date(self::LAST_UPDATED);
+        $poTable->integer(self::CATALOG_URL);
+
+        $poTable->unique([cColumns::SOL]);
     }
+}
+
+//#############################################################################################
+class tblID extends tblModel {
+    const ID = "id";
+    const NAME = "name";
+
+    static $cache = [];
+    protected $fillable = [self::NAME];
+
 
 
     static function get_id($piMissionID, $psName) {
@@ -35,7 +50,7 @@ class tblID extends Model {
         if (isset(self::$cache[$sCacheKey])) {
             $iRowID = self::$cache[$sCacheKey];
         } else {
-            $oRow = static::where('name', $psName)->first();
+            $oRow = static::where(self::NAME, $psName)->first();
             if ($oRow !== null)
                 $iRowID = $oRow->id;
             else {
@@ -59,14 +74,14 @@ class tblID extends Model {
         $sTableName = static::get_table_name();
         cDebug::extra_debug("creating table $sTableName");
 
-        $poTable->increments('id');
-        $poTable->string('name');
-        $poTable->unique(['name']);
+        $poTable->increments(self::ID);
+        $poTable->string(self::NAME);
+        $poTable->unique([self::NAME]);
 
-        $sMissionTable = tblMissions::get_table_id();
+        $sMissionTable = tblMissions::get_table_name();
         if ($sTableName !== $sMissionTable) {
-            $poTable->integer('mission_id')->index();
-            $poTable->foreign('mission_id')->references('id')->on('tblMissions');
+            $poTable->integer(cColumns::MISSION_ID)->index();
+            $poTable->foreign(cColumns::MISSION_ID)->references(cColumns::ID)->on($sMissionTable);
         }
     }
 }
@@ -81,24 +96,34 @@ class tblSampleType extends tblID {
 
 //#############################################################################################
 //https://mars.nasa.gov/msl-raw-images/image/images_sol4413.json
-class tblProducts extends Model {
+class tblProducts extends tblModel {
+    const INSTRUMENT_ID = 'instrument_id';
+    const SAMPLE_TYPE_ID = 'sample_type_id';
+    const SITE = 'site';
+    const IMAGE_URL = 'image_url';
+    const PRODUCT = 'product';
+    const UTC_DATE = 'utc_date';
+    const UPDATED_AT = 'updated_at';
+    const DRIVE = 'drive';
+
     static function create_table(Blueprint $poTable) {
         //create table structure
-        $poTable->integer('mission_id');
-        $poTable->increments('id');
-        $poTable->integer('sol')->index();
-        $poTable->integer('instrument_id')->index();
-        $poTable->integer('sample_type_id')->index();
-        $poTable->integer('site')->index();
-        $poTable->text('image_url');
-        $poTable->text('product')->index();
-        $poTable->dateTime('utc-date');
-        $poTable->integer('drive')->index();
+        $poTable->integer(cColumns::MISSION_ID);
+        $poTable->increments(cColumns::ID);
+        $poTable->integer(cColumns::SOL)->index();
+        $poTable->integer(self::INSTRUMENT_ID)->index();
+        $poTable->integer(self::SAMPLE_TYPE_ID)->index();
+        $poTable->integer(self::SITE)->index();
+        $poTable->text(self::IMAGE_URL);
+        $poTable->text(self::PRODUCT)->index();
+        $poTable->dateTime(self::UTC_DATE);
+        $poTable->dateTime(self::UPDATED_AT);
+        $poTable->integer(self::DRIVE)->index();
 
         //add relationships
-        $poTable->foreign('mission_id')->references('id')->on('tblMissions');
-        $poTable->foreign('instrument_id')->references('id')->on('tblInstruments');
-        $poTable->unique(['sol', 'instrument_id', 'product', 'sample_type_id']);
+        $poTable->foreign(cColumns::MISSION_ID)->references(cColumns::ID)->on(tblMissions::get_table_name());
+        $poTable->foreign(self::INSTRUMENT_ID)->references(cColumns::ID)->on(tblInstruments::get_table_name());
+        $poTable->unique([cColumns::SOL, self::INSTRUMENT_ID, self::PRODUCT, self::SAMPLE_TYPE_ID]);
     }
 }
 
@@ -150,6 +175,25 @@ class cMissionManifest {
         }
         //create the table if it does not exist
         self::check_tables();
+    }
+
+    static function add_to_index($poItem) {
+        // Convert sampletype and instrument to integer lookups
+        $iSampleTypeID = tblSampleType::get_id(null, $poItem->sampletype);
+        $iInstrumentID = tblInstruments::get_id(null, $poItem->instrument);
+
+        // Create a new row in tblProducts
+        $oProduct = new tblProducts();
+        $oProduct->{cColumns::MISSION_ID} = $poItem->mission_id;
+        $oProduct->{cColumns::SOL} = $poItem->sol;
+        $oProduct->{tblProducts::INSTRUMENT_ID} = $iInstrumentID;
+        $oProduct->{tblProducts::SAMPLE_TYPE_ID} = $iSampleTypeID;
+        $oProduct->{tblProducts::SITE} = $poItem->site;
+        $oProduct->{tblProducts::IMAGE_URL} = $poItem->image_url;
+        $oProduct->{tblProducts::PRODUCT} = $poItem->product;
+        $oProduct->{tblProducts::UTC_DATE} = $poItem->utc_date;
+        $oProduct->{tblProducts::DRIVE} = $poItem->drive;
+        $oProduct->save();
     }
 }
 cMissionManifest::init();

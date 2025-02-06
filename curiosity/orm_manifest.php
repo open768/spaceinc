@@ -19,7 +19,7 @@ class cCuriosityORMManifest {
     static $mission_id = null;
 
     static function init() {
-        $mission_id = tblMissions::get_id(null, cCuriosity::MISSION_ID);
+        self::$mission_id = tblMissions::get_id(null, cCuriosity::MISSION_ID);
     }
 
     static function empty_ORM_tables() {
@@ -87,34 +87,68 @@ class cCuriosityORMManifest {
                 TransactionsORM::rollBack();
                 cDebug::error("unable to index sol $sSol: $e ");
             }
+            cDebug::error("stopping here");
         }
         cCuriosityManifestIndexStatus::put_status(cCuriosityManifestIndexStatus::STATUS_COMPLETE);
         cDebug::leave();
     }
 
     //*****************************************************************************
-    static function index_sol(string $psSol, $sLastUpdatedValue, bool $pbReindex) {
-        cDebug::extra_debug("indexing sol:$psSol");
+    static function delete_sol_index(int $piSol) {
+        $iMission = self::$mission_id;
+        tblProducts::where("mission_id", $iMission)->where('sol', $piSol)->delete();
+    }
 
-        if ($pbReindex) self::delete_sol_index($psSol);
+    //*****************************************************************************
+
+    static function add_to_index($pisol, $poItem) {
+        cDebug::enter();
+
+        //cDebug::vardump($poItem);
+        // Convert sampletype and instrument to integer lookups
+        $iMission = self::$mission_id;
+        $iSampleTypeID = tblSampleType::get_id($iMission, $poItem->sampleType);
+        $iInstrumentID = tblInstruments::get_id($iMission, $poItem->instrument);
+
+        // Create a new row in tblProducts
+        $oProduct = new tblProducts();
+        $oProduct->mission_id = $iMission;
+        $oProduct->sol = $poItem->sol;
+        $oProduct->instrument_id = $iInstrumentID;
+        $oProduct->sample_type_id = $iSampleTypeID;
+        $oProduct->site = $poItem->site;
+        $oProduct->image_url = $poItem->urlList;
+        $oProduct->product = $poItem->itemName;
+        $oProduct->utc_date = $poItem->utc;
+        $oProduct->drive = $poItem->drive;
+        $oProduct->save();
+
+        cDebug::leave();
+    }
+
+    //*****************************************************************************
+    static function index_sol(int $piSol, $sLastUpdatedValue, bool $pbReindex) {
+        cDebug::enter();
+        cDebug::extra_debug("indexing sol:$piSol");
+
+        if ($pbReindex) self::delete_sol_index($piSol);
 
         $bCheckExpiry = !$pbReindex;
-        $oSolData = cCuriosityManifest::getSolRawData($psSol, $bCheckExpiry); //this is needed
+        $oSolData = cCuriosityManifest::getSolRawData($piSol, $bCheckExpiry); //this is needed
 
         $aImages = $oSolData->images;
         if ($aImages === null) cDebug::error("no image data");
 
         foreach ($aImages as $sKey => $oImgData)
-            self::add_to_index($psSol, $oImgData);
-
+            self::add_to_index($piSol, $oImgData);
 
         if (cDebug::is_debugging())
             cPageOutput::scroll_to_bottom();
 
-
         //update the status
-        cCuriosityManifestIndexStatus::put_last_indexed_sol($psSol);
-        cCuriosityManifestIndexStatus::put_sol_last_updated($psSol, $sLastUpdatedValue);
+        cCuriosityManifestIndexStatus::put_last_indexed_sol($piSol);
+        cCuriosityManifestIndexStatus::put_sol_last_updated($piSol, $sLastUpdatedValue);
+        cDebug::leave();
     }
 }
 
