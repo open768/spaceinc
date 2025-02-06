@@ -14,6 +14,31 @@ require_once "manifest.php";
 require_once cAppGlobals::$spaceInc . "/db/mission-manifest.php";
 require_once  cAppGlobals::$spaceInc . "/curiosity/curiosity.php";
 
+class cManifestUtils {
+    static $replacements = [
+        "http://mars.jpl.nasa.gov/msl-raw-images/msss/" => "{ms}",
+        "http://mars.jpl.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/" => "{red}",
+        "http://mars.jpl.nasa.gov/msl-raw-images/ods/surface/sol/" => "{ods}",
+        ".jpg" => "{jp}",
+        ".png" => "{pn}",
+    ];
+
+    static function reduce_image_url($psUrl, $psProduct) {
+        $sOut = str_replace($psProduct, "{P}", $psUrl);
+        foreach (self::$replacements as $sSearch => $sReplace) {
+            $sOut = str_replace($sSearch, $sReplace, $sOut);
+        }
+        return $sOut;
+    }
+
+    static function expand_image_url($psUrl, $psProduct) {
+        $sOut = str_replace("{P}", $psProduct, $psUrl);
+        foreach (self::$replacements as $sReplace => $sSearch) {
+            $sOut = str_replace($sSearch, $sReplace, $sOut);
+        }
+        return $sOut;
+    }
+}
 
 class cCuriosityORMManifest {
     static $mission_id = null;
@@ -25,6 +50,7 @@ class cCuriosityORMManifest {
     static function empty_ORM_tables() {
         //drop all tables in the manifest
         cDebug::enter();
+        cCuriosityManifestIndexStatus::clear_status();
         cMissionManifest::empty_manifest();
         cDebug::leave();
     }
@@ -32,8 +58,6 @@ class cCuriosityORMManifest {
     static function updateIndex() {
         cDebug::enter();
 
-        //reset index status for DEBUGGING PRUPOSES
-        //cCuriosityManifestIndexStatus::clear_status();
 
         //----------get manifest
         cDebug::write("getting sol Manifest");
@@ -116,7 +140,7 @@ class cCuriosityORMManifest {
         $oProduct->instrument_id = $iInstrumentID;
         $oProduct->sample_type_id = $iSampleTypeID;
         $oProduct->site = $poItem->site;
-        $oProduct->image_url = cCuriosity::reduce_image_url($poItem->urlList);
+        $oProduct->image_url = cManifestUtils::reduce_image_url($poItem->urlList, $poItem->itemName);
         $oProduct->product = $poItem->itemName;
         $oProduct->utc_date = $poItem->utc;
         $oProduct->drive = $poItem->drive;

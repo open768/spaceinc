@@ -32,7 +32,7 @@ class cCuriosity implements iMission {
     const MISSION_NAME = "curiosity";
     const MISSION_ID = "msl";
     const MISSION_URL = "https://science.nasa.gov/mission/msl-curiosity/";
-    const IMG_URL_PREFIX = "http://mars.jpl.nasa.gov/msl-raw-images/msss/";
+
 
     private static $Instruments, $instrument_map;
 
@@ -49,9 +49,7 @@ class cCuriosity implements iMission {
         return self::MISSION_URL;
     }
 
-    static function reduce_image_url($psUrl) {
-        return str_replace(self::IMG_URL_PREFIX, '', $psUrl);
-    }
+    
 
     //*****************************************************************************
     public static function search_product($psSearch) {
