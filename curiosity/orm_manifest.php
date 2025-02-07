@@ -16,11 +16,15 @@ require_once  cAppGlobals::$spaceInc . "/curiosity/curiosity.php";
 
 class cManifestUtils {
     static $replacements = [
-        "http://mars.jpl.nasa.gov/msl-raw-images/msss/" => "{ms}",
-        "http://mars.jpl.nasa.gov/msl-raw-images/proj/msl/redops/ods/surface/sol/" => "{red}",
-        "http://mars.jpl.nasa.gov/msl-raw-images/ods/surface/sol/" => "{ods}",
-        ".jpg" => "{jp}",
-        ".png" => "{pn}",
+        "http://" => "{1}",
+        "https://" => "{2}",
+        "mars.jpl.nasa.gov/msl-raw-images/" => "{3}",
+        "mars.nasa.gov/msl-raw-images/" => "{4}",
+        "proj/msl/redops/ods/surface/sol/" => "{5}",
+        "ods/surface/sol/" => "{6}",
+        "{1}{3}msss/" => "{7}",
+        "opgs/edr" => "{8}",
+        "soas/rdr/" => "{9}"
     ];
 
     static function reduce_image_url($psUrl, $psProduct) {
