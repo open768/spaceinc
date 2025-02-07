@@ -827,7 +827,7 @@ class cCuriosityManifest {
     const FEED_URL = "https://mars.jpl.nasa.gov/msl-raw-images/image/image_manifest.json";
     const SOL_URL = "https://mars.jpl.nasa.gov/msl-raw-images/image/images_sol";
     const SOL_CACHE = 7 * 24 * 3600;    //1 week
-    const FEED_SLEEP = 200; //milliseconds
+    const FEED_SLEEP = 100; //milliseconds
     static $cached_manifest = null;
     private static $dont_check_sol_index = false;
 
