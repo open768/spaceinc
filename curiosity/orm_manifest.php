@@ -74,8 +74,11 @@ class cCuriosityORMManifest {
             $sLastIndexedSol = cCuriosityManifestIndexStatus::get_last_indexed_sol();
             $sLatestManifestSol = $oManifest->latest_sol;
             cDebug::write("last indexed sol was: $sLastIndexedSol, latest manifest sol: $sLatestManifestSol");
-            if ($sLastIndexedSol >= $sLatestManifestSol)
+            if ($sLastIndexedSol >= $sLatestManifestSol) {
+                cDebug::write("vacuuming database");
+                TransactionsORM::vacuum();
                 cDebug::error("indexing allready complete");
+            }
         }
 
         //----------get last indexed sol  odb
@@ -116,6 +119,10 @@ class cCuriosityORMManifest {
                 cDebug::error("unable to index sol $sSol: $e ");
             }
         }
+        cDebug::write("vacuuming database");
+        TransactionsORM::vacuum();
+
+        cDebug::extra_debug("completed");
         cCuriosityManifestIndexStatus::put_status(cCuriosityManifestIndexStatus::STATUS_COMPLETE);
         cDebug::leave();
     }
