@@ -69,6 +69,7 @@ class cCuriosityORMManifest {
 
         //----------get status from odb
         $sStatus = cCuriosityManifestIndexStatus::get_status();
+        $oORMTransaction = new TransactionsORM(cMissionManifest::DBNAME);
 
         if ($sStatus === cCuriosityManifestIndexStatus::STATUS_COMPLETE) {
             $sLastIndexedSol = cCuriosityManifestIndexStatus::get_last_indexed_sol();
@@ -76,7 +77,7 @@ class cCuriosityORMManifest {
             cDebug::write("last indexed sol was: $sLastIndexedSol, latest manifest sol: $sLatestManifestSol");
             if ($sLastIndexedSol >= $sLatestManifestSol) {
                 cDebug::write("vacuuming database");
-                TransactionsORM::vacuum();
+                $oORMTransaction->vacuum();
                 cDebug::error("indexing allready complete");
             }
         }
@@ -90,6 +91,8 @@ class cCuriosityORMManifest {
         $aSols = $oManifest->sols;
         ksort($aSols, SORT_NUMERIC);
 
+
+        $oORMTransaction = new TransactionsORM(cMissionManifest::DBNAME);
 
         //---------------iterate manifest
         foreach ($aSols as $number => $oSol) {
@@ -110,17 +113,17 @@ class cCuriosityORMManifest {
             if (!$bReindex) continue;
 
             //-------perform the index
-            TransactionsORM::beginTransaction();
+            $oORMTransaction->beginTransaction();
             try {
                 self::index_sol($sSol, $sManifestLastUpdated, $bReindex);
-                TransactionsORM::commit();
+                $oORMTransaction->commit();
             } catch (Exception $e) {
-                TransactionsORM::rollBack();
+                $oORMTransaction->rollBack();
                 cDebug::error("unable to index sol $sSol: $e ");
             }
         }
         cDebug::write("vacuuming database");
-        TransactionsORM::vacuum();
+        $oORMTransaction->vacuum();
 
         cDebug::extra_debug("completed");
         cCuriosityManifestIndexStatus::put_status(cCuriosityManifestIndexStatus::STATUS_COMPLETE);

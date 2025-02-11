@@ -14,8 +14,12 @@ class cColumns {
 
 class tblModel extends Model {
     public $timestamps = false;
+    protected $connection = cMissionManifest::DBNAME;
     static function get_table_name() {
         return (new static())->getTable();
+    }
+    public function getConnectionName() {
+        return cMissionManifest::DBNAME;
     }
 }
 
@@ -41,8 +45,6 @@ class tblID extends tblModel {
 
     static $cache = [];
     protected $fillable = [self::NAME];
-
-
 
     static function get_id($piMissionID, $psName) {
         $iRowID = null;
@@ -105,7 +107,6 @@ class tblProducts extends tblModel {
     const UTC_DATE = 'utc_date';
     const DRIVE = 'drive';
 
-
     static function create_table(Blueprint $poTable) {
         //create table structure
         $poTable->integer(cColumns::MISSION_ID);
@@ -134,14 +135,11 @@ class tblProducts extends tblModel {
 class cMissionManifest {
     const DBNAME = "manifest_orm.db";
 
-    static $capsuleManager = null;
+    static $bAddedConnection = false;
 
     //**********************************************************************************************
     static function check_tables() {
         cDebug::enter();
-
-        /** @var CapsuleManager $oManager*/
-        $oManager = self::$capsuleManager;
 
         //check SOLS_TABLE_NAME table exists
         $aClasses = [
@@ -155,7 +153,7 @@ class cMissionManifest {
         foreach ($aClasses as $oModelClass) {
             $oInstance = (new $oModelClass);
             $sTableName = $oInstance->getTable();
-            cEloquentORM::create_table($sTableName, function ($poTable) use ($oModelClass) {
+            cEloquentORM::create_table(self::DBNAME, $sTableName, function ($poTable) use ($oModelClass) {
                 $oModelClass::create_table($poTable);
             });
         }
@@ -172,12 +170,13 @@ class cMissionManifest {
     }
 
     static function init() {
-        if (self::$capsuleManager == null) {
-            $oCapsule = cEloquentORM::init_db(self::DBNAME);
-            self::$capsuleManager = $oCapsule;
+        if (!self::$bAddedConnection) {
+            cEloquentORM::add_connection(self::DBNAME);
+            self::$bAddedConnection = true;
+
+            //check that tables have been created
+            self::check_tables();
         }
-        //create the table if it does not exist
-        self::check_tables();
     }
 }
 cMissionManifest::init();
