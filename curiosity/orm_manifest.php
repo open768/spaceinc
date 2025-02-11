@@ -54,6 +54,7 @@ class cCuriosityORMManifest {
     static function empty_ORM_tables() {
         //drop all tables in the manifest
         cDebug::enter();
+        cDebug::write("emptying manifest");
         cCuriosityManifestIndexStatus::clear_status();
         cMissionManifest::empty_manifest();
         cDebug::leave();
@@ -69,7 +70,6 @@ class cCuriosityORMManifest {
 
         //----------get status from odb
         $sStatus = cCuriosityManifestIndexStatus::get_status();
-        $oORMTransaction = new TransactionsORM(cMissionManifest::DBNAME);
 
         if ($sStatus === cCuriosityManifestIndexStatus::STATUS_COMPLETE) {
             $sLastIndexedSol = cCuriosityManifestIndexStatus::get_last_indexed_sol();
@@ -77,7 +77,7 @@ class cCuriosityORMManifest {
             cDebug::write("last indexed sol was: $sLastIndexedSol, latest manifest sol: $sLatestManifestSol");
             if ($sLastIndexedSol >= $sLatestManifestSol) {
                 cDebug::write("vacuuming database");
-                $oORMTransaction->vacuum();
+                cEloquentORM::vacuum(cMissionManifest::DBNAME);
                 cDebug::error("indexing allready complete");
             }
         }
@@ -90,19 +90,19 @@ class cCuriosityORMManifest {
         cDebug::write("processing sol Manifest");
         $aSols = $oManifest->sols;
         ksort($aSols, SORT_NUMERIC);
-
-
-        $oORMTransaction = new TransactionsORM(cMissionManifest::DBNAME);
+        $sLastManifestSol = array_key_last($aSols);
+        cDebug::write("last sol in manifest is $sLastManifestSol");
 
         //---------------iterate manifest
         foreach ($aSols as $number => $oSol) {
             $sSol = $oSol->sol;
+            cDebug::write("processing sol:$sSol");
             $bReindex = false;
 
             //- - - - - - - - -check when SOL was  last updated
             $sStoredLastUpdated = cCuriosityManifestIndexStatus::get_sol_last_updated($sSol);
             $sManifestLastUpdated = $oSol->last_updated;
-            //cDebug::write("stored lastindex:$sStoredLastUpdated, manifest date:$sManifestLastUpdated");
+            cDebug::write("stored lastindex:$sStoredLastUpdated, manifest date:$sManifestLastUpdated");
             if ($sStoredLastUpdated == null)
                 $bReindex = true;
             elseif ($sStoredLastUpdated < $sManifestLastUpdated)
@@ -113,17 +113,17 @@ class cCuriosityORMManifest {
             if (!$bReindex) continue;
 
             //-------perform the index
-            $oORMTransaction->beginTransaction();
+            cEloquentORM::beginTransaction(cMissionManifest::DBNAME);
             try {
                 self::index_sol($sSol, $sManifestLastUpdated, $bReindex);
-                $oORMTransaction->commit();
+                cEloquentORM::commit(cMissionManifest::DBNAME);
             } catch (Exception $e) {
-                $oORMTransaction->rollBack();
+                cEloquentORM::rollBack(cMissionManifest::DBNAME);
                 cDebug::error("unable to index sol $sSol: $e ");
             }
         }
         cDebug::write("vacuuming database");
-        $oORMTransaction->vacuum();
+        cEloquentORM::vacuum(cMissionManifest::DBNAME);
 
         cDebug::extra_debug("completed");
         cCuriosityManifestIndexStatus::put_status(cCuriosityManifestIndexStatus::STATUS_COMPLETE);

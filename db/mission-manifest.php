@@ -136,21 +136,20 @@ class cMissionManifest {
     const DBNAME = "manifest_orm.db";
 
     static $bAddedConnection = false;
+    static $models = [
+        tblSols::class,
+        tblProducts::class,
+        tblInstruments::class,
+        tblSampleType::class,
+        tblMissions::class
+    ];
 
     //**********************************************************************************************
     static function check_tables() {
         cDebug::enter();
 
         //check SOLS_TABLE_NAME table exists
-        $aClasses = [
-            tblSols::class,
-            tblProducts::class,
-            tblInstruments::class,
-            tblSampleType::class,
-            tblMissions::class
-        ];
-
-        foreach ($aClasses as $oModelClass) {
+        foreach (self::$models as $oModelClass) {
             $oInstance = (new $oModelClass);
             $sTableName = $oInstance->getTable();
             cEloquentORM::create_table(self::DBNAME, $sTableName, function ($poTable) use ($oModelClass) {
@@ -162,11 +161,12 @@ class cMissionManifest {
     }
 
     static function empty_manifest() {
-        tblSols::truncate();
-        tblProducts::truncate();
-        tblInstruments::truncate();
-        tblSampleType::truncate();
-        tblMissions::truncate();
+        cDebug::enter();
+        foreach (self::$models as $oModelClass) {
+            cDebug::write("truncating " . $oModelClass);
+            $oModelClass::truncate();
+        }
+        cDebug::leave();
     }
 
     static function init() {
