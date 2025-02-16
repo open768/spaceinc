@@ -3,6 +3,7 @@
 //ORM is eloquent: https://github.com/illuminate/database
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Date;
 
 require_once cAppGlobals::$ckPhpInc . "/eloquentorm.php";
 
@@ -12,14 +13,27 @@ class cColumns {
     const SOL = 'sol';
 }
 
-class tblModel extends Model {
+abstract class tblModel extends Model {
     public $timestamps = false;
     protected $connection = cMissionManifest::DBNAME;
+    protected $guarded = [];
+
     static function get_table_name() {
         return (new static())->getTable();
     }
     public function getConnectionName() {
         return cMissionManifest::DBNAME;
+    }
+
+    abstract static function create_table(Blueprint $poTable);
+
+    static function add_mission_column(Blueprint $poTable) {
+        $sTableName = static::get_table_name();
+        $sMissionTable = tblMissions::get_table_name();
+        if ($sTableName !== $sMissionTable) {
+            $poTable->integer(cColumns::MISSION_ID)->index();
+            $poTable->foreign(cColumns::MISSION_ID)->references(cColumns::ID)->on($sMissionTable);
+        }
     }
 }
 
@@ -80,11 +94,7 @@ class tblID extends tblModel {
         $poTable->string(self::NAME);
         $poTable->unique([self::NAME]);
 
-        $sMissionTable = tblMissions::get_table_name();
-        if ($sTableName !== $sMissionTable) {
-            $poTable->integer(cColumns::MISSION_ID)->index();
-            $poTable->foreign(cColumns::MISSION_ID)->references(cColumns::ID)->on($sMissionTable);
-        }
+        static::add_mission_column($poTable);
     }
 }
 
@@ -132,7 +142,52 @@ class tblProducts extends tblModel {
 }
 
 //#############################################################################################
+class tblSolStatus extends tblModel {
+    const LAST_INGESTED = "LAST_INGEST";
+
+    static function create_table(Blueprint $poTable) {
+        $poTable->integer(cColumns::SOL)->index();
+        $poTable->date(self::LAST_INGESTED);
+
+        $poTable->unique([cColumns::SOL]);
+        static::add_mission_column($poTable);
+    }
+
+    static function get_last_updated(int $piMissionID, int $piSol): ?Date {
+        $row = static::where(cColumns::MISSION_ID, $piMissionID)
+            ->where(cColumns::SOL, $piSol)
+            ->first();
+
+        if ($row)
+            return $row->{self::LAST_INGESTED};
+
+        return null;
+    }
+
+    static function put_last_updated(int $piMissionID, int $piSol, $pdDate): void {
+        $convertedDate = $pdDate;
+        if (is_string($convertedDate)) {
+            $convertedDate = new DateTime($pdDate);
+        }
+
+        $sDate = $convertedDate->format(cSqlLite::SQLITE_DATE_FORMAT);
+        cDebug::write("mission:$piMissionID, sol:$piSol, date:" . $sDate);
+
+        static::updateOrCreate(
+            [
+                cColumns::MISSION_ID => $piMissionID,
+                cColumns::SOL => $piSol
+            ],
+            [
+                self::LAST_INGESTED => $sDate
+            ]
+        );
+    }
+}
+
+//#############################################################################################
 class cMissionManifest {
+    //https://mars.nasa.gov/msl-raw-images/image/images_sol4413.json
     const DBNAME = "manifest_orm.db";
 
     static $bAddedConnection = false;
@@ -141,7 +196,8 @@ class cMissionManifest {
         tblProducts::class,
         tblInstruments::class,
         tblSampleType::class,
-        tblMissions::class
+        tblMissions::class,
+        tblSolStatus::class
     ];
 
     //**********************************************************************************************

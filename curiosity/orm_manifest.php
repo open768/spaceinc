@@ -14,6 +14,7 @@ require_once "manifest.php";
 require_once cAppGlobals::$spaceInc . "/db/mission-manifest.php";
 require_once  cAppGlobals::$spaceInc . "/curiosity/curiosity.php";
 
+//################################################################################
 class cManifestUtils {
     static $replacements = [
         "http://" => "{1}",
@@ -44,7 +45,9 @@ class cManifestUtils {
     }
 }
 
+//################################################################################
 class cCuriosityORMManifest {
+    //const FEED_URL = "https://mars.jpl.nasa.gov/msl-raw-images/image/image_manifest.json";
     static $mission_id = null;
 
     static function init() {
@@ -96,13 +99,11 @@ class cCuriosityORMManifest {
         //---------------iterate manifest
         foreach ($aSols as $number => $oSol) {
             $sSol = $oSol->sol;
-            cDebug::write("processing sol:$sSol");
             $bReindex = false;
 
             //- - - - - - - - -check when SOL was  last updated
-            $sStoredLastUpdated = cCuriosityManifestIndexStatus::get_sol_last_updated($sSol);
+            $sStoredLastUpdated = tblSolStatus::get_last_updated(self::$mission_id, $sSol);
             $sManifestLastUpdated = $oSol->last_updated;
-            cDebug::write("stored lastindex:$sStoredLastUpdated, manifest date:$sManifestLastUpdated");
             if ($sStoredLastUpdated == null)
                 $bReindex = true;
             elseif ($sStoredLastUpdated < $sManifestLastUpdated)
@@ -190,7 +191,7 @@ class cCuriosityORMManifest {
 
         //update the status
         cCuriosityManifestIndexStatus::put_last_indexed_sol($piSol);
-        cCuriosityManifestIndexStatus::put_sol_last_updated($piSol, $sLastUpdatedValue);
+        tblSolStatus::put_last_updated(self::$mission_id, $piSol, $sLastUpdatedValue);
         cDebug::leave();
     }
 }
