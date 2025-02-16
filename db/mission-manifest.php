@@ -153,13 +153,16 @@ class tblSolStatus extends tblModel {
         static::add_mission_column($poTable);
     }
 
-    static function get_last_updated(int $piMissionID, int $piSol): ?Date {
+    static function get_last_updated(int $piMissionID, int $piSol): ?DateTime {
         $row = static::where(cColumns::MISSION_ID, $piMissionID)
             ->where(cColumns::SOL, $piSol)
             ->first();
 
-        if ($row)
-            return $row->{self::LAST_INGESTED};
+        if ($row) {
+            $val = $row->{self::LAST_INGESTED};
+            $dDate = new DateTime($val);
+            return $dDate;
+        }
 
         return null;
     }
