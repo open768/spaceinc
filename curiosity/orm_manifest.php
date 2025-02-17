@@ -62,7 +62,11 @@ class cCuriosityORMManifest {
         cMissionManifest::empty_manifest();
         cDebug::leave();
     }
+}
+cCuriosityORMManifest::init();
 
+//################################################################################
+class    cCuriosityORMManifestIndexer {
     static function updateIndex() {
         cDebug::enter();
 
@@ -102,7 +106,7 @@ class cCuriosityORMManifest {
             $bReindex = false;
 
             //- - - - - - - - -check when SOL was  last updated
-            $sStoredLastUpdated = tblSolStatus::get_last_updated(self::$mission_id, $sSol);
+            $sStoredLastUpdated = tblSolStatus::get_last_updated(cCuriosityORMManifest::$mission_id, $sSol);
             $sManifestLastUpdated = $oSol->last_updated;
             if ($sStoredLastUpdated == null)
                 $bReindex = true;
@@ -133,7 +137,7 @@ class cCuriosityORMManifest {
 
     //*****************************************************************************
     static function delete_sol_index(int $piSol) {
-        $iMission = self::$mission_id;
+        $iMission = cCuriosityORMManifest::$mission_id;
         tblProducts::where("mission_id", $iMission)->where('sol', $piSol)->delete();
     }
 
@@ -144,7 +148,7 @@ class cCuriosityORMManifest {
 
         if (cDebug::is_debugging())   cCommon::flushprint(".");
         // Convert sampletype and instrument to integer lookups
-        $iMission = self::$mission_id;
+        $iMission = cCuriosityORMManifest::$mission_id;
         $iSampleTypeID = tblSampleType::get_id($iMission, $poItem->sampleType);
         $iInstrumentID = tblInstruments::get_id($iMission, $poItem->instrument);
 
@@ -191,9 +195,7 @@ class cCuriosityORMManifest {
 
         //update the status
         cCuriosityManifestIndexStatus::put_last_indexed_sol($piSol);
-        tblSolStatus::put_last_updated(self::$mission_id, $piSol, $sLastUpdatedValue);
+        tblSolStatus::put_last_updated(cCuriosityORMManifest::$mission_id, $piSol, $sLastUpdatedValue);
         cDebug::leave();
     }
 }
-
-cCuriosityORMManifest::init();
