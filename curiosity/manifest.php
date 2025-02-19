@@ -190,217 +190,19 @@ class cCuriosityManifestIndex {
     // Index functions
     //*****************************************************************************
     static function updateIndex() {
-        cDebug::enter();
-        cDebug::on(); //turn off extra debugging
-
-        //----------get manifest
-        cDebug::write("getting sol Manifest");
-        $oManifest = cCuriosityManifest::getManifest();
-
-        //----------get status from odb
-        $sStatus = cCuriosityManifestIndexStatus::get_status();
-
-        if ($sStatus === cCuriosityManifestIndexStatus::STATUS_COMPLETE) {
-            $sLastIndexedSol = cCuriosityManifestIndexStatus::get_last_indexed_sol();
-            $sLatestManifestSol = $oManifest->latest_sol;
-            cDebug::write("last indexed sol was: $sLastIndexedSol, latest manifest sol: $sLatestManifestSol");
-            if ($sLastIndexedSol >= $sLatestManifestSol)
-                cDebug::error("indexing allready complete");
-        }
-
-        //----------get last indexed sol  odb
-        $sLastSol = cCuriosityManifestIndexStatus::get_last_indexed_sol();
-        if ($sLastSol == null) $sLastSol = -1;
-        cDebug::write("indexing starting at sol: $sLastSol");
-
-        cDebug::write("processing sol Manifest");
-        $aSols = $oManifest->sols;
-        ksort($aSols, SORT_NUMERIC);
-
-
-        //---------------iterate manifest
-        foreach ($aSols as $number => $oSol) {
-            $sSol = $oSol->sol;
-            $bReindex = false;
-
-            //- - - - - - - - -check when SOL was  last updated
-            $sStoredLastUpdated = cCuriosityManifestIndexStatus::get_sol_last_updated($sSol);
-            $sManifestLastUpdated = $oSol->last_updated;
-            //cDebug::write("stored lastindex:$sStoredLastUpdated, manifest date:$sManifestLastUpdated");
-            if ($sStoredLastUpdated == null)
-                $bReindex = true;
-            elseif ($sStoredLastUpdated < $sManifestLastUpdated)
-                $bReindex = true;
-
-            //---------------------check if the row needs reindexing
-            if (!$bReindex) $bReindex = $sSol > $sLastSol;
-            if (!$bReindex) continue;
-
-            //-------perform the index
-            self::index_sol($sSol, $sManifestLastUpdated, $bReindex);
-        }
-        cCuriosityManifestIndexStatus::put_status(cCuriosityManifestIndexStatus::STATUS_COMPLETE);
-
-        //----------------compress database
-        cDebug::write("compresssing database");
-        cSqlLiteUtils::vacuum(self::DB_FILENAME);
-        cDebug::write("done");
-        cDebug::leave();
-    }
-
-    //*****************************************************************************
-    static function index_sol(string $psSol, $sLastUpdatedValue, bool $pbReindex) {
-        $oSqlDB = self::$oSQLDB;
-        cDebug::extra_debug("indexing sol:$psSol");
-
-        if ($pbReindex) self::delete_sol_index($psSol);
-
-        $bCheckExpiry = !$pbReindex;
-        $oSolData = cCuriosityManifest::getSolRawData($psSol, $bCheckExpiry); //this is needed
-
-        $aImages = $oSolData->images;
-        if ($aImages === null) cDebug::error("no image data");
-
-        $oSqlDB->begin_transaction(); {
-            foreach ($aImages as $sKey => $oImgData)
-                self::add_to_index($psSol, $oImgData);
-            $oSqlDB->commit();
-        }
-
-
-        if (cDebug::is_debugging())
-            cPageOutput::scroll_to_bottom();
-
-
-        //update the status
-        cCuriosityManifestIndexStatus::put_last_indexed_sol($psSol);
-        cCuriosityManifestIndexStatus::put_sol_last_updated($psSol, $sLastUpdatedValue);
-    }
-
-    //*****************************************************************************
-    static function delete_sol_index(string $psSol) {
-        if (cCommon::is_string_empty($psSol))
-            cDebug::error("sol must be provided");
-
-        cDebug::extra_debug("deleting Sol $psSol index");
-        $sSQL = "DELETE FROM `:table` where :sol_col=:sol";
-        $sSQL = self::replace_sql_params($sSQL);
-
-        $oSqlDB = self::$oSQLDB;
-        $oStmt = $oSqlDB->prepare($sSQL);
-        $oStmt->bindValue(":sol", $psSol);
-
-        $oSqlDB->exec_stmt($oStmt); //handles retries and errors
-
-        cCuriosityManifestIndexStatus::kill_sol_last_updated($psSol);
-    }
-
-    //*****************************************************************************
-    static function add_to_index($psSol, $poItem) {
-        //cDebug::enter();
-        //--------------get the data out of the item
-        $sSampleType = $poItem->sampleType;
-        $sInstr = $poItem->instrument;
-        $sProduct = $poItem->itemName;
-        $sUrl = $poItem->urlList;
-        $sUtc = $poItem->utc;
-        $iUtc = cCommon::UTC_to_epoch($sUtc);
-
-        //--------------get the data out of the item
-        cDebug::extra_debug("adding to index: $psSol, $sInstr, $sProduct, $sSampleType");
-        if (cDebug::is_debugging())   cCommon::flushprint(".");
-        $sSQL = "INSERT INTO `:table` (:mission_col, :sol_col, :instr_col, :product_col, :url_col, :sample_col ,:date_col) VALUES (:mission, :sol, :instr, :product, :url, :sample , :d_val)";
-        $sSQL = self::replace_sql_params($sSQL);
-
-        //--------------put it into the database
-        /** @var cSQLLite $oSqlDB  */
-        $oSqlDB = self::$oSQLDB;
-        $oStmt = $oSqlDB->prepare($sSQL);
-        $oStmt->bindValue(":mission", cSpaceMissions::CURIOSITY);
-        $oStmt->bindValue(":sol", $psSol);
-        $oStmt->bindValue(":instr", $sInstr);
-        $oStmt->bindValue(":product", $sProduct);
-        $oStmt->bindValue(":url", $sUrl);
-        $oStmt->bindValue(":sample", $sSampleType);
-        $oStmt->bindValue(":d_val", $iUtc);
-
-
-        $oSqlDB->exec_stmt($oStmt); //handles retries and errors
-
-        //cDebug::leave();
-    }
-
-    //******************************************************************************************* */
-    static function deleteEntireIndex() {
-        cDebug::enter();
-        //delete everything
-        cDebug::write("deleting from sql");
-        $sSQL = "DELETE from `:table`";
-        $sSQL = self::replace_sql_params($sSQL);
-        $oSqlDB = self::$oSQLDB;
-        $oStmt = $oSqlDB->prepare($sSQL);
-        $oSqlDB->exec_stmt($oStmt); //handles retries and errors
-
-        cDebug::write("vacuuming db");
-        cSqlLiteUtils::vacuum(self::DB_FILENAME);
-
-        //update the status
-        cDebug::write("updating status");
-        cCuriosityManifestIndexStatus::clear_status();
-
-        cDebug::write("done");
-        cDebug::leave();
+        cCuriosityORMManifestIndexer::updateIndex();
     }
 
     //*****************************************************************************
     // getters functions
     //*****************************************************************************
     static function is_sol_in_index(string $psSol) {
-        cDebug::enter();
-
-        $slastUpdated = cCuriosityManifestIndexStatus::get_sol_last_updated($psSol);
-        $bResult = true;
-        if ($slastUpdated === null) {
-            cDebug::write("sol $psSol is not in the index");
-            $bResult = false;
-        }
-
-        cDebug::leave();
-        return $bResult;
+        return cCuriosityORMManifest::is_sol_in_index($psSol);
     }
 
     //*****************************************************************************
     static function reindex_if_needed(string $psSol) {
-        cDebug::enter();
-
-        cDebug::write("checking Sol $psSol");
-        $bIndexIt = false;
-
-        //----------------is it in the index?
-        $oManifestData = cCuriosityManifest::getSolEntry($psSol);
-        if ($oManifestData == null) {
-            cDebug::write("$psSol is not in the manifest at all");
-            return null;
-        }
-        $sManUtc = $oManifestData->last_updated;
-
-
-        $slastUpdated = cCuriosityManifestIndexStatus::get_sol_last_updated($psSol);
-        if ($slastUpdated === null) {
-            cDebug::write("sol $psSol is not in the index");
-            $bIndexIt = true;
-        } elseif ($slastUpdated < $sManUtc) {
-            cDebug::write("sol $psSol needs to be reindexed");
-            $bIndexIt = true;
-        } else
-            cDebug::write("no reindexing needed - data is up-to-date");
-
-        //----------------Not in index, then index it by jeeves
-        if ($bIndexIt) {
-            cDebug::write("indexing sol $psSol");
-            self::index_sol($psSol, $sManUtc, true);
-        }
-        cDebug::leave();
+        cCuriosityORMManifestIndexer::reindex_if_needed($psSol);
     }
 
     //*****************************************************************************
@@ -822,7 +624,7 @@ class cCuriosityManifestUtils {
 }
 
 //###############################################################################
-class cCuriosityManifest {
+class cCuriosityJPLManifest {
     const MANIFEST_CACHE = 2 * 3600;    //2 hour
     const FEED_URL = "https://mars.jpl.nasa.gov/msl-raw-images/image/image_manifest.json";
     const SOL_URL = "https://mars.jpl.nasa.gov/msl-raw-images/image/images_sol";

@@ -50,11 +50,13 @@ class cCuriosityORMManifest {
     //const FEED_URL = "https://mars.jpl.nasa.gov/msl-raw-images/image/image_manifest.json";
     static $mission_id = null;
 
+    //***************************************************************************
     static function init() {
         self::$mission_id = tblMissions::get_id(null, cCuriosity::MISSION_ID);
     }
 
-    static function empty_ORM_tables() {
+    //***************************************************************************
+    static function deleteEntireIndex() {
         //drop all tables in the manifest
         cDebug::enter();
         cDebug::write("emptying manifest");
@@ -62,18 +64,63 @@ class cCuriosityORMManifest {
         cMissionManifest::empty_manifest();
         cDebug::leave();
     }
+
+    //***************************************************************************
+    static function is_sol_in_index(int $piSol): bool {
+        return tblSolStatus::is_sol_indexed(self::$mission_id, $piSol);
+    }
+
+    static function get_all_sol_data(): array {
+    }
 }
 cCuriosityORMManifest::init();
 
 //################################################################################
 class    cCuriosityORMManifestIndexer {
-    static function updateIndex() {
+    static function is_reindex_needed(int $piSol): bool {
+
+        //get the last_updated from the JPL manifest
+        $oManifestData = cCuriosityJPLManifest::getSolEntry($piSol);
+        if ($oManifestData == null) {
+            cDebug::write("$piSol is not in the manifest at all");
+            return null;
+        }
+        $sManifestUtc = $oManifestData->last_updated;
+
+        //calculate if sol needs reindexing
+        $bIndexIt = false;
+        $slastUpdated = tblSolStatus::get_last_updated(cCuriosityORMManifest::$mission_id, $piSol);
+        if ($slastUpdated === null) {
+            cDebug::write("sol $piSol is not in the index");
+            $bIndexIt = true;
+        } elseif ($slastUpdated < $sManifestUtc) {
+            cDebug::write("sol $piSol needs to be reindexed");
+            $bIndexIt = true;
+        } else
+            cDebug::write("no reindexing needed - data is up-to-date");
+
+        return $bIndexIt;
+    }
+
+    static function reindex_if_needed(int $piSol) {
         cDebug::enter();
 
+        cDebug::write("checking Sol $piSol");
+
+        $bIndexIt = self::is_reindex_needed($piSol);
+        if ($bIndexIt) {
+            cDebug::write("indexing sol $piSol");
+            self::index_sol($piSol, true);
+        }
+        cDebug::leave();
+    }
+
+    static function updateIndex() {
+        //cDebug::enter();
 
         //----------get manifest
         cDebug::write("getting sol Manifest");
-        $oManifest = cCuriosityManifest::getManifest();
+        $oManifest = cCuriosityJPLManifest::getManifest();
 
         //----------get status from odb
         $sStatus = cCuriosityManifestIndexStatus::get_status();
@@ -103,15 +150,7 @@ class    cCuriosityORMManifestIndexer {
         //---------------iterate manifest
         foreach ($aSols as $number => $oSol) {
             $sSol = $oSol->sol;
-            $bReindex = false;
-
-            //- - - - - - - - -check when SOL was  last updated
-            $sStoredLastUpdated = tblSolStatus::get_last_updated(cCuriosityORMManifest::$mission_id, $sSol);
-            $sManifestLastUpdated = $oSol->last_updated;
-            if ($sStoredLastUpdated == null)
-                $bReindex = true;
-            elseif ($sStoredLastUpdated < $sManifestLastUpdated)
-                $bReindex = true;
+            $bReindex = self::is_reindex_needed($sSol);
 
             //---------------------check if the row needs reindexing
             if (!$bReindex) $bReindex = $sSol > $sLastSol;
@@ -120,7 +159,7 @@ class    cCuriosityORMManifestIndexer {
             //-------perform the index
             cEloquentORM::beginTransaction(cMissionManifest::DBNAME);
             try {
-                self::index_sol($sSol, $sManifestLastUpdated, $bReindex);
+                self::index_sol($sSol, $bReindex);
                 cEloquentORM::commit(cMissionManifest::DBNAME);
             } catch (Exception $e) {
                 cEloquentORM::rollBack(cMissionManifest::DBNAME);
@@ -132,7 +171,7 @@ class    cCuriosityORMManifestIndexer {
 
         cDebug::extra_debug("completed");
         cCuriosityManifestIndexStatus::put_status(cCuriosityManifestIndexStatus::STATUS_COMPLETE);
-        cDebug::leave();
+        //cDebug::leave();
     }
 
     //*****************************************************************************
@@ -144,7 +183,7 @@ class    cCuriosityORMManifestIndexer {
     //*****************************************************************************
 
     static function add_to_index($pisol, $poItem) {
-        cDebug::enter();
+        //cDebug::enter();
 
         if (cDebug::is_debugging())   cCommon::flushprint(".");
         // Convert sampletype and instrument to integer lookups
@@ -165,18 +204,19 @@ class    cCuriosityORMManifestIndexer {
         $oProduct->drive = $poItem->drive;
         $oProduct->save();
 
-        cDebug::leave();
+        //cDebug::leave();
     }
 
     //*****************************************************************************
-    static function index_sol(int $piSol, $sLastUpdatedValue, bool $pbReindex) {
-        cDebug::enter();
+    static function index_sol(int $piSol, bool $pbReindex) {
+        //cDebug::enter();
         cDebug::write("indexing sol:$piSol");
 
         if ($pbReindex) self::delete_sol_index($piSol);
 
+
         $bCheckExpiry = !$pbReindex;
-        $oSolData = cCuriosityManifest::getSolRawData($piSol, $bCheckExpiry, false); //this is needed
+        $oSolData = cCuriosityJPLManifest::getSolRawData($piSol, $bCheckExpiry, false); //this is needed
 
         $aImages = $oSolData->images;
         if ($aImages === null) cDebug::error("no image data");
@@ -195,7 +235,10 @@ class    cCuriosityORMManifestIndexer {
 
         //update the status
         cCuriosityManifestIndexStatus::put_last_indexed_sol($piSol);
-        tblSolStatus::put_last_updated(cCuriosityORMManifest::$mission_id, $piSol, $sLastUpdatedValue);
-        cDebug::leave();
+
+        //update the sol status
+        $oManifestData = cCuriosityJPLManifest::getSolEntry($piSol);
+        tblSolStatus::put_last_updated(cCuriosityORMManifest::$mission_id, $piSol, $oManifestData->last_updated);
+        //cDebug::leave();
     }
 }

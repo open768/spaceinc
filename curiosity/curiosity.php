@@ -49,7 +49,7 @@ class cCuriosity implements iMission {
         return self::MISSION_URL;
     }
 
-    
+
 
     //*****************************************************************************
     public static function search_product($psSearch) {
@@ -68,7 +68,7 @@ class cCuriosity implements iMission {
     //*****************************************************************************
     public static function getSolRawData($psSol, $psInstrument = null, $pbThumbs = false): cCuriosityInstrument {
         cDebug::enter();
-        $oJson = cCuriosityManifest::getSolRawData($psSol);
+        $oJson = cCuriosityJPLManifest::getSolRawData($psSol);
         $oData = new cCuriosityInstrument($psInstrument);  //put all images under a single instrument
 
         //get the images from the json response
@@ -99,7 +99,7 @@ class cCuriosity implements iMission {
         cDebug::enter();
 
         //get the manifest
-        $oManifest = cCuriosityManifest::getManifest();
+        $oManifest = cCuriosityJPLManifest::getManifest();
         $aSols = $oManifest->sols;
         $aData = [];
 

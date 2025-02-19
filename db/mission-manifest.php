@@ -38,21 +38,6 @@ abstract class tblModel extends Model {
 }
 
 //#############################################################################################
-class tblSols extends tblModel {
-    const LAST_UPDATED = 'last_updated';
-    const CATALOG_URL = 'catalog_url';
-
-    static function create_table(Blueprint $poTable) {
-        $poTable->increments(cColumns::ID);
-        $poTable->integer(cColumns::SOL)->index();
-        $poTable->date(self::LAST_UPDATED);
-        $poTable->integer(self::CATALOG_URL);
-
-        $poTable->unique([cColumns::SOL]);
-    }
-}
-
-//#############################################################################################
 class tblID extends tblModel {
     const ID = "id";
     const NAME = "name";
@@ -154,9 +139,7 @@ class tblSolStatus extends tblModel {
     }
 
     static function get_last_updated(int $piMissionID, int $piSol): ?DateTime {
-        $row = static::where(cColumns::MISSION_ID, $piMissionID)
-            ->where(cColumns::SOL, $piSol)
-            ->first();
+        $row = self::get_sol($piMissionID, $piSol);
 
         if ($row) {
             $val = $row->{self::LAST_INGESTED};
@@ -186,6 +169,18 @@ class tblSolStatus extends tblModel {
             ]
         );
     }
+
+    static function get_sol(int $piMissionID, int $piSol) {
+        $row = static::where(cColumns::MISSION_ID, $piMissionID)
+            ->where(cColumns::SOL, $piSol)
+            ->first();
+        return $row;
+    }
+
+    static function is_sol_indexed(int $piMissionID, int $piSol): bool {
+        $row = self::get_sol($piMissionID, $piSol);
+        return ($row !== null);
+    }
 }
 
 //#############################################################################################
@@ -195,7 +190,6 @@ class cMissionManifest {
 
     static $bAddedConnection = false;
     static $models = [
-        tblSols::class,
         tblProducts::class,
         tblInstruments::class,
         tblSampleType::class,
