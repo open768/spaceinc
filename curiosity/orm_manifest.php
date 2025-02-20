@@ -183,7 +183,7 @@ class    cCuriosityORMManifestIndexer {
 
         //remove unwanted instruments and sample types
         cDebug::write("removing unwanted products");
-        self::pr__remove_unwanted();
+        self::remove_unwanted();
 
         //finalise
         cDebug::write("vacuuming database");
@@ -195,15 +195,58 @@ class    cCuriosityORMManifestIndexer {
     }
 
     //*****************************************************************************
-    private static function pr__remove_unwanted() {
+    public static function remove_unwanted() {
+        cDebug::enter();
         self::pr__remove_sample_types(["downsampled", "subframe", "mixed"]);
         self::pr__keep_instruments(["mahli", "mardi", "mast_left", "mast_right"]);
+        cDebug::leave();
     }
 
     private static function pr__remove_sample_types(array $pasample_types) {
+        cDebug::enter();
+
+        // Convert sample type names to lowercase
+        cDebug::extra_debug("checking lists");
+        $aLowercaseSampleTypeNames = array_map('strtolower', $pasample_types);
+
+        // Get the valid sample type names from the database
+        $aValidSampleTypeNames = tblSampleType::whereIn(tblID::NAME, $aLowercaseSampleTypeNames)
+            ->where(cMissionColumns::MISSION_ID, cCuriosityORMManifest::$mission_id)
+            ->pluck(tblID::NAME)
+            ->toArray();
+
+        // Check for invalid sample type names
+        $aInvalidSampleTypeNames = array_diff($aLowercaseSampleTypeNames, $aValidSampleTypeNames);
+        if (!empty($aInvalidSampleTypeNames)) {
+            cDebug::error("Invalid sample type names provided: " . implode(', ', $aInvalidSampleTypeNames));
+            cDebug::leave();
+            return;
+        }
+
+        // Get the IDs of the valid sample types
+        cDebug::extra_debug("making ID list");
+        $aSampleTypeIDs = tblSampleType::whereIn(tblID::NAME, $aValidSampleTypeNames)
+            ->where(cMissionColumns::MISSION_ID, cCuriosityORMManifest::$mission_id)
+            ->pluck(tblID::ID);
+
+        // remove the offending sample types from product table
+        cDebug::extra_debug("removing from products table");
+        tblProducts::whereIn(tblProducts::SAMPLE_TYPE_ID, $aSampleTypeIDs)
+            ->where(cMissionColumns::MISSION_ID, cCuriosityORMManifest::$mission_id)
+            ->delete();
+
+        // remove the offending sample types from sampletypes table
+        cDebug::extra_debug("removing from sampletypes table");
+        tblSampleType::whereIn(tblID::ID, $aSampleTypeIDs)
+            ->where(cMissionColumns::MISSION_ID, cCuriosityORMManifest::$mission_id)
+            ->delete();
+
+        cDebug::leave();
     }
 
     private static function pr__keep_instruments(array $Instruments) {
+        cDebug::enter();
+        cDebug::leave();
     }
 
     //*****************************************************************************
