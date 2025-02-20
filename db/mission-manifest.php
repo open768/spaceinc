@@ -98,6 +98,43 @@ class tblID extends tblModel {
 
         static::add_mission_column($poTable);
     }
+
+    public static function get_all_ids(int $piMission) {
+        $aIDs =  static::where(cMissionColumns::MISSION_ID, $piMission)
+            ->pluck(tblID::ID)
+            ->toArray();
+        return $aIDs;
+    }
+
+    public static function get_ids(int $piMission, array $paNames) {
+        //cDebug::enter();
+
+        // Convert sample type names to lowercase
+        $aLowerNames = array_map('strtolower', $paNames);
+
+        // Get the valid sample type names from the database
+        $aMatchedNames = static::whereIn(tblID::NAME, $aLowerNames)
+            ->where(cMissionColumns::MISSION_ID, $piMission)
+            ->pluck(tblID::NAME)
+            ->toArray();
+
+        // Check for invalid sample type names
+        $aInvalidNames = array_diff($aLowerNames, $aMatchedNames);
+        if (!empty($aInvalidNames)) {
+            cDebug::leave();
+            cDebug::error("Invalid names provided: " . implode(', ', $aInvalidNames));
+            return;
+        }
+
+        // Get the IDs of the valid sample types
+        $aIDs = static::whereIn(tblID::NAME, $aMatchedNames)
+            ->where(cMissionColumns::MISSION_ID, $piMission)
+            ->pluck(tblID::ID)
+            ->toArray();
+
+        //cDebug::leave();
+        return $aIDs;
+    }
 }
 
 class tblMissions extends tblID {
@@ -140,6 +177,56 @@ class tblProducts extends tblModel {
     }
 
     static function get_all_data(int $piMission, int $piSol, ?string $psInstrument = null, string $psSampleType = self::SAMPLE_ALL): array {
+    }
+
+    static function remove_sample_types(int $piMission, array $pasample_types) {
+        cDebug::enter();
+
+        cDebug::extra_debug("building lists");
+        $aIDs = tblSampleType::get_ids($piMission, $pasample_types);
+
+        // remove the offending sample types from product table
+        cDebug::extra_debug("removing from products table");
+        tblProducts::whereIn(tblProducts::SAMPLE_TYPE_ID, $aIDs)
+            ->where(cMissionColumns::MISSION_ID, $piMission)
+            ->delete();
+
+        // remove the offending sample types from sampletypes table
+        cDebug::extra_debug("removing from sampletypes table");
+        tblSampleType::whereIn(tblID::ID, $aIDs)
+            ->where(cMissionColumns::MISSION_ID, $piMission)
+            ->delete();
+
+        cDebug::leave();
+    }
+
+    public static function keep_instruments(int $piMission, array $paInstrNames) {
+        cDebug::enter();
+
+        //work out which IDs to remove
+        cDebug::extra_debug("building lists");
+        $aIDs = tblInstruments::get_ids($piMission, $paInstrNames);
+        $aAllIDs = tblInstruments::get_all_ids($piMission);
+        $aDiff = array_diff($aAllIDs, $aIDs);
+
+        if (count($aDiff) == 0) {
+            cDebug::leave();
+            cDebug::error("only instruments found were:" . implode(", ", $paInstrNames));
+        }
+
+        //delete the IDs from product table
+        cDebug::extra_debug("deleting products with instruments");
+        tblProducts::whereIn(tblProducts::INSTRUMENT_ID, $aDiff)
+            ->where(cMissionColumns::MISSION_ID, $piMission)
+            ->delete();
+
+        //delete the IDs from instruments table
+        cDebug::extra_debug("deleting instruments");
+        tblInstruments::whereIn(tblID::ID, $aDiff)
+            ->where(cMissionColumns::MISSION_ID, $piMission)
+            ->delete();
+
+        cDebug::leave();
     }
 }
 
