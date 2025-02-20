@@ -197,7 +197,10 @@ class cCuriosityManifestIndex {
     // getters functions
     //*****************************************************************************
     static function is_sol_in_index(string $psSol) {
-        return cCuriosityORMManifest::is_sol_in_index($psSol);
+        cDebug::enter();
+        $result = cCuriosityORMManifest::is_sol_in_index($psSol);
+        cDebug::leave();
+        return $result;
     }
 
     //*****************************************************************************

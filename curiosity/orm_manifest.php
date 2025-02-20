@@ -47,6 +47,11 @@ class cManifestUtils {
 
 //################################################################################
 class cCuriosityORMManifest {
+
+    const SAMPLE_ALL = 1;
+    const SAMPLE_THUMBS = 2;
+    const SAMPLE_NONTHUMBS = 3;
+
     //const FEED_URL = "https://mars.jpl.nasa.gov/msl-raw-images/image/image_manifest.json";
     static $mission_id = null;
 
@@ -59,18 +64,27 @@ class cCuriosityORMManifest {
     static function deleteEntireIndex() {
         //drop all tables in the manifest
         cDebug::enter();
+
         cDebug::write("emptying manifest");
         cCuriosityManifestIndexStatus::clear_status();
         cMissionManifest::empty_manifest();
+
         cDebug::leave();
     }
 
     //***************************************************************************
     static function is_sol_in_index(int $piSol): bool {
-        return tblSolStatus::is_sol_indexed(self::$mission_id, $piSol);
+        cDebug::enter();
+        $slastUpdated = tblSolStatus::get_last_updated(cCuriosityORMManifest::$mission_id, $piSol);
+        cDebug::leave();
+        return ($slastUpdated !== null);
     }
 
-    static function get_all_sol_data(): array {
+    //***************************************************************************
+    static function get_all_sol_data(int $piSol, ?string $psInstrument = null, string $piSampleType = self::SAMPLE_ALL): array {
+        cDebug::enter();
+        return tblProducts::get_all_sol_data(self::$mission_id, $piSol,  $psInstrument, $piSampleType);
+        cDebug::leave();
     }
 }
 cCuriosityORMManifest::init();
@@ -97,7 +111,7 @@ class    cCuriosityORMManifestIndexer {
             cDebug::write("sol $piSol needs to be reindexed");
             $bIndexIt = true;
         } else
-            cDebug::write("no reindexing needed - data is up-to-date");
+            cDebug::write("sol $piSol no reindexing needed");
 
         return $bIndexIt;
     }
@@ -166,12 +180,30 @@ class    cCuriosityORMManifestIndexer {
                 cDebug::error("unable to index sol $sSol: $e ");
             }
         }
+
+        //remove unwanted instruments and sample types
+        cDebug::write("removing unwanted products");
+        self::pr__remove_unwanted();
+
+        //finalise
         cDebug::write("vacuuming database");
         cEloquentORM::vacuum(cMissionManifest::DBNAME);
 
         cDebug::extra_debug("completed");
         cCuriosityManifestIndexStatus::put_status(cCuriosityManifestIndexStatus::STATUS_COMPLETE);
         //cDebug::leave();
+    }
+
+    //*****************************************************************************
+    private static function pr__remove_unwanted() {
+        self::pr__remove_sample_types(["downsampled", "subframe", "mixed"]);
+        self::pr__keep_instruments(["mahli", "mardi", "mast_left", "mast_right"]);
+    }
+
+    private static function pr__remove_sample_types(array $pasample_types) {
+    }
+
+    private static function pr__keep_instruments(array $Instruments) {
     }
 
     //*****************************************************************************

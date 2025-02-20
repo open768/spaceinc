@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Date;
 
 require_once cAppGlobals::$ckPhpInc . "/eloquentorm.php";
 
-class cColumns {
+class cMissionColumns {
     const MISSION_ID = "mission_id";
     const ID = 'id';
     const SOL = 'sol';
@@ -31,9 +31,24 @@ abstract class tblModel extends Model {
         $sTableName = static::get_table_name();
         $sMissionTable = tblMissions::get_table_name();
         if ($sTableName !== $sMissionTable) {
-            $poTable->integer(cColumns::MISSION_ID)->index();
-            $poTable->foreign(cColumns::MISSION_ID)->references(cColumns::ID)->on($sMissionTable);
+            $poTable->integer(cMissionColumns::MISSION_ID)->index();
+            $poTable->foreign(cMissionColumns::MISSION_ID)->references(cMissionColumns::ID)->on($sMissionTable);
         }
+    }
+}
+
+//#############################################################################################
+class tblSols extends tblModel {
+    const LAST_UPDATED = 'last_updated';
+    const CATALOG_URL = 'catalog_url';
+
+    static function create_table(Blueprint $poTable) {
+        $poTable->increments(cMissionColumns::ID);
+        $poTable->integer(cMissionColumns::SOL)->index();
+        $poTable->date(self::LAST_UPDATED);
+        $poTable->integer(self::CATALOG_URL);
+
+        $poTable->unique([cMissionColumns::SOL]);
     }
 }
 
@@ -47,11 +62,13 @@ class tblID extends tblModel {
 
     static function get_id($piMissionID, $psName) {
         $iRowID = null;
-        $sCacheKey = "$piMissionID:$psName";
+        $lower = strtolower($psName);
+
+        $sCacheKey = "$piMissionID:$lower";
         if (isset(self::$cache[$sCacheKey])) {
             $iRowID = self::$cache[$sCacheKey];
         } else {
-            $oRow = static::where(self::NAME, $psName)->first();
+            $oRow = static::where(self::NAME, $lower)->first();
             if ($oRow !== null)
                 $iRowID = $oRow->id;
             else {
@@ -62,7 +79,7 @@ class tblID extends tblModel {
                 if ($sThisTable !== $sMissionTable) {
                     $oRow->mission_id = $piMissionID;
                 }
-                $oRow->name = $psName;
+                $oRow->name = $lower;
                 $oRow->save();
                 $iRowID = $oRow->id;
             }
@@ -104,9 +121,9 @@ class tblProducts extends tblModel {
 
     static function create_table(Blueprint $poTable) {
         //create table structure
-        $poTable->integer(cColumns::MISSION_ID);
-        $poTable->increments(cColumns::ID);
-        $poTable->integer(cColumns::SOL)->index();
+        $poTable->integer(cMissionColumns::MISSION_ID);
+        $poTable->increments(cMissionColumns::ID);
+        $poTable->integer(cMissionColumns::SOL)->index();
         $poTable->integer(self::INSTRUMENT_ID)->index();
         $poTable->integer(self::SAMPLE_TYPE_ID)->index();
         $poTable->integer(self::SITE)->index();
@@ -116,13 +133,13 @@ class tblProducts extends tblModel {
         $poTable->integer(self::DRIVE)->index();
 
         //add relationships
-        $poTable->foreign(cColumns::MISSION_ID)->references(cColumns::ID)->on(tblMissions::get_table_name());
-        $poTable->foreign(self::INSTRUMENT_ID)->references(cColumns::ID)->on(tblInstruments::get_table_name());
-        $poTable->foreign(self::SAMPLE_TYPE_ID)->references(cColumns::ID)->on(tblSampleType::get_table_name());
-        $poTable->unique([cColumns::SOL, self::INSTRUMENT_ID, self::PRODUCT, self::SAMPLE_TYPE_ID]);
+        $poTable->foreign(cMissionColumns::MISSION_ID)->references(cMissionColumns::ID)->on(tblMissions::get_table_name());
+        $poTable->foreign(self::INSTRUMENT_ID)->references(cMissionColumns::ID)->on(tblInstruments::get_table_name());
+        $poTable->foreign(self::SAMPLE_TYPE_ID)->references(cMissionColumns::ID)->on(tblSampleType::get_table_name());
+        $poTable->unique([cMissionColumns::SOL, self::INSTRUMENT_ID, self::PRODUCT, self::SAMPLE_TYPE_ID]);
     }
 
-    static function reduce_url($psUrl) {
+    static function get_all_data(int $piMission, int $piSol, ?string $psInstrument = null, string $psSampleType = self::SAMPLE_ALL): array {
     }
 }
 
@@ -131,15 +148,17 @@ class tblSolStatus extends tblModel {
     const LAST_INGESTED = "LAST_INGEST";
 
     static function create_table(Blueprint $poTable) {
-        $poTable->integer(cColumns::SOL)->index();
+        $poTable->integer(cMissionColumns::SOL)->index();
         $poTable->date(self::LAST_INGESTED);
 
-        $poTable->unique([cColumns::SOL]);
+        $poTable->unique([cMissionColumns::SOL]);
         static::add_mission_column($poTable);
     }
 
     static function get_last_updated(int $piMissionID, int $piSol): ?DateTime {
-        $row = self::get_sol($piMissionID, $piSol);
+        $row = static::where(cMissionColumns::MISSION_ID, $piMissionID)
+            ->where(cMissionColumns::SOL, $piSol)
+            ->first();
 
         if ($row) {
             $val = $row->{self::LAST_INGESTED};
@@ -161,25 +180,13 @@ class tblSolStatus extends tblModel {
 
         static::updateOrCreate(
             [
-                cColumns::MISSION_ID => $piMissionID,
-                cColumns::SOL => $piSol
+                cMissionColumns::MISSION_ID => $piMissionID,
+                cMissionColumns::SOL => $piSol
             ],
             [
                 self::LAST_INGESTED => $sDate
             ]
         );
-    }
-
-    static function get_sol(int $piMissionID, int $piSol) {
-        $row = static::where(cColumns::MISSION_ID, $piMissionID)
-            ->where(cColumns::SOL, $piSol)
-            ->first();
-        return $row;
-    }
-
-    static function is_sol_indexed(int $piMissionID, int $piSol): bool {
-        $row = self::get_sol($piMissionID, $piSol);
-        return ($row !== null);
     }
 }
 
@@ -190,6 +197,7 @@ class cMissionManifest {
 
     static $bAddedConnection = false;
     static $models = [
+        tblSols::class,
         tblProducts::class,
         tblInstruments::class,
         tblSampleType::class,
