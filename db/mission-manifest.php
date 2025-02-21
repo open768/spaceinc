@@ -53,12 +53,13 @@ class tblSols extends tblModel {
 }
 
 //#############################################################################################
+//# ID Tables
+//#############################################################################################
 class tblID extends tblModel {
     const ID = "id";
     const NAME = "name";
 
     static $cache = [];
-    protected $fillable = [self::NAME];
 
     static function get_id(?int $piMissionID, string $psName) {
         $iRowID = null;
@@ -137,11 +138,25 @@ class tblID extends tblModel {
     }
 }
 
+//*****************************************************************************
 class tblMissions extends tblID {
 }
 
+//*****************************************************************************
 class tblInstruments extends tblID {
+    const ABBREVIATION = "abbr";
+    const DESCRIPTION = "desc";
+    const COLOUR = "col";
+
+    static function create_table(Blueprint $poTable) {
+        parent::create_table($poTable);
+        $poTable->string(self::ABBREVIATION)->nullable();
+        $poTable->string(self::DESCRIPTION)->nullable();
+        $poTable->string(self::COLOUR)->nullable();
+    }
 }
+
+//*****************************************************************************
 class tblSampleType extends tblID {
 }
 
