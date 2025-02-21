@@ -13,6 +13,8 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
  **************************************************************************/
 
 require_once  cAppGlobals::$ckPhpInc . "/cached_http.php";
+require_once  cAppGlobals::$spaceInc . "/curiosity/orm_manifest.php";
+require_once  cAppGlobals::$spaceInc . "/db/mission-manifest.php";
 
 //##########################################################################
 class cCuriosityInstrumentData {
@@ -67,10 +69,6 @@ class cCuriosityInstrument {
             // build instrument list
             self::$Instruments = [
                 ["name" => "CHEMCAM_RMI",    "colour" => "red",    "abbr" => "CC",    "caption" => "Chemistry "],
-                ["name" => "FHAZ_LEFT_A",    "colour" => "green",    "abbr" => "FLa",    "caption" => "Left Front Hazard Avoidance (A)"],
-                ["name" => "FHAZ_RIGHT_A", "colour" => "steelblue",    "abbr" => "FRa",    "caption" => "Right Front Hazard Avoidance (A)"],
-                ["name" => "FHAZ_LEFT_B",    "colour" => "lime",    "abbr" => "FLb",    "caption" => "Left Front Hazard Avoidance (B)"],
-                ["name" => "FHAZ_RIGHT_B", "colour" => "blue",    "abbr" => "FRb",    "caption" => "Right Front Hazard Avoidance (B)"],
                 ["name" => "MAST_LEFT",    "colour" => "white",    "abbr" => "ML",    "caption" => "MastCam Left"],
                 ["name" => "MAST_RIGHT",    "colour" => "yellow",    "abbr" => "MR",    "caption" => "MastCam Right"],
                 ["name" => "MAHLI",        "colour" => "cyan",    "abbr" => "HL",    "caption" => "Mars Hand Lens Imager"],
@@ -78,11 +76,7 @@ class cCuriosityInstrument {
                 ["name" => "NAV_LEFT_A",    "colour" => "tomato",    "abbr" => "NLa",    "caption" => "Left Navigation (A)"],
                 ["name" => "NAV_RIGHT_A",    "colour" => "gray",    "abbr" => "NRa",    "caption" => "Right Navigation (A)"],
                 ["name" => "NAV_LEFT_B",    "colour" => "orange",    "abbr" => "NLb",    "caption" => "Left Navigation (B)"],
-                ["name" => "NAV_RIGHT_B",    "colour" => "black",    "abbr" => "NRb",    "caption" => "Right Navigation (B)"],
-                ["name" => "RHAZ_LEFT_A",    "colour" => "pink",    "abbr" => "RLa",    "caption" => "Left Rear Hazard Avoidance (A)"],
-                ["name" => "RHAZ_RIGHT_A", "colour" => "purple",    "abbr" => "RRa",    "caption" => "Right Rear Hazard Avoidance (A)"],
-                ["name" => "RHAZ_LEFT_B",    "colour" => "fuschia",    "abbr" => "RLb",    "caption" => "Left Rear Hazard Avoidance (B)"],
-                ["name" => "RHAZ_RIGHT_B", "colour" => "indigo",    "abbr" => "RRb",    "caption" => "Right Rear Hazard Avoidance (B)"]
+                ["name" => "NAV_RIGHT_B",    "colour" => "black",    "abbr" => "NRb",    "caption" => "Right Navigation (B)"]
             ];
             // build associative array
             self::$instrument_map = [];

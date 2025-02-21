@@ -11,8 +11,8 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 // USE AT YOUR OWN RISK - NO GUARANTEES OR ANY FORM ARE EITHER EXPRESSED OR IMPLIED
  **************************************************************************/
 require_once "manifest.php";
+require_once cAppGlobals::$spaceInc . "/curiosity/constants.php";
 require_once cAppGlobals::$spaceInc . "/db/mission-manifest.php";
-require_once  cAppGlobals::$spaceInc . "/curiosity/curiosity.php";
 
 //################################################################################
 class cManifestUtils {
@@ -57,7 +57,7 @@ class cCuriosityORMManifest {
 
     //***************************************************************************
     static function init() {
-        self::$mission_id = tblMissions::get_id(null, cCuriosity::MISSION_ID);
+        self::$mission_id = tblMissions::get_id(null, cCuriosityConstants::MISSION_ID);
     }
 
     //***************************************************************************
@@ -207,12 +207,6 @@ class    cCuriosityORMManifestIndexer {
         cDebug::leave();
     }
 
-
-
-    private static function pr__keep_instruments(array $Instruments) {
-        cDebug::enter();
-        cDebug::leave();
-    }
 
     //*****************************************************************************
     static function delete_sol_index(int $piSol) {

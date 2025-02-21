@@ -17,6 +17,7 @@ require_once  cAppGlobals::$ckPhpInc . "/blobber.php";
 require_once  cAppGlobals::$ckPhpInc . "/image.php";
 require_once  cAppGlobals::$ckPhpInc . "/cached_http.php";
 require_once  cAppGlobals::$spaceInc . "/missions/mission.php";
+require_once  cAppGlobals::$spaceInc . "/curiosity/constants.php";
 require_once  cAppGlobals::$spaceInc . "/curiosity/instrument.php";
 require_once  cAppGlobals::$spaceInc . "/curiosity/static.php";
 require_once  cAppGlobals::$spaceInc . "/curiosity/curiositypds.php";
@@ -27,26 +28,21 @@ require_once  cAppGlobals::$spaceInc . "/curiosity/product.php";
 //##########################################################################
 
 class cCuriosity implements iMission {
-    const PDS_VOLUMES = "http://pds-imaging.jpl.nasa.gov/volumes/msl.html";
-    const ALL_INSTRUMENTS = "All";
-    const MISSION_NAME = "curiosity";
-    const MISSION_ID = "msl";
-    const MISSION_URL = "https://science.nasa.gov/mission/msl-curiosity/";
 
 
     private static $Instruments, $instrument_map;
 
     static function get_mission_name() {
-        return self::MISSION_NAME;
+        return cCuriosityConstants::MISSION_NAME;
     }
 
 
     static function get_mission_id() {
-        return self::MISSION_ID;
+        return cCuriosityConstants::MISSION_ID;
     }
 
     static function get_mission_url() {
-        return self::MISSION_URL;
+        return cCuriosityConstants::MISSION_URL;
     }
 
 
@@ -246,7 +242,7 @@ class cCuriosityImages implements iMissionImages {
 
         //get the thumbnails and the non thumbnails
         $sInstrument = $psInstrument;
-        if ($sInstrument ===  cCuriosity::ALL_INSTRUMENTS) $sInstrument = null;
+        if ($sInstrument ===  cCuriosityConstants::ALL_INSTRUMENTS) $sInstrument = null;
 
         $oAllSolThumbs = cCuriosityManifestIndex::get_all_sol_data($psSol, $sInstrument, cCuriosityManifestIndex::SAMPLE_THUMBS);
         $oResult = self::pr_match_thumbs($psSol, null, $oAllSolThumbs);

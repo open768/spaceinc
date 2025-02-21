@@ -60,7 +60,7 @@ class tblID extends tblModel {
     static $cache = [];
     protected $fillable = [self::NAME];
 
-    static function get_id($piMissionID, $psName) {
+    static function get_id(?int $piMissionID, string $psName) {
         $iRowID = null;
         $lower = strtolower($psName);
 
