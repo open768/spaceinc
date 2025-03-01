@@ -91,7 +91,7 @@ cCuriosityORMManifest::init();
 
 //################################################################################
 class    cCuriosityORMManifestIndexer {
-    static function is_reindex_needed(int $piSol): bool {
+    static function is_reindex_needed(int $piSol): bool|null {
 
         //get the last_updated from the JPL manifest
         $oManifestData = cCuriosityJPLManifest::getSolEntry($piSol);

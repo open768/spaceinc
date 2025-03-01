@@ -14,6 +14,7 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 
 require_once  cAppGlobals::$ckPhpInc . "/cached_http.php";
 require_once  cAppGlobals::$spaceInc . "/curiosity/orm_manifest.php";
+require_once  cAppGlobals::$spaceInc . "/curiosity/constants.php";
 require_once  cAppGlobals::$spaceInc . "/db/mission-manifest.php";
 
 //##########################################################################
@@ -67,17 +68,8 @@ class cCuriosityInstrument {
     public static function getInstrumentList() {
         if (!self::$Instruments) {
             // build instrument list
-            self::$Instruments = [
-                ["name" => "CHEMCAM_RMI",    "colour" => "red",    "abbr" => "CC",    "caption" => "Chemistry "],
-                ["name" => "MAST_LEFT",    "colour" => "white",    "abbr" => "ML",    "caption" => "MastCam Left"],
-                ["name" => "MAST_RIGHT",    "colour" => "yellow",    "abbr" => "MR",    "caption" => "MastCam Right"],
-                ["name" => "MAHLI",        "colour" => "cyan",    "abbr" => "HL",    "caption" => "Mars Hand Lens Imager"],
-                ["name" => "MARDI",        "colour" => "magenta", "abbr" => "DI",    "caption" => "Mars Descent Imager"],
-                ["name" => "NAV_LEFT_A",    "colour" => "tomato",    "abbr" => "NLa",    "caption" => "Left Navigation (A)"],
-                ["name" => "NAV_RIGHT_A",    "colour" => "gray",    "abbr" => "NRa",    "caption" => "Right Navigation (A)"],
-                ["name" => "NAV_LEFT_B",    "colour" => "orange",    "abbr" => "NLb",    "caption" => "Left Navigation (B)"],
-                ["name" => "NAV_RIGHT_B",    "colour" => "black",    "abbr" => "NRb",    "caption" => "Right Navigation (B)"]
-            ];
+            self::$Instruments = cCuriosityConstants::$Instruments;
+
             // build associative array
             self::$instrument_map = [];
             foreach (self::$Instruments as $oInstr) {
