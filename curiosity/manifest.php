@@ -13,75 +13,9 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 
 require_once cAppGlobals::$spaceInc . "/missions/rover.php";
 require_once cAppGlobals::$spaceInc . "/curiosity/instrument.php";
+require_once cAppGlobals::$spaceInc . "/db/mission-manifest.php";
 
-//#################################################################################
-class cCuriosityManifestIndexStatus {
-    const INDEXING_STATUS_KEY = "indexing:status";
-    const INDEXING_LASTSOL_KEY = "indexing:lastsol";
-    const LAST_SOL_PREFIX = "indexing:lastsol:";
-    const STATUS_NOT_STARTED = -1;
-    const STATUS_COMPLETE = "complete";
 
-    /**  @var cObjstoreDB $oDB */
-    private static $oDB = null;
-
-    //*****************************************************************************
-    static function init_db() {
-        if (self::$oDB === null)
-            self::$oDB = new cOBjStoreDB(cSpaceRealms::ROVER_MANIFEST, cSpaceTables::ROVER_MANIFEST);
-    }
-
-    //*****************************************************************************
-    static function clear_status() {
-        cDebug::extra_debug("deleting status");
-        $oDB = self::$oDB;
-        $oDB->kill(self::INDEXING_STATUS_KEY);
-        $oDB->kill(self::INDEXING_LASTSOL_KEY);
-    }
-
-    static function get_status() {
-        $oDB = self::$oDB;
-        $sStatus = $oDB->get(self::INDEXING_STATUS_KEY);
-        return $sStatus;
-    }
-    static function put_status($psStatus) {
-        $oDB = self::$oDB;
-        $oDB->put(self::INDEXING_STATUS_KEY, $psStatus, true);
-    }
-
-    static function get_last_indexed_sol() {
-        $oDB = self::$oDB;
-        $sLastSol = $oDB->get(self::INDEXING_LASTSOL_KEY);
-        return $sLastSol;
-    }
-    static function put_last_indexed_sol(string $psSol) {
-        $oDB = self::$oDB;
-        $oDB->put(self::INDEXING_LASTSOL_KEY, $psSol, true);
-    }
-
-    //-----------------------------------------------------------
-    static function get_sol_last_updated(string $psSol) {
-        $oDB = self::$oDB;
-        $sKey = self::LAST_SOL_PREFIX . $psSol;
-        $sLastUpdated = $oDB->get($sKey);
-        return $sLastUpdated;
-    }
-
-    static function put_sol_last_updated($psSol, $psDate) {
-        $oDB = self::$oDB;
-        $sKey = self::LAST_SOL_PREFIX . $psSol;
-        $oDB->put($sKey, $psDate, true);
-    }
-
-    static function kill_sol_last_updated(string $psSol) {
-        if (cCommon::is_string_empty($psSol))
-            cDebug::error("sol must be provided");
-        $sKey = self::LAST_SOL_PREFIX . $psSol;
-        $oDB = self::$oDB;
-        $oDB->kill($sKey);
-    }
-}
-cCuriosityManifestIndexStatus::init_db();
 
 class cManifestSolData {
     public string $sol;
@@ -120,8 +54,8 @@ class cCuriosityManifestIndex {
             $oSqLDB = new cSqlLite(self::DB_FILENAME);
             self::$oSQLDB = $oSqLDB;
         }
-        self::pr_create_table();
     }
+
     static function get_db() {
         return self::$oSQLDB;
     }
@@ -140,73 +74,10 @@ class cCuriosityManifestIndex {
         return $sSQL;
     }
 
-    //*****************************************************************************
-    private static function pr_create_table() {
-        $oSqLDB = self::$oSQLDB;
-        //-------------- check table
-        $bTableExists = $oSqLDB->table_exists(self::MANIFEST_TABLE);
-        if ($bTableExists)
-            return;
-        else
-            cCuriosityManifestIndexStatus::clear_status();
-
-        //-------------create TABLE
-        cDebug::extra_debug("table doesnt exist " . self::MANIFEST_TABLE);
-        $sSQL =
-            "CREATE TABLE `:table` ( " .
-            "rowid INTEGER PRIMARY KEY, :mission_col TEXT not null, :sol_col TEXT not null, :instr_col TEXT not null, :product_col TEXT not null, :url_col TEXT not null, :sample_col TEXT, :date_col INTEGER, " .
-            "CONSTRAINT cmanifest UNIQUE (:mission_col, :sol_col, :instr_col, :product_col) " .
-            ")";
-        $sSQL = self::replace_sql_params($sSQL);
-        $oSqLDB->querySQL($sSQL);
-        cDebug::extra_debug("table created");
-
-        //-------------create INDEX
-        $sSQL = "CREATE INDEX idx_manifest on ':table' ( :mission_col, :sol_col, :instr_col )";
-        $sSQL = self::replace_sql_params($sSQL);
-        $oSqLDB->querySQL($sSQL);
-        cDebug::extra_debug("main index created");
-
-        //-------------create INDEX
-        $sSQL = "CREATE INDEX idx_manifest_date on ':table' ( :date_col )";
-        $sSQL = self::replace_sql_params($sSQL);
-        $oSqLDB->querySQL($sSQL);
-        cDebug::extra_debug("secondary index created");
-
-        //-------------create INDEX
-        $sSQL = "CREATE INDEX idx_mission_sol_product on ':table' ( :mission_col, :sol_col, :product_col )";
-        $sSQL = self::replace_sql_params($sSQL);
-        $oSqLDB->querySQL($sSQL);
-        cDebug::extra_debug("secondary index created");
-
-        //-------------create INDEX
-        $sSQL = "CREATE INDEX idx_mission_product on ':table' ( :mission_col, :product_col )";
-        $sSQL = self::replace_sql_params($sSQL);
-        $oSqLDB->querySQL($sSQL);
-        cDebug::extra_debug("secondary index created");
-    }
-
-    //*****************************************************************************
-    // Index functions
-    //*****************************************************************************
-    static function updateIndex() {
-        cCuriosityORMManifestIndexer::updateIndex();
-    }
 
     //*****************************************************************************
     // getters functions
     //*****************************************************************************
-    static function is_sol_in_index(string $psSol) {
-        cDebug::enter();
-        $result = cCuriosityORMManifest::is_sol_in_index($psSol);
-        cDebug::leave();
-        return $result;
-    }
-
-    //*****************************************************************************
-    static function reindex_if_needed(string $psSol) {
-        cCuriosityORMManifestIndexer::reindex_if_needed($psSol);
-    }
 
     //*****************************************************************************
     static function get_all_sol_data(string $psSol, ?string $psInstrument = null, string $piSampleType = self::SAMPLE_ALL) {
@@ -214,7 +85,7 @@ class cCuriosityManifestIndex {
         cDebug::write("attempting to get data for $psSol");
 
         //---------------- check if Sol is in the index or needs updating
-        self::reindex_if_needed($psSol);
+        cCuriosityORMManifestIndexer::reindex_if_needed($psSol);
         cDebug::write("sol $psSol is in the index");
 
         //---------------- build SQL where
@@ -276,7 +147,7 @@ cCuriosityManifestIndex::init_db();
 //###################################################################################
 //#
 //###################################################################################
-class cCuriosityManifestUtils {
+class   cCuriosityManifestUtils {
     const TIMESLOT = 10;
 
 
@@ -405,7 +276,7 @@ class cCuriosityManifestUtils {
     static function get_instruments_for_sol($psSol): array {
         cDebug::enter();
 
-        cCuriosityManifestIndex::reindex_if_needed($psSol);
+        cCuriosityORMManifestIndexer::reindex_if_needed($psSol);
 
         // build SQL
         $sSQL = "SELECT DISTINCT :instr_col from `:table` WHERE :mission_col=:mission  AND :sol_col=:sol ORDER BY :instr_col";
@@ -709,12 +580,12 @@ class cCuriosityJPLManifest {
         if ($oResult === null)
             cDebug::write("nothing found - sol doesnt exist at $sUrl");
         elseif (! self::$dont_check_sol_index) {
-            $bInIndex = cCuriosityManifestIndex::is_sol_in_index($psSol);
+            $bInIndex = cCuriosityORMManifest::is_sol_in_index($psSol);
             if (!$bInIndex && $pbIndexMissing) {
                 self::$dont_check_sol_index = true;
                 cDebug::extra_debug_warning("sol found, but isnt in manifestindex.. ");
                 try {
-                    cCuriosityManifestIndex::reindex_if_needed($psSol);
+                    cCuriosityORMManifestIndexer::reindex_if_needed($psSol);
                 } finally {
                     self::$dont_check_sol_index = false;
                 }

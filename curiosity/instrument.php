@@ -13,7 +13,7 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
  **************************************************************************/
 
 require_once  cAppGlobals::$ckPhpInc . "/cached_http.php";
-require_once  cAppGlobals::$spaceInc . "/curiosity/orm_manifest.php";
+require_once  cAppGlobals::$spaceInc . "/curiosity/manifest/orm.php";
 require_once  cAppGlobals::$spaceInc . "/curiosity/constants.php";
 require_once  cAppGlobals::$spaceInc . "/db/mission-manifest.php";
 

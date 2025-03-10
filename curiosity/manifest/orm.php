@@ -10,7 +10,8 @@ http://creativecommons.org/licenses/by-nc-nd/4.0/legalcode
 For licenses that allow for commercial use please contact cluck@chickenkatsu.co.uk
 // USE AT YOUR OWN RISK - NO GUARANTEES OR ANY FORM ARE EITHER EXPRESSED OR IMPLIED
  **************************************************************************/
-require_once "manifest.php";
+require_once cAppGlobals::$spaceInc . "/curiosity/manifest.php";
+require_once cAppGlobals::$spaceInc . "/curiosity/manifest/index/status.php";
 require_once cAppGlobals::$spaceInc . "/curiosity/constants.php";
 require_once cAppGlobals::$spaceInc . "/db/mission-manifest.php";
 
@@ -116,6 +117,7 @@ class    cCuriosityORMManifestIndexer {
         return $bIndexIt;
     }
 
+    //********************************************************************************************
     static function reindex_if_needed(int $piSol) {
         cDebug::enter();
 
@@ -129,6 +131,7 @@ class    cCuriosityORMManifestIndexer {
         cDebug::leave();
     }
 
+    //********************************************************************************************
     static function updateIndex() {
         //cDebug::enter();
 

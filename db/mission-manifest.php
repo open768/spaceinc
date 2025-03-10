@@ -176,9 +176,11 @@ class tblProducts extends tblModel {
         $poTable->unique([cMissionColumns::SOL, self::INSTRUMENT_ID, self::PRODUCT, self::SAMPLE_TYPE_ID]);
     }
 
+    //********************************************************************************************
     static function get_all_data(int $piMission, int $piSol, ?string $psInstrument = null, string $psSampleType = self::SAMPLE_ALL): array {
     }
 
+    //********************************************************************************************
     static function remove_sample_types(int $piMission, array $pasample_types) {
         cDebug::enter();
 
@@ -200,6 +202,7 @@ class tblProducts extends tblModel {
         cDebug::leave();
     }
 
+    //********************************************************************************************
     public static function keep_instruments(int $piMission, array $paInstrNames) {
         cDebug::enter();
 
