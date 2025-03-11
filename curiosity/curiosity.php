@@ -21,7 +21,7 @@ require_once  cAppGlobals::$spaceInc . "/curiosity/constants.php";
 require_once  cAppGlobals::$spaceInc . "/curiosity/instrument.php";
 require_once  cAppGlobals::$spaceInc . "/curiosity/static.php";
 require_once  cAppGlobals::$spaceInc . "/curiosity/curiositypds.php";
-require_once  cAppGlobals::$spaceInc . "/curiosity/manifest.php";
+require_once  cAppGlobals::$spaceInc . "/curiosity/manifest/manifest.php";
 require_once  cAppGlobals::$spaceInc . "/curiosity/product.php";
 
 
@@ -244,7 +244,7 @@ class cCuriosityImages implements iMissionImages {
         $sInstrument = $psInstrument;
         if ($sInstrument ===  cCuriosityConstants::ALL_INSTRUMENTS) $sInstrument = null;
 
-        $oAllSolThumbs = cCuriosityManifestIndex::get_all_sol_data($psSol, $sInstrument, cCuriosityManifestIndex::SAMPLE_THUMBS);
+        $oAllSolThumbs = cCuriosityManifestIndex::get_all_sol_data($psSol, $sInstrument, eSpaceSampleTypes::SAMPLE_THUMBS);
         $oResult = self::pr_match_thumbs($psSol, null, $oAllSolThumbs);
 
         cDebug::leave();

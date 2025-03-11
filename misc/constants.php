@@ -17,6 +17,12 @@ class cSpaceUrlParams {
     const EDR_INDEX = "i";
 }
 
+enum eSpaceSampleTypes {
+    case SAMPLE_ALL;
+    case SAMPLE_THUMBS;
+    case SAMPLE_NONTHUMBS;
+}
+
 //#################################################################################
 class cSpaceProductData {
     public string $mission;

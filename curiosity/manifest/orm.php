@@ -10,13 +10,13 @@ http://creativecommons.org/licenses/by-nc-nd/4.0/legalcode
 For licenses that allow for commercial use please contact cluck@chickenkatsu.co.uk
 // USE AT YOUR OWN RISK - NO GUARANTEES OR ANY FORM ARE EITHER EXPRESSED OR IMPLIED
  **************************************************************************/
-require_once cAppGlobals::$spaceInc . "/curiosity/manifest.php";
+require_once cAppGlobals::$spaceInc . "/curiosity/manifest/manifest.php";
 require_once cAppGlobals::$spaceInc . "/curiosity/manifest/index/status.php";
 require_once cAppGlobals::$spaceInc . "/curiosity/constants.php";
 require_once cAppGlobals::$spaceInc . "/db/mission-manifest.php";
 
 //################################################################################
-class cManifestUtils {
+class cManifestOrmUtils {
     static $replacements = [
         "http://" => "{1}",
         "https://" => "{2}",
@@ -82,9 +82,9 @@ class cCuriosityORMManifest {
     }
 
     //***************************************************************************
-    static function get_all_sol_data(int $piSol, ?string $psInstrument = null, string $piSampleType = self::SAMPLE_ALL): array {
+    static function get_all_sol_data(int $piSol, ?string $psInstrument = null, eSpaceSampleTypes $piSampleType = eSpaceSampleTypes::SAMPLE_ALL): array {
         cDebug::enter();
-        return tblProducts::get_all_sol_data(self::$mission_id, $piSol,  $psInstrument, $piSampleType);
+        return tblProducts::get_all_data(self::$mission_id, $piSol,  $psInstrument, $piSampleType);
         cDebug::leave();
     }
 }
@@ -235,7 +235,7 @@ class    cCuriosityORMManifestIndexer {
         $oProduct->instrument_id = $iInstrumentID;
         $oProduct->sample_type_id = $iSampleTypeID;
         $oProduct->site = $poItem->site;
-        $oProduct->image_url = cManifestUtils::reduce_image_url($poItem->urlList, $poItem->itemName);
+        $oProduct->image_url = cManifestOrmUtils::reduce_image_url($poItem->urlList, $poItem->itemName);
         $oProduct->product = $poItem->itemName;
         $oProduct->utc_date = $poItem->utc;
         $oProduct->drive = $poItem->drive;

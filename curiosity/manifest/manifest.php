@@ -14,6 +14,7 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 require_once cAppGlobals::$spaceInc . "/missions/rover.php";
 require_once cAppGlobals::$spaceInc . "/curiosity/instrument.php";
 require_once cAppGlobals::$spaceInc . "/db/mission-manifest.php";
+require_once cAppGlobals::$spaceInc . "/misc/constants.php";
 
 
 
@@ -36,9 +37,6 @@ class cCuriosityManifestIndex {
     const COL_SAMPLE_TYPE = "SA";
     const COL_DATE_ADDED = "DA";
 
-    const SAMPLE_ALL = 1;
-    const SAMPLE_THUMBS = 2;
-    const SAMPLE_NONTHUMBS = 3;
 
     /**  @var cSQLLite $oSQLDB */
     private static $oSQLDB = null;
@@ -80,7 +78,7 @@ class cCuriosityManifestIndex {
     //*****************************************************************************
 
     //*****************************************************************************
-    static function get_all_sol_data(string $psSol, ?string $psInstrument = null, string $piSampleType = self::SAMPLE_ALL) {
+    static function get_all_sol_data(string $psSol, ?string $psInstrument = null, eSpaceSampleTypes $piSampleType = eSpaceSampleTypes::SAMPLE_ALL) {
         cDebug::enter();
         cDebug::write("attempting to get data for $psSol");
 
@@ -91,10 +89,10 @@ class cCuriosityManifestIndex {
         //---------------- build SQL where
         $sWhere = ":mission_col=:mission AND :sol_col=:sol";
         switch ($piSampleType) {
-            case self::SAMPLE_NONTHUMBS:
+            case eSpaceSampleTypes::SAMPLE_NONTHUMBS:
                 $sWhere = "$sWhere AND :sample_col != :sample_type";
                 break;
-            case cCuriosityProduct::THUMB_SAMPLE_TYPE:
+            case eSpaceSampleTypes::SAMPLE_THUMBS:
                 $sWhere = "$sWhere AND :sample_col = :sample_type";
         }
 
@@ -223,7 +221,7 @@ class   cCuriosityManifestUtils {
 
         $oInstruments = cCuriosityInstrument::getInstrumentList();
         /** @var cManifestSolData $oData */
-        $oData = cCuriosityManifestIndex::get_all_sol_data($psSol, null, cCuriosityManifestIndex::SAMPLE_NONTHUMBS);
+        $oData = cCuriosityManifestIndex::get_all_sol_data($psSol, null, eSpaceSampleTypes::SAMPLE_NONTHUMBS);
         $aManData = $oData->data;
 
         $oData = (object) [
@@ -306,7 +304,7 @@ class   cCuriosityManifestUtils {
     static function get_products(string $psSol, ?string $psInstr = null): array {
         // read the img files for the products
         cDebug::enter();
-        $oRawData = cCuriosityManifestIndex::get_all_sol_data($psSol, $psInstr, cCuriosityManifestIndex::SAMPLE_NONTHUMBS);
+        $oRawData = cCuriosityManifestIndex::get_all_sol_data($psSol, $psInstr, eSpaceSampleTypes::SAMPLE_NONTHUMBS);
         $aProducts = [];
         foreach ($oRawData->data as $oItem)
             $aProducts[] = $oItem->product;
@@ -321,10 +319,10 @@ class   cCuriosityManifestUtils {
         //-----------------------build SQL
         $sSQL = "SELECT count(*) as count from `:table` WHERE :mission_col=:mission AND :sol_col=:sol";
         switch ($piSampleType) {
-            case cCuriosityManifestIndex::SAMPLE_NONTHUMBS:
+            case eSpaceSampleTypes::SAMPLE_NONTHUMBS:
                 $sSQL = "$sSQL AND :sample_col != :sample_type";
                 break;
-            case cCuriosityManifestIndex::SAMPLE_THUMBS:
+            case eSpaceSampleTypes::SAMPLE_THUMBS:
                 $sSQL = "$sSQL AND :sample_col = :sample_type";
         }
 
@@ -394,10 +392,10 @@ class   cCuriosityManifestUtils {
         //-----------------------build SQL
         $sWhere = ":mission_col=:mission AND :sol_col=:sol";
         switch ($piSampleType) {
-            case cCuriosityManifestIndex::SAMPLE_NONTHUMBS:
+            case eSpaceSampleTypes::SAMPLE_NONTHUMBS:
                 $sWhere = "$sWhere AND :sample_col != :sample_type";
                 break;
-            case cCuriosityManifestIndex::SAMPLE_THUMBS:
+            case eSpaceSampleTypes::SAMPLE_THUMBS:
                 $sWhere = "$sWhere AND :sample_col = :sample_type";
         }
         $iOffset = $piIndex - 1;
