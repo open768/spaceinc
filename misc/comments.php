@@ -37,10 +37,10 @@ class cSpaceComments {
     //# INDEX functions
     //######################################################################
     static function get_top_index() {
-        cDebug::enter();
+        cTracing::enter();
         $aResult = cSpaceIndex::get_top_sol_data(cSpaceIndex::COMMENT_SUFFIX);
         if ($aResult) ksort($aResult, SORT_NUMERIC);
-        cDebug::leave();
+        cTracing::leave();
         return $aResult;
     }
 
@@ -103,9 +103,9 @@ class cSpaceComments {
 
     //********************************************************************
     static function moderate($psText) {
-        cDebug::enter();
+        cTracing::enter();
         cPageOutput::warning("moderation not implemented");
-        cDebug::leave();
+        cTracing::leave();
         return $psText;
     }
 }

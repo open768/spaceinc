@@ -44,6 +44,15 @@ class cManifestOrmUtils {
         }
         return $sOut;
     }
+
+    static function get_random_images(string $psIntrument, int $piHowmany) {
+        cTracing::enter();
+        //check its a valid instrument
+
+        $sInstrumentID = tblInstruments::get_id(cCuriosityORMManifest::$mission_id, $psInstrument);
+
+        cTracing::leave();
+    }
 }
 
 //################################################################################
@@ -64,28 +73,29 @@ class cCuriosityORMManifest {
     //***************************************************************************
     static function deleteEntireIndex() {
         //drop all tables in the manifest
-        cDebug::enter();
+        cTracing::enter();
 
         cDebug::write("emptying manifest");
         cCuriosityManifestIndexStatus::clear_status();
         cMissionManifest::empty_manifest();
 
-        cDebug::leave();
+        cTracing::leave();
     }
 
     //***************************************************************************
     static function is_sol_in_index(int $piSol): bool {
-        cDebug::enter();
+        cTracing::enter();
         $slastUpdated = tblSolStatus::get_last_updated(cCuriosityORMManifest::$mission_id, $piSol);
-        cDebug::leave();
+        cTracing::leave();
         return ($slastUpdated !== null);
     }
 
     //***************************************************************************
     static function get_all_sol_data(int $piSol, ?string $psInstrument = null, eSpaceSampleTypes $piSampleType = eSpaceSampleTypes::SAMPLE_ALL): array {
-        cDebug::enter();
+        cTracing::enter();
+        cCuriosityORMManifestIndexer::reindex_if_needed($piSol);
         return tblProducts::get_all_data(self::$mission_id, $piSol,  $psInstrument, $piSampleType);
-        cDebug::leave();
+        cTracing::leave();
     }
 }
 cCuriosityORMManifest::init();
@@ -119,7 +129,7 @@ class    cCuriosityORMManifestIndexer {
 
     //********************************************************************************************
     static function reindex_if_needed(int $piSol) {
-        cDebug::enter();
+        cTracing::enter();
 
         cDebug::write("checking Sol $piSol");
 
@@ -128,12 +138,12 @@ class    cCuriosityORMManifestIndexer {
             cDebug::write("indexing sol $piSol");
             self::index_sol($piSol, true);
         }
-        cDebug::leave();
+        cTracing::leave();
     }
 
     //********************************************************************************************
     static function updateIndex() {
-        //cDebug::enter();
+        //cTracing::enter();
 
         //----------get manifest
         cDebug::write("getting sol Manifest");
@@ -194,12 +204,12 @@ class    cCuriosityORMManifestIndexer {
 
         cDebug::extra_debug("completed");
         cCuriosityManifestIndexStatus::put_status(cCuriosityManifestIndexStatus::STATUS_COMPLETE);
-        //cDebug::leave();
+        //cTracing::leave();
     }
 
     //*****************************************************************************
     public static function remove_unwanted() {
-        cDebug::enter();
+        cTracing::enter();
         try {
             tblProducts::remove_sample_types(cCuriosityORMManifest::$mission_id, ["downsampled", "subframe", "mixed"]);
         } catch (Exception $e) {
@@ -207,7 +217,7 @@ class    cCuriosityORMManifestIndexer {
         }
 
         tblProducts::keep_instruments(cCuriosityORMManifest::$mission_id, ["mahli", "mardi", "mast_left", "mast_right", "nav_left_a", "nav_left_b", "nav_right_a", "nav_right_b"]);
-        cDebug::leave();
+        cTracing::leave();
     }
 
 
@@ -220,7 +230,7 @@ class    cCuriosityORMManifestIndexer {
     //*****************************************************************************
 
     static function add_to_index($pisol, $poItem) {
-        //cDebug::enter();
+        //cTracing::enter();
 
         if (cDebug::is_debugging())   cCommon::flushprint(".");
         // Convert sampletype and instrument to integer lookups
@@ -241,12 +251,12 @@ class    cCuriosityORMManifestIndexer {
         $oProduct->drive = $poItem->drive;
         $oProduct->save();
 
-        //cDebug::leave();
+        //cTracing::leave();
     }
 
     //*****************************************************************************
     static function index_sol(int $piSol, bool $pbReindex) {
-        //cDebug::enter();
+        //cTracing::enter();
         cDebug::write("indexing sol:$piSol");
 
         if ($pbReindex) self::delete_sol_index($piSol);
@@ -276,6 +286,6 @@ class    cCuriosityORMManifestIndexer {
         //update the sol status
         $oManifestData = cCuriosityJPLManifest::getSolEntry($piSol);
         tblSolStatus::put_last_updated(cCuriosityORMManifest::$mission_id, $piSol, $oManifestData->last_updated);
-        //cDebug::leave();
+        //cTracing::leave();
     }
 }

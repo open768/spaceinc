@@ -149,10 +149,10 @@ abstract class cRoverManifest {
 
     //*************************************************************************************************
     public function get_sol_numbers() {
-        cDebug::enter();
+        cTracing::enter();
         if (!$this->oSols) cDebug::error("no sols");
         $aSols = $this->oSols->get_sol_numbers();
-        cDebug::leave();
+        cTracing::leave();
         return $aSols;
     }
 
@@ -188,9 +188,9 @@ abstract class cRoverInstruments {
 
     //********************************************************************
     public  function getInstruments() {
-        cDebug::enter();
+        cTracing::enter();
         if (count($this->aInstruments) == 0)     $this->prAddInstruments();
-        cDebug::leave();
+        cTracing::leave();
         return $this->aInstruments;
     }
 
@@ -204,16 +204,16 @@ abstract class cRoverInstruments {
 
     //*****************************************************************************
     public  function getAbbreviation($psName) {
-        cDebug::enter();
+        cTracing::enter();
         $this->getInstruments();
         if (isset($this->aInstrument_map[$psName])) {
-            cDebug::leave();
+            cTracing::leave();
             return $this->aInstrument_map[$psName]["abbr"];
         }
 
         foreach ($this->aInstruments as $aInstrument)
             if ($aInstrument["caption"] == $psName) {
-                cDebug::leave();
+                cTracing::leave();
                 return $aInstrument["abbr"];
             }
 
@@ -222,17 +222,17 @@ abstract class cRoverInstruments {
 
     //*****************************************************************************
     public  function getInstrumentName($psAbbr) {
-        cDebug::enter();
+        cTracing::enter();
         $this->getInstruments();
-        cDebug::leave();
+        cTracing::leave();
         return  $this->aInstrument_map[$psAbbr]["name"];
     }
 
     //*****************************************************************************
     public  function getDetails($psAbbr) {
-        cDebug::enter();
+        cTracing::enter();
         $this->getInstruments();
-        cDebug::leave();
+        cTracing::leave();
         return  $this->aInstrument_map[$psAbbr];
     }
 }

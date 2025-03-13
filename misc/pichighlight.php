@@ -37,13 +37,13 @@ class cSpaceImageMosaic {
 
     //********************************************************************
     static function get_mosaic_sol_highlight_count($psSol) {
-        cDebug::enter();
+        cTracing::enter();
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         $iCount = $oDB->get("$psSol/" . self::MOSAIC_COUNT_FILENAME);
 
         if ($iCount == null) $iCount = 0;
-        cDebug::leave();
+        cTracing::leave();
         return $iCount;
     }
 
@@ -57,15 +57,15 @@ class cSpaceImageMosaic {
 
     //**********************************************************************
     static private function pr_get_mosaic(string $psSol): cBlobData {
-        cDebug::enter();
+        cTracing::enter();
         $sKey = "mos-$psSol";
-        cDebug::leave();
+        cTracing::leave();
         return cMosaicer::get($sKey);
     }
 
     //**********************************************************************
     static private function pr_generate_mosaic(string $psSol, array $paData): cBlobData {
-        cDebug::enter();
+        cTracing::enter();
 
         $aBlobs = [];
 
@@ -80,7 +80,7 @@ class cSpaceImageMosaic {
 
         $sKey = self::pr_mosaic_key($psSol);
         $oBlob = cMosaicer::make($sKey, $aBlobs, cAppConsts::CROP_WIDTH, cAppConsts::CROP_HEIGHT, self::MOSAIC_WIDTH);
-        cDebug::leave();
+        cTracing::leave();
         return $oBlob;
     }
 
@@ -91,7 +91,7 @@ class cSpaceImageMosaic {
     //**********************************************************************
     //@TODO convert to using blobber
     static function get_sol_high_mosaic($psSol): ?cBlobData {
-        cDebug::enter();
+        cTracing::enter();
 
         $aHighData = cSpaceImageHighlight::get_all_highlights($psSol, true);
         $iCount = cSpaceImageHighlight::count_highlights($aHighData);
@@ -119,7 +119,7 @@ class cSpaceImageMosaic {
             $oMosaic = self::pr_get_mosaic($psSol);
         }
 
-        cDebug::leave();
+        cTracing::leave();
         return $oMosaic;
     }
 }
@@ -149,7 +149,7 @@ class cSpaceImageHighlight {
 
     //****************************************************************
     static function get(string $psSol, string $psInstrument, string $psProduct, bool $pbGetImgUrl = false): cSpaceProductData {
-        cDebug::enter();
+        cTracing::enter();
         cDebug::extra_debug("s:$psSol, i:$psInstrument, p:$psProduct");
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
@@ -169,19 +169,19 @@ class cSpaceImageHighlight {
             $oOut->image_url = $oProduct->image_url;
         }
 
-        cDebug::leave();
+        cTracing::leave();
         return $oOut;
     }
 
     //****************************************************************
     static function put(string $psSol, string $psInstrument, string $psProduct, array $paData): void {
-        cDebug::enter();
+        cTracing::enter();
         if (!cAuth::is_role(cAuth::ADMIN_ROLE)) cDebug::error("put can only be done by admin");
         $oDB = self::$objstoreDB;
         $sFile = self::pr_get_filename($psSol, $psInstrument, $psProduct);
         $oDB->put($sFile, $paData);
 
-        cDebug::leave();
+        cTracing::leave();
     }
 
     //****************************************************************
@@ -198,7 +198,7 @@ class cSpaceImageHighlight {
      * @return array
      */
     static function get_all_highlights(string $psSol, bool $pbGetImageUrls = false): ?array {
-        cDebug::enter();
+        cTracing::enter();
 
         //get which products have highlights
         cDebug::write("getting highlights for sol $psSol");
@@ -215,7 +215,7 @@ class cSpaceImageHighlight {
                 $aData[$sInstrument][$sProduct] = $oHighlites;
             }
         }
-        cDebug::leave();
+        cTracing::leave();
         return $aData;
     }
 
@@ -241,10 +241,10 @@ class cSpaceImageHighlight {
 
     //********************************************************************
     static function get_top_index() {
-        cDebug::enter();
+        cTracing::enter();
         $aResult = cSpaceIndex::get_top_sol_data(cSpaceIndex::HILITE_SUFFIX);
         if ($aResult) ksort($aResult, SORT_NUMERIC);
-        cDebug::leave();
+        cTracing::leave();
         return $aResult;
     }
 
@@ -259,7 +259,7 @@ class cSpaceImageHighlight {
     //# UPDATE functions
     //######################################################################
     static function pr_is_duplicate($psSol, $psInstrument, $psProduct, $psTop, $psLeft): bool {
-        cDebug::enter();
+        cTracing::enter();
         $bIsDuplicate = false;
         $oResult = self::get($psSol, $psInstrument, $psProduct);
         $aData = $oResult->data;
@@ -274,12 +274,12 @@ class cSpaceImageHighlight {
                 }
             }
         return $bIsDuplicate;
-        cDebug::leave();
+        cTracing::leave();
     }
 
     //****************************************************************************
     static function set($psSol, $psInstrument, $psProduct, $psTop, $psLeft, $psUser): string {
-        cDebug::enter();
+        cTracing::enter();
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         //get the file from the object store to get the latest version
@@ -294,13 +294,13 @@ class cSpaceImageHighlight {
             cSpaceIndex::update_indexes($psSol, $psInstrument, $psProduct, 1, cSpaceIndex::HILITE_SUFFIX);
             return "ok";
         }
-        cDebug::leave();
+        cTracing::leave();
     }
 
 
     //************************************************************************
     static function get_box_blob(cSpaceProductData $poHighlight, array $poBox): cCropData {
-        //cDebug::enter();
+        //cTracing::enter();
 
         //'img' + sProduct + '_' + sTop + '_' + sLeft
         cDebug::vardump($poBox);
@@ -316,7 +316,7 @@ class cSpaceImageHighlight {
 
         $oCropData = cCropper::get_crop_blob_data($poHighlight->image_url, $sLeft, $sTop, cAppConsts::CROP_WIDTH, cAppConsts::CROP_HEIGHT);
 
-        //cDebug::leave();
+        //cTracing::leave();
         return $oCropData;
     }
 

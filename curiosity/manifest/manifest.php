@@ -79,7 +79,7 @@ class cCuriosityManifestIndex {
 
     //*****************************************************************************
     static function get_all_sol_data(string $psSol, ?string $psInstrument = null, eSpaceSampleTypes $piSampleType = eSpaceSampleTypes::SAMPLE_ALL) {
-        cDebug::enter();
+        cTracing::enter();
         cDebug::write("attempting to get data for $psSol");
 
         //---------------- check if Sol is in the index or needs updating
@@ -136,7 +136,7 @@ class cCuriosityManifestIndex {
         }
 
 
-        cDebug::leave();
+        cTracing::leave();
         return $oOut;
     }
 }
@@ -157,7 +157,7 @@ class   cCuriosityManifestUtils {
      * @return array
      */
     static function get_random_images(string $sIntrumentPattern, int $piHowmany) {
-        cDebug::enter();
+        cTracing::enter();
 
         //----------------prepare statement
         $sSQL = "SELECT :mission_col,:sol_col,:instr_col,:product_col,:url_col FROM `:table` WHERE ( :mission_col=:mission AND  :instr_col LIKE :pattern AND :sample_col != 'thumbnail')  ORDER BY RANDOM() LIMIT :howmany";
@@ -184,13 +184,13 @@ class   cCuriosityManifestUtils {
             $aOut[] = $oProduct;
         }
 
-        cDebug::leave();
+        cTracing::leave();
         return $aOut;
     }
 
     //********************************************************
     static function search_for_product(string $psProduct) {
-        cDebug::enter();
+        cTracing::enter();
         cDebug::extra_debug("looking for product: $psProduct");
         $sSQL = "SELECT :mission_col,:sol_col,:instr_col,:product_col,:url_col FROM `:table` WHERE ( :mission_col=:mission AND :product_col=:search AND :sample_col != 'thumbnail')  LIMIT 1";
         $sSQL = cCuriosityManifestIndex::replace_sql_params($sSQL);
@@ -211,7 +211,7 @@ class   cCuriosityManifestUtils {
             $oOut->image_url = $aRow[cCuriosityManifestIndex::COL_IMAGE_URL];
         }
 
-        cDebug::leave();
+        cTracing::leave();
         return $oOut;
     }
 
@@ -272,7 +272,7 @@ class   cCuriosityManifestUtils {
 
     //********************************************************
     static function get_instruments_for_sol($psSol): array {
-        cDebug::enter();
+        cTracing::enter();
 
         cCuriosityORMManifestIndexer::reindex_if_needed($psSol);
 
@@ -296,25 +296,25 @@ class   cCuriosityManifestUtils {
             $aData[] = $aItem[cCuriosityManifestIndex::COL_INSTR];
         }
 
-        cDebug::leave();
+        cTracing::leave();
         return $aData;
     }
 
     //*********************************************************************
     static function get_products(string $psSol, ?string $psInstr = null): array {
         // read the img files for the products
-        cDebug::enter();
+        cTracing::enter();
         $oRawData = cCuriosityManifestIndex::get_all_sol_data($psSol, $psInstr, eSpaceSampleTypes::SAMPLE_NONTHUMBS);
         $aProducts = [];
         foreach ($oRawData->data as $oItem)
             $aProducts[] = $oItem->product;
-        cDebug::leave();
+        cTracing::leave();
         return $aProducts;
     }
 
     //*********************************************************************
     static function count_products_in_sol($psSol, ?string $psInstr, $piSampleType): int {
-        cDebug::enter();
+        cTracing::enter();
 
         //-----------------------build SQL
         $sSQL = "SELECT count(*) as count from `:table` WHERE :mission_col=:mission AND :sol_col=:sol";
@@ -344,13 +344,13 @@ class   cCuriosityManifestUtils {
         $iCount = $aRow["count"];
         //cDebug::write("there are $iCount matching rows");
 
-        cDebug::leave();
+        cTracing::leave();
         return $iCount;
     }
 
     //*********************************************************************
     static function get_product_index(string $psProduct): cSpaceProductData {
-        cDebug::enter();
+        cTracing::enter();
 
         //********** construct SQL
         $sSQL = "SELECT rowid,:mission_col,:instr_col,:product_col FROM `:table` WHERE :mission_col=:mission AND :product_col=:product";
@@ -381,13 +381,13 @@ class   cCuriosityManifestUtils {
             $oData->product = $aRow[cCuriosityManifestIndex::COL_PRODUCT];
         }
 
-        cDebug::leave();
+        cTracing::leave();
         return $oData;
     }
 
     //*********************************************************************
     static function get_sol_indexed_product(string $psSol, string $piIndex, int $piSampleType) {
-        cDebug::enter();
+        cTracing::enter();
 
         //-----------------------build SQL
         $sWhere = ":mission_col=:mission AND :sol_col=:sol";
@@ -419,13 +419,13 @@ class   cCuriosityManifestUtils {
         $oProduct->instr = $aRow[cCuriosityManifestIndex::COL_INSTR];
         $oProduct->product = $aRow[cCuriosityManifestIndex::COL_PRODUCT];
 
-        cDebug::leave();
+        cTracing::leave();
         return $oProduct;
     }
 
     //*********************************************************************
     static function find_sequential_product(string $psProduct, string $psDirection, bool $pbAnyInstrument = false) {
-        cDebug::enter();
+        cTracing::enter();
 
         //get the table row number of the input product 
         $oRow = self::get_product_index($psProduct);
@@ -476,7 +476,7 @@ class   cCuriosityManifestUtils {
         $oProduct->product = $aRow[cCuriosityManifestIndex::COL_PRODUCT];
         $oProduct->rowid = $aRow["rowid"];
 
-        cDebug::leave();
+        cTracing::leave();
         return $oProduct;
     }
 
@@ -497,7 +497,7 @@ class   cCuriosityManifestUtils {
 
 //###############################################################################
 class cCuriosityJPLManifest {
-    const MANIFEST_CACHE = 2 * 3600;    //2 hour
+    const MANIFEST_CACHE = 4 * 3600;    //4 hour
     const FEED_URL = "https://mars.jpl.nasa.gov/msl-raw-images/image/image_manifest.json";
     const SOL_URL = "https://mars.jpl.nasa.gov/msl-raw-images/image/images_sol";
     const SOL_CACHE = 7 * 24 * 3600;    //1 week
@@ -510,7 +510,7 @@ class cCuriosityJPLManifest {
     //*****************************************************************************
     static function getManifest() {
         $oResult = null;
-        cDebug::enter();
+        cTracing::enter();
 
         $oResult = self::$cached_manifest;
         if ($oResult == null) {
@@ -520,13 +520,13 @@ class cCuriosityJPLManifest {
             }
             self::$cached_manifest = $oResult;
         }
-        cDebug::leave();
+        cTracing::leave();
         return $oResult;
     }
 
     //*****************************************************************************
     static function getSolEntry(string $psSol) {
-        cDebug::enter();
+        cTracing::enter();
         //---- get the manifest
         $oManifest = self::getManifest();
         $aSols = $oManifest->sols;
@@ -546,24 +546,24 @@ class cCuriosityJPLManifest {
         }
 
         if ($oMatched == null) cDebug::write("unable to find the SOL entry");
-        cDebug::leave();
+        cTracing::leave();
         return $oMatched;
     }
 
     //*****************************************************************************
     static function getSolJsonUrl($psSol) {
-        cDebug::enter();
+        cTracing::enter();
 
         $oSol = self::getSolEntry($psSol);
         $sUrl = $oSol->catalog_url;
 
-        cDebug::leave();
+        cTracing::leave();
         return $sUrl;
     }
 
     //*****************************************************************************
     public static function getSolRawData($psSol, $pbCheckExpiry = true, $pbIndexMissing = false) {
-        cDebug::enter();
+        cTracing::enter();
 
         $sUrl = self::getSolJsonUrl($psSol);
         if (cCommon::is_string_empty($sUrl)) cDebug::error("empty url for $psSol");
@@ -597,19 +597,19 @@ class cCuriosityJPLManifest {
             usleep(self::FEED_SLEEP);
         }
 
-        cDebug::leave();
+        cTracing::leave();
         return $oResult;
     }
 
     //*****************************************************************************
     public static function clearSolDataCache($psSol) {
-        cDebug::enter();
+        cTracing::enter();
 
         cDebug::write("clearing sol cache : " . $psSol);
         $sUrl = self::getSolJsonUrl($psSol);
         $oCache = new cCachedHttp();
         $oCache->deleteCachedURL($sUrl);
 
-        cDebug::leave();
+        cTracing::leave();
     }
 }

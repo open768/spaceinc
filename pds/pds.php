@@ -40,13 +40,13 @@ class cPDS {
 
     //**********************************************************************
     public static function get_pds_data($psSol, $psInstrument) {
-        cDebug::enter();
+        cTracing::enter();
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
 
         $sFilename = self::pr__get_objstore_filename($psSol, $psInstrument);
         $oData = $oDB->get($sFilename);
-        cDebug::leave();
+        cTracing::leave();
 
         return $oData;
     }

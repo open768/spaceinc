@@ -49,7 +49,7 @@ class cCuriosity implements iMission {
 
     //*****************************************************************************
     public static function search_product($psSearch) {
-        cDebug::enter();
+        cTracing::enter();
 
         //check for a valid product ID - will error if not
         $aExploded = cCuriosityPDS::explode_productID($psSearch);
@@ -57,13 +57,13 @@ class cCuriosity implements iMission {
         $oData = cCuriosityManifestUtils::search_for_product($psSearch);
 
         //return the product data
-        cDebug::leave();
+        cTracing::leave();
         return $oData;
     }
 
     //*****************************************************************************
     public static function getSolRawData($psSol, $psInstrument = null, $pbThumbs = false): cCuriosityInstrument {
-        cDebug::enter();
+        cTracing::enter();
         $oJson = cCuriosityJPLManifest::getSolRawData($psSol);
         $oData = new cCuriosityInstrument($psInstrument);  //put all images under a single instrument
 
@@ -78,21 +78,21 @@ class cCuriosity implements iMission {
                 $oData->add($oItem, $pbThumbs);
         }
 
-        cDebug::leave();
+        cTracing::leave();
         return $oData;
     }
 
     //*****************************************************************************
     public static function getSolData($psSol, $psInstrument = null, $pbThumbs = false): cCuriosityInstrument {
-        cDebug::enter();
+        cTracing::enter();
         $oData = new cCuriosityInstrument($psInstrument);  //put all images under a single instrument
-        cDebug::leave();
+        cTracing::leave();
         return $oData;
     }
 
     //*****************************************************************************
     public static function getSolList() {
-        cDebug::enter();
+        cTracing::enter();
 
         //get the manifest
         $oManifest = cCuriosityJPLManifest::getManifest();
@@ -106,13 +106,13 @@ class cCuriosity implements iMission {
             $aData[] = ["sol" => $iSol, "date" => $sDate];
         }
 
-        cDebug::leave();
+        cTracing::leave();
         return $aData;
     }
 
     //*****************************************************************************
     public static function nextSol($piSol, $piIncrement) {
-        cDebug::enter();
+        cTracing::enter();
 
         $aSols = self::getSolList();
         $iCount = count($aSols);
@@ -124,26 +124,26 @@ class cCuriosity implements iMission {
                     return $aSols[$i2]["sol"];
             }
 
-        cDebug::leave();
+        cTracing::leave();
         return null;
     }
 
     //*****************************************************************************
     public static function getSolInstrumentList($piSol) {
         $aResults = [];
-        cDebug::enter();
+        cTracing::enter();
 
         cDebug::write("Getting instrument list for sol " . $piSol);
 
         $aData = cCuriosityManifestUtils::get_instruments_for_sol($piSol);
 
-        cDebug::leave();
+        cTracing::leave();
         return $aData;
     }
 
     //*****************************************************************************
     public static function getProductDetails($psSol, $psInstrument, $psProduct) {
-        cDebug::enter();
+        cTracing::enter();
 
         //check if the instrument might be an abbreviation
         $sInstr = cCuriosityInstrument::getInstrumentName($psInstrument);
@@ -173,7 +173,7 @@ class cCuriosity implements iMission {
         }
 
         //return the result
-        cDebug::leave();
+        cTracing::leave();
         return $aOutput;
     }
 }
@@ -187,33 +187,33 @@ class cCuriosityImages implements iMissionImages {
 
     //*****************************************************************************
     public static function getThumbBlobData($psSol, $psInstr, $psProduct) {
-        cDebug::enter();
+        cTracing::enter();
 
         $sImgUrl = cCuriosityImages::getImageUrl($psSol, $psInstr, $psProduct);
         if ($sImgUrl == null)
             cDebug::error("unable to find image for $psSol, $psInstr, $psProduct");
         $aData = cThumbNailer::get_thumbnail_blob_data($sImgUrl, self::THUMBNAIL_HEIGHT, self::THUMBNAIL_QUALITY);
 
-        cDebug::leave();
+        cTracing::leave();
         return $aData;
     }
 
     public static function getImageUrl($psSol, $psInstrument, $psProduct) {
-        cDebug::enter();
+        cTracing::enter();
         $oDetails = cCuriosity::getProductDetails($psSol, $psInstrument, $psProduct);
         if ($oDetails["d"])
             return $oDetails["d"]["i"];
         else
             cDebug::error("no image found");
 
-        cDebug::leave();
+        cTracing::leave();
     }
 
     //*****************************************************************************
     static function getInstrumentImageDetails($paInstrumentImages, $psProduct) {
         $oDetails = null;
         $oResult = null;
-        cDebug::enter();
+        cTracing::enter();
 
         cDebug::write("looking for $psProduct");
         $iCount = count($paInstrumentImages);
@@ -232,12 +232,12 @@ class cCuriosityImages implements iMissionImages {
         } else
             $oResult = ["d" => $oDetails, "max" => $iCount, "item" => $i + 1];
 
-        cDebug::leave();
+        cTracing::leave();
         return $oResult;
     }
     //*****************************************************************************
     public static function getThumbnails($psSol, $psInstrument) {
-        cDebug::enter();
+        cTracing::enter();
         $oResult = null;
 
         //get the thumbnails and the non thumbnails
@@ -247,13 +247,13 @@ class cCuriosityImages implements iMissionImages {
         $oAllSolThumbs = cCuriosityManifestIndex::get_all_sol_data($psSol, $sInstrument, eSpaceSampleTypes::SAMPLE_THUMBS);
         $oResult = self::pr_match_thumbs($psSol, null, $oAllSolThumbs);
 
-        cDebug::leave();
+        cTracing::leave();
         return $oResult;
     }
 
     //*****************************************************************************
     private static function pr_match_thumbs($psSol, $psInstrument, cManifestSolData $poAllSolThumbs) {
-        cDebug::enter();
+        cTracing::enter();
 
         //----------check that there are thumbnails
         $aThumbData = $poAllSolThumbs->data;
@@ -331,7 +331,7 @@ class cCuriosityImages implements iMissionImages {
         $aValues = array_values($aThumbData);
         $poAllSolThumbs->data = $aValues;
 
-        cDebug::leave();
+        cTracing::leave();
         return ["s" => $psSol, "i" => $psInstrument, "d" => $poAllSolThumbs];
     }
 }

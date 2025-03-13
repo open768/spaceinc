@@ -107,7 +107,7 @@ class tblID extends tblModel {
     }
 
     public static function get_ids(int $piMission, array $paNames) {
-        //cDebug::enter();
+        //cTracing::enter();
 
         // Convert sample type names to lowercase
         $aLowerNames = array_map('strtolower', $paNames);
@@ -121,7 +121,7 @@ class tblID extends tblModel {
         // Check for invalid sample type names
         $aInvalidNames = array_diff($aLowerNames, $aMatchedNames);
         if (!empty($aInvalidNames)) {
-            cDebug::leave();
+            cTracing::leave();
             cDebug::error("Invalid names provided: " . implode(', ', $aInvalidNames));
             return;
         }
@@ -132,7 +132,7 @@ class tblID extends tblModel {
             ->pluck(tblID::ID)
             ->toArray();
 
-        //cDebug::leave();
+        //cTracing::leave();
         return $aIDs;
     }
 }
@@ -177,10 +177,11 @@ class tblProducts extends tblModel {
     }
 
     static function get_all_data(int $piMission, int $piSol, ?string $psInstrument = null, eSpaceSampleTypes $piSampleType = eSpaceSampleTypes::SAMPLE_ALL): array {
+        tblProducts::where(cMissionColumns::MISSION_ID);
     }
 
     static function remove_sample_types(int $piMission, array $pasample_types) {
-        cDebug::enter();
+        cTracing::enter();
 
         cDebug::extra_debug("building lists");
         $aIDs = tblSampleType::get_ids($piMission, $pasample_types);
@@ -197,11 +198,11 @@ class tblProducts extends tblModel {
             ->where(cMissionColumns::MISSION_ID, $piMission)
             ->delete();
 
-        cDebug::leave();
+        cTracing::leave();
     }
 
     public static function keep_instruments(int $piMission, array $paInstrNames) {
-        cDebug::enter();
+        cTracing::enter();
 
         //work out which IDs to remove
         cDebug::extra_debug("building lists");
@@ -210,7 +211,7 @@ class tblProducts extends tblModel {
         $aDiff = array_diff($aAllIDs, $aIDs);
 
         if (count($aDiff) == 0) {
-            cDebug::leave();
+            cTracing::leave();
             cDebug::error("only instruments found were:" . implode(", ", $paInstrNames));
         }
 
@@ -226,7 +227,7 @@ class tblProducts extends tblModel {
             ->where(cMissionColumns::MISSION_ID, $piMission)
             ->delete();
 
-        cDebug::leave();
+        cTracing::leave();
     }
 }
 
@@ -278,8 +279,10 @@ class tblSolStatus extends tblModel {
 }
 
 //#############################################################################################
+/** 
+ * creates tables need to store manifest data
+ */
 class cMissionManifest {
-    //https://mars.nasa.gov/msl-raw-images/image/images_sol4413.json
     const DBNAME = "manifest_orm.db";
 
     static $bAddedConnection = false;
@@ -294,7 +297,7 @@ class cMissionManifest {
 
     //**********************************************************************************************
     static function check_tables() {
-        cDebug::enter();
+        cTracing::enter();
 
         //check SOLS_TABLE_NAME table exists
         foreach (self::$models as $oModelClass) {
@@ -305,16 +308,16 @@ class cMissionManifest {
             });
         }
 
-        cDebug::leave();
+        cTracing::leave();
     }
 
     static function empty_manifest() {
-        cDebug::enter();
+        cTracing::enter();
         foreach (self::$models as $oModelClass) {
             cDebug::write("truncating " . $oModelClass);
             $oModelClass::truncate();
         }
-        cDebug::leave();
+        cTracing::leave();
     }
 
     static function init() {

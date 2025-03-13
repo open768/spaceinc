@@ -21,29 +21,29 @@ class cPencilNev {
 
     //***********************************************************************************************
     public static function get_top_gigas() {
-        cDebug::enter();
+        cTracing::enter();
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         $aData =  $oDB->get("/" . self::TOP_NEVILLE_FILENAME);
         ksort($aData);
-        cDebug::leave();
+        cTracing::leave();
 
         return $aData;
     }
 
     //***********************************************************************************************
     public static function get_sol_gigas($psSol) {
-        //cDebug::enter();
+        //cTracing::enter();
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         $oData = $oDB->get("$psSol/" . self::NEVILLE_FILENAME);
-        //cDebug::leave();
+        //cTracing::leave();
         return $oData;
     }
 
     //***********************************************************************************************
     public static function index_gigapans($paData) {
-        cDebug::enter();
+        cTracing::enter();
         $aData = [];
         $aTop = [];
         $iMatched = 0;
@@ -73,16 +73,16 @@ class cPencilNev {
         $oDB->put("/" . self::TOP_NEVILLE_FILENAME, $aTop);
 
         cDebug::write("Completed indexing of neville gigapans");
-        cDebug::leave();
+        cTracing::leave();
     }
 
     //***********************************************************************************************
     public static function get_gigas($psSol) {
-        cDebug::enter();
+        cTracing::enter();
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         $oData =  $oDB->get("$psSol/" . self::NEVILLE_FILENAME);
-        cDebug::leave();
+        cTracing::leave();
         return $oData;
     }
 }

@@ -22,20 +22,20 @@ class cSpaceTagNames {
 
     //********************************************************************
     static function get_top_tag_names() {
-        cDebug::enter();
+        cTracing::enter();
         /** @var cObjStoreDB $oDB **/
         $oDB = cSpaceTags::$objstoreDB;
 
         $aTags = $oDB->get("/" . self::TOP_TAG_NAME_FILE);
         //cDebug::vardump($aTags);
         if ($aTags) ksort($aTags);
-        cDebug::leave();
+        cTracing::leave();
         return $aTags;
     }
 
     //********************************************************************
     static function kill_tag_name($psTag) {
-        cDebug::enter(); {
+        cTracing::enter(); {
 
             /** @var cObjStoreDB $oDB **/
             $oDB = cSpaceTags::$objstoreDB;
@@ -64,7 +64,7 @@ class cSpaceTagNames {
             foreach ($aTags as $sFolder)
                 $oDB->kill("$sFolder/" . cSpaceTags::PRODUCT_TAG_FILE);
         }
-        cDebug::leave();
+        cTracing::leave();
     }
 
     //********************************************************************
@@ -76,7 +76,7 @@ class cSpaceTagNames {
 
     //********************************************************************
     static function update_top_name_index($psTag) {
-        cDebug::enter();
+        cTracing::enter();
 
         cDebug::write("updating index for tag : $psTag");
 
@@ -95,35 +95,35 @@ class cSpaceTagNames {
         /** @var cObjStoreDB $oDB **/
         $oDB = cSpaceTags::$objstoreDB;
         $oDB->put("/" . self::TOP_TAG_NAME_FILE, $aData);
-        cDebug::leave();
+        cTracing::leave();
     }
     //********************************************************************
     static function get_tag_name_index($psTag) {
-        cDebug::enter();
+        cTracing::enter();
 
         $filename = $psTag . ".txt";
         /** @var cObjStoreDB $oDB **/
         $oDB = cSpaceTags::$objstoreDB;
 
         $aTags = $oDB->get(self::TAG_FOLDER . "/$filename");
-        cDebug::leave();
+        cTracing::leave();
         if ($aTags) sort($aTags);
         return $aTags;
     }
     //********************************************************************
     static function update_tag_name_index($psTag, $psSol, $psInstrument, $psProduct) {
-        cDebug::enter();
+        cTracing::enter();
         $sFolder = cSpaceTags::get_product_tag_folder($psSol, $psInstrument, $psProduct);
         $filename = $psTag . ".txt";
         /** @var cObjStoreDB $oDB **/
         $oDB = cSpaceTags::$objstoreDB;
         $oDB->add_to_array(self::TAG_FOLDER . "/$filename", $sFolder);
-        cDebug::leave();
+        cTracing::leave();
     }
 
     //********************************************************************
     static function search_tag_names($psPartial) {
-        cDebug::enter();
+        cTracing::enter();
 
         if (strlen($psPartial) < 2) cDebug::error("partial match must be at least 2 characeters");
         $aOut = [];
@@ -133,7 +133,7 @@ class cSpaceTagNames {
             if (stristr($sTag, $psPartial))
                 $aOut[] = strtolower($sTag);
 
-        cDebug::leave();
+        cTracing::leave();
         return $aOut;
     }
 }
@@ -200,7 +200,7 @@ class cSpaceTags {
 
     //********************************************************************
     static function set_product_tag($psSol, $psInstrument, $psProduct, $psTag, $psUser) {
-        cDebug::enter();
+        cTracing::enter();
 
         //tidy the tags - remove anything non alphanumeric
         $sTag = strtolower($psTag);
@@ -229,7 +229,7 @@ class cSpaceTags {
         //update Indexes
         self::update_sol_tags($psSol, $psInstrument, $psProduct, $sTag);
 
-        cDebug::leave();
+        cTracing::leave();
     }
 
     //********************************************************************
@@ -260,20 +260,20 @@ class cSpaceTags {
 
     //********************************************************************
     static function get_sol_tag_count($psSol) {
-        cDebug::enter();
+        cTracing::enter();
         $aData = self::get_sol_tags($psSol);
         $iCount = 0;
         if ($aData != null)
             foreach ($aData as $sInstr => $aTags)
                 foreach ($aTags as $oItem)
                     $iCount++;
-        cDebug::leave();
+        cTracing::leave();
         return $iCount;
     }
 
     //********************************************************************
     static function clean_product_tags() {
-        cDebug::enter(); {
+        cTracing::enter(); {
             /** @var cObjStoreDB $oDB **/
             $oDB = self::$objstoreDB;
 
@@ -299,7 +299,7 @@ class cSpaceTags {
                     }
             }
         }
-        cDebug::leave();
+        cTracing::leave();
     }
 }
 cSpaceTags::init_obj_store_db();

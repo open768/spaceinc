@@ -51,7 +51,7 @@ class cSpiritRover extends cRoverManifest {
     //# implement abstract functions
     //#####################################################################
     protected function pr_generate_details($psSol, $psInstr) {
-        cDebug::enter();
+        cTracing::enter();
 
         //find the url where to get the instrument details from
         $oSol = $this->get_sol($psSol);
@@ -99,13 +99,13 @@ class cSpiritRover extends cRoverManifest {
             $aResults[] = $oDetail;
         });
 
-        cDebug::leave();
+        cTracing::leave();
         return $aResults;
     }
 
     //*****************************************************************************
     protected function pr_generate_manifest() {
-        cDebug::enter();
+        cTracing::enter();
 
         //------------------------------------------------------
         cDebug::write("fetching page from NASA");
@@ -142,6 +142,6 @@ class cSpiritRover extends cRoverManifest {
                 $oParent->add($iSol, $sAbbr, $iCount, $sUrl);
             });
         });
-        cDebug::leave();
+        cTracing::leave();
     }
 }

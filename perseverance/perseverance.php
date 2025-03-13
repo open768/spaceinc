@@ -40,23 +40,23 @@ class cPerseverance extends cRoverManifest {
 
     //*******************************************************************************
     protected  function pr_build_manifest() {
-        cDebug::enter();
+        cTracing::enter();
         $oSols = $this->pr__do_build_manifest();
-        cDebug::leave();
+        cTracing::leave();
         return $oSols;
     }
 
     //*******************************************************************************
     protected  function pr_generate_details($psSol, $psInstr) {
-        cDebug::enter();
-        cDebug::leave();
+        cTracing::enter();
+        cTracing::leave();
     }
 
     //#####################################################################
     //# PRIVATES
     //#####################################################################
     private function pr__do_build_manifest() {
-        cDebug::enter();
+        cTracing::enter();
 
         //get the total number of sols from the RSS feed
         $oHttp = new cCachedHttp;
@@ -66,7 +66,7 @@ class cPerseverance extends cRoverManifest {
 
         //build the sols object with blanks
         $oSols = new cRoverSols;
-        cDebug::leave();
+        cTracing::leave();
         return $oSols;
     }
 }

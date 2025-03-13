@@ -35,20 +35,20 @@ class cSpaceIndex {
 
     //********************************************************************
     static function get_top_sol_data($psSuffix) {
-        cDebug::enter();
+        cTracing::enter();
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
 
         $sFile = self::get_filename(self::TOP_PREFIX, $psSuffix);
         $oData = $oDB->get("/$sFile");
-        cDebug::leave();
+        cTracing::leave();
 
         return $oData;
     }
 
     //********************************************************************
     static function get_sol_index($psSol, $psSuffix, $pbSolProdInstr = false) {
-        //cDebug::enter();
+        //cTracing::enter();
         $sFile = self::get_filename(self::SOL_PREFIX, $psSuffix);
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
@@ -69,25 +69,25 @@ class cSpaceIndex {
             }
             $oData = $aProdData;
         }
-        //cDebug::leave();
+        //cTracing::leave();
         return $oData;
     }
 
     //********************************************************************
     static function get_instr_data($psSol, $psInstrument, $psSuffix) {
-        cDebug::enter();
+        cTracing::enter();
         $sFile = self::get_filename(self::INSTR_PREFIX, $psSuffix);
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         $oData = $oDB->get("$psSol/$psInstrument/$sFile");
-        cDebug::leave();
+        cTracing::leave();
 
         return $oData;
     }
 
     //********************************************************************
     static function get_solcount($psSol, $psFile) {
-        cDebug::enter();
+        cTracing::enter();
         $iCount = 0;
         $aData = self::get_sol_index($psSol, $psFile);
         if ($aData) {
@@ -96,7 +96,7 @@ class cSpaceIndex {
                     $iCount += $iProdCount;
             }
         }
-        cDebug::leave();
+        cTracing::leave();
 
         return $iCount;
     }
@@ -105,17 +105,17 @@ class cSpaceIndex {
     //# UPDATE functions
     //######################################################################
     static function update_indexes($psSol, $psInstrument, $psProduct, $poData, $psSuffix) {
-        cDebug::enter();
+        cTracing::enter();
         //@todo check for valid product
         self::update_instr_index($psSol, $psInstrument, $psProduct, $poData, $psSuffix);
         self::update_sol_index($psSol, $psInstrument, $psProduct, $psSuffix);
         self::update_top_sol_index($psSol, $psSuffix);
-        cDebug::leave();
+        cTracing::leave();
     }
 
     //********************************************************************
     static function update_top_sol_index($psSol, $psSuffix) {
-        //cDebug::enter();
+        //cTracing::enter();
         $sFile = self::get_filename(self::TOP_PREFIX, $psSuffix);
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
@@ -127,12 +127,12 @@ class cSpaceIndex {
         $aData[$psSol] = $aData[$psSol] + 1;
         cDebug::write("updating top sol index for sol $psSol");
         $oDB->put("/$sFile", $aData);
-        //cDebug::leave();
+        //cTracing::leave();
     }
 
     //********************************************************************
     static function update_sol_index($psSol, $psInstrument, $psProduct, $psSuffix) {
-        //cDebug::enter();
+        //cTracing::enter();
         $aData = self::get_sol_index($psSol, $psSuffix);
         if (!$aData) $aData = [];
         if (!isset($aData[$psInstrument])) $aData[$psInstrument] = [];
@@ -144,12 +144,12 @@ class cSpaceIndex {
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         $oDB->put("$psSol/$sFile", $aData);
-        //cDebug::leave();
+        //cTracing::leave();
     }
 
     //********************************************************************
     static function update_instr_index($psSol, $psInstrument, $psProduct, $poData, $psSuffix) {
-        //cDebug::enter();
+        //cTracing::enter();
         $sFile = self::get_filename(self::INSTR_PREFIX, $psSuffix);
         $sFolder = "$psSol/$psInstrument";
         /** @var cObjStoreDB $oDB **/
@@ -158,7 +158,7 @@ class cSpaceIndex {
         if (!$aData) $aData = [];
         $aData[$psProduct] = $poData;
         $oDB->put("$sFolder/$sFile", $aData);
-        //cDebug::leave();
+        //cTracing::leave();
     }
 
     //######################################################################
@@ -172,7 +172,7 @@ class cSpaceIndex {
      * @return [type]
      */
     static function reindex($poInstrData, $psSuffix, $psProdFile) {
-        cDebug::enter();
+        cTracing::enter();
         $aData = [];
 
         $toppath = cObjStore::$rootFolder . "/" . cObjStore::$OBJDATA_REALM;
@@ -202,12 +202,12 @@ class cSpaceIndex {
             }
 
         self::write_index_files($aData, $psSuffix);
-        cDebug::leave();
+        cTracing::leave();
     }
 
     //***********************************************************************************************************
     public static function write_index_files($paData, $psSuffix) {
-        cDebug::enter();
+        cTracing::enter();
         $aTopSols = [];
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
@@ -218,7 +218,7 @@ class cSpaceIndex {
             $oDB->put("$sSol/" . self::get_filename(self::SOL_PREFIX, $psSuffix), $aSolData);
         }
         $oDB->put("/" . self::get_filename(self::TOP_PREFIX, $psSuffix), $aTopSols);
-        cDebug::leave();
+        cTracing::leave();
     }
 }
 

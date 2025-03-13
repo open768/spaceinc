@@ -37,7 +37,7 @@ class cGigapan {
 
     //***********************************************************************************************
     public static function get_gigapans($psUser, $piPage) {
-        cDebug::enter();
+        cTracing::enter();
         $oCache = new cCachedHttp();
         $oCache->CACHE_EXPIRY = self::GIGAPAN_CACHE;
 
@@ -71,7 +71,7 @@ class cGigapan {
             ]
         ];
 
-        cDebug::leave();
+        cTracing::leave();
         return $aData;
     }
 }
