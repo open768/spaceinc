@@ -141,8 +141,27 @@ class tblMissions extends tblID {
 }
 
 class tblInstruments extends tblID {
+    static function get_matching(int $piMission, string $psPattern) {
+        cTracing::enter();
+
+        $aMatchingIDs = static::where(cMissionColumns::MISSION_ID, $piMission)
+            ->where(self::NAME, 'LIKE', $psPattern)
+            ->pluck(self::ID)
+            ->toArray();
+        cDebug::extra_debug("matching instruments:" . count($aMatchingIDs));
+        return $aMatchingIDs;
+
+        cTracing::leave();
+    }
 }
+
 class tblSampleType extends tblID {
+}
+
+class cTableRelationships {
+    const RELATION_INSTRUMENT = 'instrument';
+    const RELATION_SAMPLE_TYPE = 'sampleType';
+    const RELATION_MISSION = 'mission';
 }
 
 //#############################################################################################
@@ -155,6 +174,8 @@ class tblProducts extends tblModel {
     const PRODUCT = 'product';
     const UTC_DATE = 'utc_date';
     const DRIVE = 'drive';
+
+
 
     static function create_table(Blueprint $poTable) {
         //create table structure
@@ -228,6 +249,38 @@ class tblProducts extends tblModel {
             ->delete();
 
         cTracing::leave();
+    }
+
+    public static function get_random_images(int $piMission, array $aInstrumentIDs, int $iLimit = 10) {
+        cTracing::enter();
+
+        $aImages = static::whereIn(self::INSTRUMENT_ID, $aInstrumentIDs)
+            ->where(cMissionColumns::MISSION_ID, $piMission)
+            ->with(
+                [
+                    cTableRelationships::RELATION_INSTRUMENT,
+                    cTableRelationships::RELATION_SAMPLE_TYPE,
+                    cTableRelationships::RELATION_MISSION
+                ]
+            )
+            ->inRandomOrder()
+            ->limit($iLimit)
+            ->get()
+            ->toArray();
+
+        cTracing::leave();
+        return $aImages;
+    }
+
+    public function instrument() {
+        return $this->belongsTo(tblInstruments::class, self::INSTRUMENT_ID);
+    }
+    public function mission() {
+        return $this->belongsTo(tblMissions::class, cMissionColumns::MISSION_ID);
+    }
+
+    public function sampleType() {
+        return $this->belongsTo(tblSampleType::class, self::SAMPLE_TYPE_ID);
     }
 }
 

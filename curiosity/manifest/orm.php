@@ -45,11 +45,17 @@ class cManifestOrmUtils {
         return $sOut;
     }
 
-    static function get_random_images(string $psIntrument, int $piHowmany) {
+    static function get_random_images(string $psPattern, int $piHowmany) {
         cTracing::enter();
-        //check its a valid instrument
 
-        $sInstrumentID = tblInstruments::get_id(cCuriosityORMManifest::$mission_id, $psInstrument);
+        //get instruments
+        $aInstruments = tblInstruments::get_matching(cCuriosityORMManifest::$mission_id, $psPattern);
+        if (count($aInstruments) == 0)
+            cDebug::error("no matching instruments");
+
+        //from the products table get number of products
+        $aRows = tblProducts::get_random_images(cCuriosityORMManifest::$mission_id, $aInstruments, $piHowmany);
+        cDebug::vardump($aRows);
 
         cTracing::leave();
     }
