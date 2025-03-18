@@ -3,7 +3,8 @@
 //ORM is eloquent: https://github.com/illuminate/database
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Date;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Builder;
 
 require_once cAppGlobals::$ckPhpInc . "/eloquentorm.php";
 
@@ -175,8 +176,7 @@ class tblProducts extends tblModel {
     const UTC_DATE = 'utc_date';
     const DRIVE = 'drive';
 
-
-
+    //*******************************************************************************
     static function create_table(Blueprint $poTable) {
         //create table structure
         $poTable->integer(cMissionColumns::MISSION_ID);
@@ -197,10 +197,12 @@ class tblProducts extends tblModel {
         $poTable->unique([cMissionColumns::SOL, self::INSTRUMENT_ID, self::PRODUCT, self::SAMPLE_TYPE_ID]);
     }
 
+    //*******************************************************************************
     static function get_all_data(int $piMission, int $piSol, ?string $psInstrument = null, eSpaceSampleTypes $piSampleType = eSpaceSampleTypes::SAMPLE_ALL): array {
         tblProducts::where(cMissionColumns::MISSION_ID);
     }
 
+    //*******************************************************************************
     static function remove_sample_types(int $piMission, array $pasample_types) {
         cTracing::enter();
 
@@ -222,6 +224,7 @@ class tblProducts extends tblModel {
         cTracing::leave();
     }
 
+    //*******************************************************************************
     public static function keep_instruments(int $piMission, array $paInstrNames) {
         cTracing::enter();
 
@@ -238,7 +241,7 @@ class tblProducts extends tblModel {
 
         //delete the IDs from product table
         cDebug::extra_debug("deleting products with instruments");
-        tblProducts::whereIn(tblProducts::INSTRUMENT_ID, $aDiff)
+        static::whereIn(tblProducts::INSTRUMENT_ID, $aDiff)
             ->where(cMissionColumns::MISSION_ID, $piMission)
             ->delete();
 
@@ -251,27 +254,50 @@ class tblProducts extends tblModel {
         cTracing::leave();
     }
 
-    public static function get_random_images(int $piMission, array $aInstrumentIDs, int $iLimit = 10) {
+    //*******************************************************************************
+    /**
+     * 
+     * @param int $piMission  MIssion ID
+     * @param array $aInstrumentIDs list of instruments for products
+     * @param int $iLimit How many rows to return
+     * @return Collection 
+     */
+    public static function get_random_images(int $piMission, array $paInstrumentIDs, int $piLimit = 10) {
         cTracing::enter();
 
-        $aImages = static::whereIn(self::INSTRUMENT_ID, $aInstrumentIDs)
-            ->where(cMissionColumns::MISSION_ID, $piMission)
+        /** @var Builder $oBuilder */
+        $oBuilder = self::get_builder($piMission);
+
+        /** @var Collection $oCollection */
+        $oCollection  = $oBuilder->whereIn(self::INSTRUMENT_ID, $paInstrumentIDs)
+            ->inRandomOrder()
+            ->limit($piLimit)
+            ->get();
+
+        cTracing::leave();
+        return $oCollection;
+    }
+
+    /**
+     * 
+     * @param int $piMission mission ID
+     * @return Builder 
+     */
+    public static function get_builder(int $piMission) {
+        $oBuilder =
+            static::where(cMissionColumns::MISSION_ID, $piMission)
             ->with(
                 [
                     cTableRelationships::RELATION_INSTRUMENT,
                     cTableRelationships::RELATION_SAMPLE_TYPE,
                     cTableRelationships::RELATION_MISSION
                 ]
-            )
-            ->inRandomOrder()
-            ->limit($iLimit)
-            ->get()
-            ->toArray();
-
-        cTracing::leave();
-        return $aImages;
+            );
+        return $oBuilder;
     }
 
+    //*******************************************************************************
+    //*******************************************************************************
     public function instrument() {
         return $this->belongsTo(tblInstruments::class, self::INSTRUMENT_ID);
     }
