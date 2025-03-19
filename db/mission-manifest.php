@@ -15,6 +15,17 @@ class cMissionColumns {
     const RELATED_MISSION_NAME = "rmn";
 }
 
+class cOutputColumns {
+    const MISSION = "m";
+    const SOL = "s";
+    const INSTRUMENT = "i";
+    const PRODUCT = "p";
+    const DATA = "d";
+    const URL = "d";
+    const DATE = "dt";
+    const SAMPLETYPE = "st";
+}
+
 abstract class tblModel extends Model {
     public $timestamps = false;
     protected $connection = cMissionManifest::DBNAME;
@@ -207,28 +218,6 @@ class tblProducts extends tblModel {
     }
 
     //*******************************************************************************
-    static function remove_sample_types(int $piMission, array $pasample_types) {
-        cTracing::enter();
-
-        cDebug::extra_debug("building lists");
-        $aIDs = tblSampleType::get_ids($piMission, $pasample_types);
-
-        // remove the offending sample types from product table
-        cDebug::extra_debug("removing from products table");
-        tblProducts::whereIn(tblProducts::SAMPLE_TYPE_ID, $aIDs)
-            ->where(cMissionColumns::MISSION_ID, $piMission)
-            ->delete();
-
-        // remove the offending sample types from sampletypes table
-        cDebug::extra_debug("removing from sampletypes table");
-        tblSampleType::whereIn(tblID::ID, $aIDs)
-            ->where(cMissionColumns::MISSION_ID, $piMission)
-            ->delete();
-
-        cTracing::leave();
-    }
-
-    //*******************************************************************************
     public static function keep_instruments(int $piMission, array $paInstrNames) {
         cTracing::enter();
 
@@ -258,36 +247,6 @@ class tblProducts extends tblModel {
         cTracing::leave();
     }
 
-    //*******************************************************************************
-    /**
-     * 
-     * @param int $piMission  MIssion ID
-     * @param array $aInstrumentIDs list of instruments for products
-     * @param int $iLimit How many rows to return
-     * @return Collection 
-     */
-    public static function get_random_images(int $piMission, array $paInstrumentIDs, int $piLimit = 10) {
-        cTracing::enter();
-
-        /** @var Builder $oBuilder */
-        $oBuilder = self::get_builder($piMission);
-
-        /** @var Collection $oCollection */
-        $oCollection  = $oBuilder->whereIn(self::INSTRUMENT_ID, $paInstrumentIDs)
-            ->inRandomOrder()
-            ->limit($piLimit)
-            ->get();
-
-        $aResults =
-            $oCollection->map(
-                function (tblProducts $poItem) {
-                    return self::map($poItem);
-                }
-            )->toArray();
-        cTracing::leave();
-
-        return $aResults;
-    }
 
     /**
      * 
@@ -308,14 +267,16 @@ class tblProducts extends tblModel {
     }
 
     public static function map(tblProducts $poItem) {
+        $sUrl = $poItem[self::IMAGE_URL];
+
         $oList =  [
-            cMissionColumns::SOL => $poItem[cMissionColumns::SOL],
-            self::IMAGE_URL => $poItem[self::IMAGE_URL],
-            self::PRODUCT => $poItem[self::PRODUCT],
-            self::UTC_DATE => $poItem[self::UTC_DATE],
-            self::RELATED_INSTRUMENT_NAME => $poItem->instrument[tblID::NAME],
-            cMissionColumns::RELATED_MISSION_NAME => $poItem->mission[tblID::NAME],
-            self::RELATED_SAMPLE_TYPE_NAME => $poItem->sampleType[tblID::NAME]
+            cOutputColumns::SOL => $poItem[cMissionColumns::SOL],
+            cOutputColumns::URL => $sUrl,
+            cOutputColumns::PRODUCT => $poItem[self::PRODUCT],
+            cOutputColumns::DATE => $poItem[self::UTC_DATE],
+            cOutputColumns::INSTRUMENT => $poItem->instrument[tblID::NAME],
+            cOutputColumns::MISSION => $poItem->mission[tblID::NAME],
+            cOutputColumns::SAMPLETYPE => $poItem->sampleType[tblID::NAME]
         ];
         return $oList;
     }

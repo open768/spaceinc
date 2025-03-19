@@ -10,13 +10,11 @@ http://creativecommons.org/licenses/by-nc-nd/4.0/legalcode
 For licenses that allow for commercial use please contact cluck@chickenkatsu.co.uk
 // USE AT YOUR OWN RISK - NO GUARANTEES OR ANY FORM ARE EITHER EXPRESSED OR IMPLIED
  **************************************************************************/
-
-use Illuminate\Database\Eloquent\Collection;
-
 require_once cAppGlobals::$spaceInc . "/curiosity/manifest/manifest.php";
 require_once cAppGlobals::$spaceInc . "/curiosity/manifest/index/status.php";
 require_once cAppGlobals::$spaceInc . "/curiosity/constants.php";
 require_once cAppGlobals::$spaceInc . "/db/mission-manifest.php";
+require_once cAppGlobals::$spaceInc . "/manifest/utils.php";
 
 //################################################################################
 class cManifestOrmUtils {
@@ -31,6 +29,7 @@ class cManifestOrmUtils {
         "opgs/edr" => "{8}",
         "soas/rdr/" => "{9}"
     ];
+    static $flip_replacements;
 
     static function reduce_image_url($psUrl, $psProduct) {
         $sOut = str_replace($psProduct, "{P}", $psUrl);
@@ -41,12 +40,27 @@ class cManifestOrmUtils {
     }
 
     static function expand_image_url($psUrl, $psProduct) {
+
         $sOut = str_replace("{P}", $psProduct, $psUrl);
-        foreach (self::$replacements as $sReplace => $sSearch) {
-            $sOut = str_replace($sSearch, $sReplace, $sOut);
+
+        while (true) {
+            $iStartPos = strpos($sOut, "{");
+            if ($iStartPos === false) break;
+
+            $iEndPos = strpos($sOut, "}", $iStartPos);
+            if ($iEndPos === false) break;
+
+            $sFragment = substr($sOut, $iStartPos, $iEndPos - $iStartPos + 1);
+            if (!isset(self::$flip_replacements[$sFragment]))
+                break;
+
+            $sReplacement = self::$flip_replacements[$sFragment];
+            $sOut = str_replace($sFragment, $sReplacement, $sOut);
         }
+
         return $sOut;
     }
+
 
     static function get_random_images(string $psPattern, int $piHowmany) {
         cTracing::enter();
@@ -57,11 +71,18 @@ class cManifestOrmUtils {
             cDebug::error("no matching instruments");
 
         //from the products table get number of products
-        /** @var Collection $oCollection */
-        $oCollection = tblProducts::get_random_images(cCuriosityORMManifest::$mission_id, $aInstruments, $piHowmany);
-        
-        cDebug::vardump($oCollection);
+        /** @var array $oCollection */
+        $aRows = cSpaceManifestUtils::get_random_images(cCuriosityORMManifest::$mission_id, $aInstruments, $piHowmany);
+        foreach ($aRows as $iIndex => $aRow) {
+            $sAbbreviated = $aRow[cOutputColumns::URL];
+            $sProduct = $aRow[cOutputColumns::PRODUCT];
+            $sFull = self::expand_image_url($sAbbreviated, $sProduct);
+            $aRows[$iIndex][cOutputColumns::URL] = $sFull;
+        }
 
         cTracing::leave();
+        return $aRows;
     }
 }
+
+cManifestOrmUtils::$flip_replacements = array_flip(cManifestOrmUtils::$replacements);

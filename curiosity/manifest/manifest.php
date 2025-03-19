@@ -17,7 +17,6 @@ require_once cAppGlobals::$spaceInc . "/db/mission-manifest.php";
 require_once cAppGlobals::$spaceInc . "/misc/constants.php";
 
 
-
 class cManifestSolData {
     public string $sol;
     public array  $data = [];

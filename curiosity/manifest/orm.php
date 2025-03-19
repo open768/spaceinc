@@ -17,6 +17,7 @@ require_once cAppGlobals::$spaceInc . "/curiosity/manifest/manifest.php";
 require_once cAppGlobals::$spaceInc . "/curiosity/manifest/index/status.php";
 require_once cAppGlobals::$spaceInc . "/curiosity/constants.php";
 require_once cAppGlobals::$spaceInc . "/db/mission-manifest.php";
+require_once cAppGlobals::$spaceInc . "/manifest/utils.php";
 
 
 
@@ -176,7 +177,7 @@ class    cCuriosityORMManifestIndexer {
     public static function remove_unwanted() {
         cTracing::enter();
         try {
-            tblProducts::remove_sample_types(cCuriosityORMManifest::$mission_id, ["downsampled", "subframe", "mixed"]);
+            cSpaceManifestUtils::remove_sample_types(cCuriosityORMManifest::$mission_id, ["downsampled", "subframe", "mixed"]);
         } catch (Exception $e) {
             cDebug::write("unable to remove sample types: " . $e->getMessage());
         }
