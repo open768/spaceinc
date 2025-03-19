@@ -12,6 +12,7 @@ class cMissionColumns {
     const MISSION_ID = "mission_id";
     const ID = 'id';
     const SOL = 'sol';
+    const RELATED_MISSION_NAME = "rmn";
 }
 
 abstract class tblModel extends Model {
@@ -176,6 +177,9 @@ class tblProducts extends tblModel {
     const UTC_DATE = 'utc_date';
     const DRIVE = 'drive';
 
+    const RELATED_INSTRUMENT_NAME = "rin";
+    const RELATED_SAMPLE_TYPE_NAME = "rstn";
+
     //*******************************************************************************
     static function create_table(Blueprint $poTable) {
         //create table structure
@@ -274,8 +278,15 @@ class tblProducts extends tblModel {
             ->limit($piLimit)
             ->get();
 
+        $aResults =
+            $oCollection->map(
+                function (tblProducts $poItem) {
+                    return self::map($poItem);
+                }
+            )->toArray();
         cTracing::leave();
-        return $oCollection;
+
+        return $aResults;
     }
 
     /**
@@ -294,6 +305,19 @@ class tblProducts extends tblModel {
                 ]
             );
         return $oBuilder;
+    }
+
+    public static function map(tblProducts $poItem) {
+        $oList =  [
+            cMissionColumns::SOL => $poItem[cMissionColumns::SOL],
+            self::IMAGE_URL => $poItem[self::IMAGE_URL],
+            self::PRODUCT => $poItem[self::PRODUCT],
+            self::UTC_DATE => $poItem[self::UTC_DATE],
+            self::RELATED_INSTRUMENT_NAME => $poItem->instrument[tblID::NAME],
+            cMissionColumns::RELATED_MISSION_NAME => $poItem->mission[tblID::NAME],
+            self::RELATED_SAMPLE_TYPE_NAME => $poItem->sampleType[tblID::NAME]
+        ];
+        return $oList;
     }
 
     //*******************************************************************************
