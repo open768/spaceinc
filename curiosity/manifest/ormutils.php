@@ -58,13 +58,14 @@ class cMSLManifestOrmUtils {
         $sUrl = $poItem[tblProducts::IMAGE_URL];
 
         $sFullInstrument = $poItem->instrument[tblID::NAME];
-
+        $sAbbrInstrument = cCuriosityInstrument::getInstrumentAbbr($sFullInstrument);
         $oList =  [
             cOutputColumns::SOL => $poItem[cMissionColumns::SOL],
             cOutputColumns::URL => $sUrl,
             cOutputColumns::PRODUCT => $poItem[tblProducts::PRODUCT],
             cOutputColumns::DATE => $poItem[tblProducts::UTC_DATE],
             cOutputColumns::FULL_INSTRUMENT => $sFullInstrument,
+            cOutputColumns::INSTRUMENT => $sAbbrInstrument,
             cOutputColumns::MISSION => $poItem->mission[tblID::NAME],
             cOutputColumns::SAMPLETYPE => $poItem->sampleType[tblID::NAME]
         ];

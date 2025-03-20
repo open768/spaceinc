@@ -21,10 +21,6 @@ class cCuriosityConstants {
         ["name" => "NAV_LEFT_B",    "colour" => "orange",    "abbr" => "NLb",    "caption" => "Left Navigation (B)"],
         ["name" => "NAV_RIGHT_B",    "colour" => "black",    "abbr" => "NRb",    "caption" => "Right Navigation (B)"]
     ];
-
-    static function get_instr_abbr($psFullInstrument) {
-        $lower_instrument = strtolower($psFullInstrument);
-    }
 }
 
 class cOutputColumns {

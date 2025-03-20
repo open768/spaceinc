@@ -82,8 +82,16 @@ class cCuriosityInstrument {
 
     //*****************************************************************************
     public static function getInstrumentAbbr($psInstrument) {
-        self::getInstrumentList();
-        return self::$instrument_map[$psInstrument]["abbr"];
+        $sLower = strtolower($psInstrument);
+        $sAbbr = null;
+        foreach (cCuriosityConstants::$Instruments as $oItem) {
+            $sItemName = strtolower($oItem["name"]);
+            if ($sItemName === $sLower) {
+                $sAbbr = $oItem["abbr"];
+                break;
+            }
+        }
+        return $sAbbr;
     }
 
     //*****************************************************************************
