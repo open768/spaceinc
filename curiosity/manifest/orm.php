@@ -211,7 +211,7 @@ class    cCuriosityORMManifestIndexer {
         $oProduct->instrument_id = $iInstrumentID;
         $oProduct->sample_type_id = $iSampleTypeID;
         $oProduct->site = $poItem->site;
-        $oProduct->image_url = cMSLManifestOrmUtils::reduce_image_url($poItem->urlList, $poItem->itemName);
+        $oProduct->image_url = cMSLImageURLUtil::reduce_image_url($poItem->urlList, $poItem->itemName);
         $oProduct->product = $poItem->itemName;
         $oProduct->utc_date = $poItem->utc;
         $oProduct->drive = $poItem->drive;

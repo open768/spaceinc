@@ -16,63 +16,12 @@ require_once cAppGlobals::$spaceInc . "/curiosity/constants.php";
 require_once cAppGlobals::$spaceInc . "/db/mission-manifest.php";
 require_once cAppGlobals::$spaceInc . "/manifest/utils.php";
 
-class cOutputColumns {
-    const MISSION = "m";
-    const SOL = "s";
-    const INSTRUMENT = "i";
-    const FULL_INSTRUMENT = "fi";
-    const PRODUCT = "p";
-    const DATA = "d";
-    const URL = "d";
-    const DATE = "dt";
-    const SAMPLETYPE = "st";
-}
+
 
 //################################################################################
 class cMSLManifestOrmUtils {
-    static $replacements = [
-        "http://" => "{1}",
-        "https://" => "{2}",
-        "mars.jpl.nasa.gov/msl-raw-images/" => "{3}",
-        "mars.nasa.gov/msl-raw-images/" => "{4}",
-        "proj/msl/redops/ods/surface/sol/" => "{5}",
-        "ods/surface/sol/" => "{6}",
-        "{1}{3}msss/" => "{7}",
-        "opgs/edr" => "{8}",
-        "soas/rdr/" => "{9}"
-    ];
+
     static $flip_replacements;
-
-    static function reduce_image_url($psUrl, $psProduct) {
-        $sOut = str_replace($psProduct, "{P}", $psUrl);
-        foreach (self::$replacements as $sSearch => $sReplace) {
-            $sOut = str_replace($sSearch, $sReplace, $sOut);
-        }
-        return $sOut;
-    }
-
-    //************************************************************************************************
-    static function expand_image_url($psUrl, $psProduct) {
-
-        $sOut = str_replace("{P}", $psProduct, $psUrl);
-
-        while (true) {
-            $iStartPos = strpos($sOut, "{");
-            if ($iStartPos === false) break;
-
-            $iEndPos = strpos($sOut, "}", $iStartPos);
-            if ($iEndPos === false) break;
-
-            $sFragment = substr($sOut, $iStartPos, $iEndPos - $iStartPos + 1);
-            if (!isset(self::$flip_replacements[$sFragment]))
-                break;
-
-            $sReplacement = self::$flip_replacements[$sFragment];
-            $sOut = str_replace($sFragment, $sReplacement, $sOut);
-        }
-
-        return $sOut;
-    }
 
     //************************************************************************************************
     static function get_random_images(string $psPattern, int $piHowmany) {
@@ -96,7 +45,7 @@ class cMSLManifestOrmUtils {
         foreach ($aResults as $iIndex => $aRow) {
             $sAbbreviated = $aRow[cOutputColumns::URL];
             $sProduct = $aRow[cOutputColumns::PRODUCT];
-            $sFull = self::expand_image_url($sAbbreviated, $sProduct);
+            $sFull = cMSLImageURLUtil::expand_image_url($sAbbreviated, $sProduct);
             $aResults[$iIndex][cOutputColumns::URL] = $sFull;
         }
 
@@ -107,6 +56,7 @@ class cMSLManifestOrmUtils {
     //************************************************************************************************
     public static function map_product(tblProducts $poItem) {
         $sUrl = $poItem[tblProducts::IMAGE_URL];
+
         $sFullInstrument = $poItem->instrument[tblID::NAME];
 
         $oList =  [
@@ -114,11 +64,10 @@ class cMSLManifestOrmUtils {
             cOutputColumns::URL => $sUrl,
             cOutputColumns::PRODUCT => $poItem[tblProducts::PRODUCT],
             cOutputColumns::DATE => $poItem[tblProducts::UTC_DATE],
-            cOutputColumns::FULL_INSTRUMENT => $sFullInstrument
+            cOutputColumns::FULL_INSTRUMENT => $sFullInstrument,
             cOutputColumns::MISSION => $poItem->mission[tblID::NAME],
             cOutputColumns::SAMPLETYPE => $poItem->sampleType[tblID::NAME]
         ];
         return $oList;
     }
 }
-cMSLManifestOrmUtils::$flip_replacements = array_flip(cMSLManifestOrmUtils::$replacements);
