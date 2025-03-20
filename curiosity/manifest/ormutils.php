@@ -20,6 +20,7 @@ class cOutputColumns {
     const MISSION = "m";
     const SOL = "s";
     const INSTRUMENT = "i";
+    const FULL_INSTRUMENT = "fi";
     const PRODUCT = "p";
     const DATA = "d";
     const URL = "d";
@@ -28,7 +29,7 @@ class cOutputColumns {
 }
 
 //################################################################################
-class cManifestOrmUtils {
+class cMSLManifestOrmUtils {
     static $replacements = [
         "http://" => "{1}",
         "https://" => "{2}",
@@ -50,6 +51,7 @@ class cManifestOrmUtils {
         return $sOut;
     }
 
+    //************************************************************************************************
     static function expand_image_url($psUrl, $psProduct) {
 
         $sOut = str_replace("{P}", $psProduct, $psUrl);
@@ -72,7 +74,7 @@ class cManifestOrmUtils {
         return $sOut;
     }
 
-
+    //************************************************************************************************
     static function get_random_images(string $psPattern, int $piHowmany) {
         cTracing::enter();
 
@@ -102,19 +104,21 @@ class cManifestOrmUtils {
         return $aResults;
     }
 
+    //************************************************************************************************
     public static function map_product(tblProducts $poItem) {
         $sUrl = $poItem[tblProducts::IMAGE_URL];
+        $sFullInstrument = $poItem->instrument[tblID::NAME];
 
         $oList =  [
             cOutputColumns::SOL => $poItem[cMissionColumns::SOL],
             cOutputColumns::URL => $sUrl,
             cOutputColumns::PRODUCT => $poItem[tblProducts::PRODUCT],
             cOutputColumns::DATE => $poItem[tblProducts::UTC_DATE],
-            cOutputColumns::INSTRUMENT => $poItem->instrument[tblID::NAME],
+            cOutputColumns::FULL_INSTRUMENT => $sFullInstrument
             cOutputColumns::MISSION => $poItem->mission[tblID::NAME],
             cOutputColumns::SAMPLETYPE => $poItem->sampleType[tblID::NAME]
         ];
         return $oList;
     }
 }
-cManifestOrmUtils::$flip_replacements = array_flip(cManifestOrmUtils::$replacements);
+cMSLManifestOrmUtils::$flip_replacements = array_flip(cMSLManifestOrmUtils::$replacements);

@@ -148,45 +148,6 @@ class   cCuriosityManifestUtils {
     const TIMESLOT = 10;
 
 
-    //******************************************************************************
-    /**
-     * returns a random image
-     * @param string $sIntrumentPattern 
-     * @param int $piHowmany 
-     * @return array
-     */
-    static function get_random_images(string $sIntrumentPattern, int $piHowmany) {
-        cTracing::enter();
-
-        //----------------prepare statement
-        $sSQL = "SELECT :mission_col,:sol_col,:instr_col,:product_col,:url_col FROM `:table` WHERE ( :mission_col=:mission AND  :instr_col LIKE :pattern AND :sample_col != 'thumbnail')  ORDER BY RANDOM() LIMIT :howmany";
-        $sSQL = cCuriosityManifestIndex::replace_sql_params($sSQL);
-        $sSQL = str_replace(":howmany", $piHowmany, $sSQL);     //cant bind LIMIT values
-
-        $oSqlDB = cCuriosityManifestIndex::get_db();
-        $oBinds = new cSqlBinds; {
-            $oBinds->add_bind(":mission", cSpaceMissions::CURIOSITY);
-            $oBinds->add_bind(":pattern", $sIntrumentPattern);
-        }
-
-        //----------------fetch results
-        $aResults = $oSqlDB->prep_exec_fetch($sSQL, $oBinds);
-        $aOut = [];
-        foreach ($aResults as $oRow) {
-            $aRow = (array) $oRow;
-            $sMission = $aRow[cCuriosityManifestIndex::COL_MISSION];
-            $sSol = $aRow[cCuriosityManifestIndex::COL_SOL];
-            $sInstr = $aRow[cCuriosityManifestIndex::COL_INSTR];
-            $sProduct = $aRow[cCuriosityManifestIndex::COL_PRODUCT];
-            $sUrl = $aRow[cCuriosityManifestIndex::COL_IMAGE_URL];
-            $oProduct = new cRoverManifestImage($sMission, $sSol, $sInstr, $sProduct, $sUrl);
-            $aOut[] = $oProduct;
-        }
-
-        cTracing::leave();
-        return $aOut;
-    }
-
     //********************************************************
     static function search_for_product(string $psProduct) {
         cTracing::enter();
