@@ -16,6 +16,17 @@ require_once cAppGlobals::$spaceInc . "/curiosity/constants.php";
 require_once cAppGlobals::$spaceInc . "/db/mission-manifest.php";
 require_once cAppGlobals::$spaceInc . "/manifest/utils.php";
 
+class cOutputColumns {
+    const MISSION = "m";
+    const SOL = "s";
+    const INSTRUMENT = "i";
+    const PRODUCT = "p";
+    const DATA = "d";
+    const URL = "d";
+    const DATE = "dt";
+    const SAMPLETYPE = "st";
+}
+
 //################################################################################
 class cManifestOrmUtils {
     static $replacements = [
@@ -71,18 +82,39 @@ class cManifestOrmUtils {
             cDebug::error("no matching instruments");
 
         //from the products table get number of products
-        /** @var array $oCollection */
-        $aRows = cSpaceManifestUtils::get_random_images(cCuriosityORMManifest::$mission_id, $aInstruments, $piHowmany);
-        foreach ($aRows as $iIndex => $aRow) {
+        /** @var Collection $oCollection */
+        $oCollection = cSpaceManifestUtils::get_random_images(cCuriosityORMManifest::$mission_id, $aInstruments, $piHowmany);
+        $aResults =
+            $oCollection->map(
+                function (tblProducts $poItem) {
+                    return self::map_product($poItem);
+                }
+            )->toArray();
+
+        foreach ($aResults as $iIndex => $aRow) {
             $sAbbreviated = $aRow[cOutputColumns::URL];
             $sProduct = $aRow[cOutputColumns::PRODUCT];
             $sFull = self::expand_image_url($sAbbreviated, $sProduct);
-            $aRows[$iIndex][cOutputColumns::URL] = $sFull;
+            $aResults[$iIndex][cOutputColumns::URL] = $sFull;
         }
 
         cTracing::leave();
-        return $aRows;
+        return $aResults;
+    }
+
+    public static function map_product(tblProducts $poItem) {
+        $sUrl = $poItem[tblProducts::IMAGE_URL];
+
+        $oList =  [
+            cOutputColumns::SOL => $poItem[cMissionColumns::SOL],
+            cOutputColumns::URL => $sUrl,
+            cOutputColumns::PRODUCT => $poItem[tblProducts::PRODUCT],
+            cOutputColumns::DATE => $poItem[tblProducts::UTC_DATE],
+            cOutputColumns::INSTRUMENT => $poItem->instrument[tblID::NAME],
+            cOutputColumns::MISSION => $poItem->mission[tblID::NAME],
+            cOutputColumns::SAMPLETYPE => $poItem->sampleType[tblID::NAME]
+        ];
+        return $oList;
     }
 }
-
 cManifestOrmUtils::$flip_replacements = array_flip(cManifestOrmUtils::$replacements);

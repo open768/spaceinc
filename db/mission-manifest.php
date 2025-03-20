@@ -15,16 +15,6 @@ class cMissionColumns {
     const RELATED_MISSION_NAME = "rmn";
 }
 
-class cOutputColumns {
-    const MISSION = "m";
-    const SOL = "s";
-    const INSTRUMENT = "i";
-    const PRODUCT = "p";
-    const DATA = "d";
-    const URL = "d";
-    const DATE = "dt";
-    const SAMPLETYPE = "st";
-}
 
 abstract class tblModel extends Model {
     public $timestamps = false;
@@ -266,20 +256,6 @@ class tblProducts extends tblModel {
         return $oBuilder;
     }
 
-    public static function map(tblProducts $poItem) {
-        $sUrl = $poItem[self::IMAGE_URL];
-
-        $oList =  [
-            cOutputColumns::SOL => $poItem[cMissionColumns::SOL],
-            cOutputColumns::URL => $sUrl,
-            cOutputColumns::PRODUCT => $poItem[self::PRODUCT],
-            cOutputColumns::DATE => $poItem[self::UTC_DATE],
-            cOutputColumns::INSTRUMENT => $poItem->instrument[tblID::NAME],
-            cOutputColumns::MISSION => $poItem->mission[tblID::NAME],
-            cOutputColumns::SAMPLETYPE => $poItem->sampleType[tblID::NAME]
-        ];
-        return $oList;
-    }
 
     //*******************************************************************************
     //*******************************************************************************

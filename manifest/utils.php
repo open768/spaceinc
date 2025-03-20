@@ -47,14 +47,8 @@ class cSpaceManifestUtils {
             ->limit($piLimit)
             ->get();
 
-        $aResults =
-            $oCollection->map(
-                function (tblProducts $poItem) {
-                    return tblProducts::map($poItem);
-                }
-            )->toArray();
         cTracing::leave();
 
-        return $aResults;
+        return $oCollection;
     }
 }
