@@ -42,26 +42,25 @@ class cMSLManifestOrmUtils {
                 }
             )->toArray();
 
-        foreach ($aResults as $iIndex => $aRow) {
-            $sAbbreviated = $aRow[cOutputColumns::URL];
-            $sProduct = $aRow[cOutputColumns::PRODUCT];
-            $sFull = cMSLImageURLUtil::expand_image_url($sAbbreviated, $sProduct);
-            $aResults[$iIndex][cOutputColumns::URL] = $sFull;
-        }
-
         cTracing::leave();
         return $aResults;
     }
 
     //************************************************************************************************
+    /**
+     * Maps generic product to what the curiosity browser expects
+     * @param tblProducts $poItem 
+     */
     public static function map_product(tblProducts $poItem) {
-        $sUrl = $poItem[tblProducts::IMAGE_URL];
+        $sProduct = $poItem[tblProducts::PRODUCT];
+        $sAbbreviated = $poItem[tblProducts::IMAGE_URL];
+        $sFull = cMSLImageURLUtil::expand_image_url($sAbbreviated, $sProduct);
 
         $sFullInstrument = $poItem->instrument[tblID::NAME];
         $sAbbrInstrument = cCuriosityInstrument::getInstrumentAbbr($sFullInstrument);
         $oList =  [
             cOutputColumns::SOL => $poItem[cMissionColumns::SOL],
-            cOutputColumns::URL => $sUrl,
+            cOutputColumns::URL => $sFull,
             cOutputColumns::PRODUCT => $poItem[tblProducts::PRODUCT],
             cOutputColumns::DATE => $poItem[tblProducts::UTC_DATE],
             cOutputColumns::FULL_INSTRUMENT => $sFullInstrument,
