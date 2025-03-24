@@ -35,6 +35,8 @@ class cMSLManifestOrmUtils {
         //from the products table get number of products
         /** @var Collection $oCollection */
         $oCollection = cSpaceManifestUtils::get_random_images(cCuriosityORMManifest::$mission_id, $aInstruments, $piHowmany);
+
+        //map data to what curiosity browser expects
         $aResults =
             $oCollection->map(
                 function (tblProducts $poItem) {
@@ -61,7 +63,7 @@ class cMSLManifestOrmUtils {
         $oList =  [
             cOutputColumns::SOL => $poItem[cMissionColumns::SOL],
             cOutputColumns::URL => $sFull,
-            cOutputColumns::PRODUCT => $poItem[tblProducts::PRODUCT],
+            cOutputColumns::PRODUCT => $sProduct,
             cOutputColumns::DATE => $poItem[tblProducts::UTC_DATE],
             cOutputColumns::FULL_INSTRUMENT => $sFullInstrument,
             cOutputColumns::INSTRUMENT => $sAbbrInstrument,
