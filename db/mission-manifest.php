@@ -109,7 +109,7 @@ class tblID extends tblModel {
         return $aIDs;
     }
 
-    public static function get_ids(int $piMission, array $paNames) {
+    public static function get_matching_ids(int $piMission, array $paNames) {
         //cTracing::enter();
 
         // Convert sample type names to lowercase
@@ -268,6 +268,28 @@ class tblProducts extends tblModel {
 
     public function sampleType() {
         return $this->belongsTo(tblSampleType::class, self::SAMPLE_TYPE_ID);
+    }
+
+    public static function search_product(int $piMission, string $psSearch, array $paSampleTypeIDs) {
+        cTracing::enter();
+
+        $oBuilder = self::get_builder($piMission);
+        $oBuilder = $oBuilder
+            ->whereIn(tblProducts::SAMPLE_TYPE_ID, $paSampleTypeIDs)
+            ->where(
+                function (Builder $poQuery) use ($psSearch) {
+                    $poQuery->where(self::PRODUCT, $psSearch)
+                        ->orWhere(self::PRODUCT, 'LIKE', "%$psSearch%");
+                }
+            )
+            ->with([cTableRelationships::RELATION_INSTRUMENT, cTableRelationships::RELATION_SAMPLE_TYPE, cTableRelationships::RELATION_MISSION])
+            ->limit(1);
+
+
+        $oCollection = cEloquentORM::get($oBuilder);
+
+        cTracing::leave();
+        return $oCollection;
     }
 }
 

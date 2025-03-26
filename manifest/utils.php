@@ -16,17 +16,22 @@ use Illuminate\Database\Eloquent\Collection;
 
 require_once cAppGlobals::$spaceInc . "/db/mission-manifest.php";
 
+class cSpaceManifestUtilsException  extends Exception {
+}
+
 /**
  * mission agnostic routines to get information from a manifest database
  */
 class cSpaceManifestUtils {
 
     //*******************************************************************************
+    //*
+    //*******************************************************************************
     static function remove_sample_types(int $piMission, array $pasample_types) {
         cTracing::enter();
 
         cDebug::extra_debug("building lists");
-        $aIDs = tblSampleType::get_ids($piMission, $pasample_types);
+        $aIDs = tblSampleType::get_matching_ids($piMission, $pasample_types);
 
         // remove the offending sample types from product table
         cDebug::extra_debug("removing from products table");
@@ -42,6 +47,9 @@ class cSpaceManifestUtils {
 
         cTracing::leave();
     }
+
+    //*******************************************************************************
+    //*
     //*******************************************************************************
     /**
      * 
@@ -57,13 +65,34 @@ class cSpaceManifestUtils {
         $oBuilder = tblProducts::get_builder($piMission);
 
         /** @var Collection $oCollection */
-        $oCollection  = $oBuilder->whereIn(tblProducts::INSTRUMENT_ID, $paInstrumentIDs)
+        $oBuilder  = $oBuilder->whereIn(tblProducts::INSTRUMENT_ID, $paInstrumentIDs)
             ->inRandomOrder()
-            ->limit($piLimit)
-            ->get();
+            ->limit($piLimit);
+        $oCollection = cEloquentORM::get($oBuilder);
 
         cTracing::leave();
 
+        return $oCollection;
+    }
+    //*******************************************************************************
+    /**
+     * 
+     * @param int $piMission  MIssion ID
+     * @param string 
+     * @param int $iLimit How many rows to return
+     * @return Collection 
+     */
+    public static function search_product(int $piMission, string $psSearch, array $paSampleTypeIDs) {
+        cTracing::enter();
+        /** @var Builder $oBuilder */
+        $oCollection = tblProducts::search_product($piMission, $psSearch, $paSampleTypeIDs);
+
+        $iCount = $oCollection->count();
+        if ($iCount == 0)
+            throw new cSpaceManifestUtilsException("no products found for $psSearch");
+        cDebug::extra_debug("$iCount rows found");
+
+        cTracing::leave();
         return $oCollection;
     }
 }
