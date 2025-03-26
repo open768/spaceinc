@@ -90,7 +90,6 @@ class cSpaceManifestUtils {
         $iCount = $oCollection->count();
         if ($iCount == 0)
             throw new cSpaceManifestUtilsException("no products found for $psSearch");
-        cDebug::extra_debug("$iCount rows found");
 
         cTracing::leave();
         return $oCollection;
