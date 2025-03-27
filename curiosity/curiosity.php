@@ -54,7 +54,7 @@ class cCuriosity implements iMission {
         //check for a valid product ID - will error if not
         cCuriosityPDS::explode_productID($psSearch);
 
-        $oData = cCuriosityManifestUtils::search_for_product($psSearch);
+        $oData = cMSLManifestOrmUtils::search_for_product($psSearch);
 
         //return the product data
         cTracing::leave();

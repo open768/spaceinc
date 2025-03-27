@@ -34,17 +34,34 @@ class cMSLManifestOrmUtils {
     }
 
     //************************************************************************************************
+    /**
+     * searches for product
+     * @param string $psPartial 
+     * @return null|cSpaceProductData 
+     */
     static function search_for_product(string $psPartial) {
         cTracing::enter();
         //search products table
         $iMission = cCuriosityORMManifest::$mission_id;
 
+        //get data from database
         $aSampleTypeIds = tblSampleType::get_matching_ids($iMission, ["full"]);
         $oCollection = cSpaceManifestUtils::search_product($iMission, $psPartial, $aSampleTypeIds);
+        if ($oCollection == null)
+            return null;
+
         $aResults = self::map_product_collection($oCollection);
 
+        //map to cSpaceProductData
+        $aRow = $aResults[0];
+        $oOut = new cSpaceProductData; {
+            $oOut->sol = $aRow[cOutputColumns::SOL];
+            $oOut->product = $aRow[cOutputColumns::PRODUCT];
+            $oOut->instr = $aRow[cOutputColumns::INSTRUMENT];
+            $oOut->image_url = $aRow[cOutputColumns::URL];
+        }
         cTracing::leave();
-        return $aResults;
+        return $oOut;
     }
 
     //************************************************************************************************

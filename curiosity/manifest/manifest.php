@@ -148,32 +148,6 @@ class   cCuriosityManifestUtils {
     const TIMESLOT = 10;
 
 
-    //********************************************************
-    static function search_for_product(string $psProduct) {
-        cTracing::enter();
-        cDebug::extra_debug("looking for product: $psProduct");
-        $sSQL = "SELECT :mission_col,:sol_col,:instr_col,:product_col,:url_col FROM `:table` WHERE ( :mission_col=:mission AND :product_col=:search AND :sample_col != 'thumbnail')  LIMIT 1";
-        $sSQL = cCuriosityManifestIndex::replace_sql_params($sSQL);
-
-        $oSqlDB = cCuriosityManifestIndex::get_db();
-        $oBinds = new cSqlBinds; {
-            $oBinds->add_bind(":mission", cSpaceMissions::CURIOSITY);
-            $oBinds->add_bind(":search", $psProduct);
-        }
-        $aResult = $oSqlDB->prep_exec_fetch($sSQL, $oBinds);
-        if ($aResult == null) cDebug::error("nothing matched");
-
-        $aRow = (array)$aResult[0];
-        $oOut = new cSpaceProductData; {
-            $oOut->sol = $aRow[cCuriosityManifestIndex::COL_SOL];
-            $oOut->product = $aRow[cCuriosityManifestIndex::COL_PRODUCT];
-            $oOut->instr = $aRow[cCuriosityManifestIndex::COL_INSTR];
-            $oOut->image_url = $aRow[cCuriosityManifestIndex::COL_IMAGE_URL];
-        }
-
-        cTracing::leave();
-        return $oOut;
-    }
 
     //********************************************************
     static function get_calendar(string $psSol) {
@@ -460,8 +434,8 @@ class cCuriosityJPLManifest {
     const MANIFEST_CACHE = 4 * 3600;    //4 hour
     const FEED_URL = "https://mars.jpl.nasa.gov/msl-raw-images/image/image_manifest.json";
     const SOL_URL = "https://mars.jpl.nasa.gov/msl-raw-images/image/images_sol";
-    const SOL_CACHE = 7 * 24 * 3600;    //1 week
-    const FEED_SLEEP = 100; //milliseconds
+    const SOL_CACHE = 7 * 24 * 3600;    // a week
+    const FEED_SLEEP = 250; //milliseconds
     static $cached_manifest = null;
     private static $dont_check_sol_index = false;
 

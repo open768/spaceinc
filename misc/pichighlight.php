@@ -165,7 +165,7 @@ class cSpaceImageHighlight {
         }
 
         if ($pbGetImgUrl) {
-            $oProduct = cCuriosityManifestUtils::search_for_product($psProduct);
+            $oProduct = cMSLManifestOrmUtils::search_for_product($psProduct);
             $oOut->image_url = $oProduct->image_url;
         }
 

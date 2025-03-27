@@ -100,10 +100,8 @@ class    cCuriosityORMManifestIndexer {
         cDebug::write("checking Sol $piSol");
 
         $bIndexIt = self::is_reindex_needed($piSol);
-        if ($bIndexIt) {
-            cDebug::write("indexing sol $piSol");
+        if ($bIndexIt)
             self::index_sol($piSol, true);
-        }
         cTracing::leave();
     }
 
@@ -177,7 +175,7 @@ class    cCuriosityORMManifestIndexer {
     public static function remove_unwanted() {
         cTracing::enter();
         try {
-            cSpaceManifestUtils::remove_sample_types(cCuriosityORMManifest::$mission_id, ["downsampled", "subframe", "mixed"]);
+            cSpaceManifestUtils::remove_sample_types(cCuriosityORMManifest::$mission_id, ["downsampled", "mixed"]);
         } catch (Exception $e) {
             cDebug::write("unable to remove sample types: " . $e->getMessage());
         }
@@ -223,7 +221,7 @@ class    cCuriosityORMManifestIndexer {
     //*****************************************************************************
     static function index_sol(int $piSol, bool $pbReindex) {
         //cTracing::enter();
-        cDebug::write("indexing sol:$piSol");
+        //cDebug::write("indexing sol:$piSol");
 
         if ($pbReindex) self::delete_sol_index($piSol);
 

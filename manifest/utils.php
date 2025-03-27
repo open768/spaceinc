@@ -88,8 +88,10 @@ class cSpaceManifestUtils {
         $oCollection = tblProducts::search_product($piMission, $psSearch, $paSampleTypeIDs);
 
         $iCount = $oCollection->count();
-        if ($iCount == 0)
-            throw new cSpaceManifestUtilsException("no products found for $psSearch");
+        if ($iCount == 0) {
+            cDebug::extra_debug("no products found for $psSearch");
+            return null;
+        }
 
         cTracing::leave();
         return $oCollection;
