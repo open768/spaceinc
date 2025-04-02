@@ -45,7 +45,7 @@ class cMSLManifestOrmUtils {
         $iMission = cCuriosityORMManifest::$mission_id;
 
         //get data from database
-        $aSampleTypeIds = tblSampleType::get_matching_ids($iMission, ["full"]);
+        $aSampleTypeIds = tblSampleType::get_matching_ids($iMission, ["full", "subframe"]);
         $oCollection = cSpaceManifestUtils::search_product($iMission, $psPartial, $aSampleTypeIds);
         if ($oCollection == null)
             return null;
