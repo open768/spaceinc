@@ -57,11 +57,25 @@ class cCuriosityORMManifest {
     }
 
     //***************************************************************************
-    static function get_all_sol_data(int $piSol, ?string $psInstrument = null, eSpaceSampleTypes $piSampleType = eSpaceSampleTypes::SAMPLE_ALL): array {
+    //* TODO: work in progress
+    static function get_all_sol_data(int $piSol, ?string $psInstrument = null, ?eSpaceSampleTypes $piSampleTypeChooser = eSpaceSampleTypes::SAMPLE_ALL): array {
         cTracing::enter();
+
         cCuriosityORMManifestIndexer::reindex_if_needed($piSol);
-        return tblProducts::get_all_data(self::$mission_id, $piSol,  $psInstrument, $piSampleType);
+        // get instrument ID
+        $iInstrument = null;
+        if ($psInstrument !== null)
+            $iInstrument = tblInstruments::get_id(self::$mission_id, $psInstrument);
+
+        //get thumbnail sampletypeid as its not known to generic tblproducts
+        $iThumbSampleType = tblSampleType::get_id(self::$mission_id, "thumbnail");
+        $oCollection =  tblProducts::get_all_data(self::$mission_id, $piSol, $iInstrument, $piSampleTypeChooser, $iThumbSampleType);
+
+        //map to our format
+        $aResults = cMSLManifestOrmUtils::map_product_collection($oCollection);
+
         cTracing::leave();
+        return $aResults;
     }
 }
 cCuriosityORMManifest::init();

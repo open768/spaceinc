@@ -203,8 +203,29 @@ class tblProducts extends tblModel {
     }
 
     //*******************************************************************************
-    static function get_all_data(int $piMission, int $piSol, ?string $psInstrument = null, eSpaceSampleTypes $piSampleType = eSpaceSampleTypes::SAMPLE_ALL): array {
-        tblProducts::where(cMissionColumns::MISSION_ID);
+    // TODO: work in progress
+    public static function get_all_data(int $piMission, int $piSol, ?int $piInstrument = null, ?eSpaceSampleTypes $piSampleTypeChooser = eSpaceSampleTypes::SAMPLE_NONTHUMBS, ?int $piThumbSampleType = null): Collection {
+        cTracing::enter();
+
+        /** @var Builder $oBuilder */
+        $oBuilder =
+            tblProducts::where(cMissionColumns::MISSION_ID, $piMission)
+            ->where(cMissionColumns::SOL, $piSol);
+
+        switch ($piSampleTypeChooser) {
+            case eSpaceSampleTypes::SAMPLE_NONTHUMBS:
+                $oBuilder = $oBuilder->whereNot(tblProducts::SAMPLE_TYPE_ID, $piThumbSampleType);
+                break;
+            case eSpaceSampleTypes::SAMPLE_THUMBS:
+                $oBuilder = $oBuilder->where(tblProducts::SAMPLE_TYPE_ID, $piThumbSampleType);
+        }
+        if ($piInstrument !== null)
+            $oBuilder = $oBuilder->where(tblProducts::INSTRUMENT_ID, $piInstrument);
+
+        /** @var Collection $oCollection */
+        $oCollection = $oBuilder->get();
+        cTracing::leave();
+        return $oCollection;
     }
 
     //*******************************************************************************
