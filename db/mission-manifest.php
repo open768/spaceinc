@@ -213,7 +213,7 @@ class tblProducts extends tblModel {
 
         //work out which IDs to remove
         cDebug::extra_debug("building lists");
-        $aIDs = tblInstruments::get_ids($piMission, $paInstrNames);
+        $aIDs = tblInstruments::get_matching_ids($piMission, $paInstrNames);
         $aAllIDs = tblInstruments::get_all_ids($piMission);
         $aDiff = array_diff($aAllIDs, $aIDs);
 
