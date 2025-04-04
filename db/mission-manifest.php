@@ -103,9 +103,9 @@ class tblID extends tblModel {
     }
 
     public static function get_all_ids(int $piMission) {
-        $aIDs =  static::where(cMissionColumns::MISSION_ID, $piMission)
-            ->pluck(tblID::ID)
-            ->toArray();
+        $oBuilder =  static::where(cMissionColumns::MISSION_ID, $piMission);
+        $oCollection = cEloquentORM::pluck($oBuilder, tblID::ID);
+        $aIDs = $oCollection->toArray();
         return $aIDs;
     }
 
@@ -116,10 +116,10 @@ class tblID extends tblModel {
         $aLowerNames = array_map('strtolower', $paNames);
 
         // Get the valid sample type names from the database
-        $aMatchedNames = static::whereIn(tblID::NAME, $aLowerNames)
-            ->where(cMissionColumns::MISSION_ID, $piMission)
-            ->pluck(tblID::NAME)
-            ->toArray();
+        $oBuilder = static::whereIn(tblID::NAME, $aLowerNames)
+            ->where(cMissionColumns::MISSION_ID, $piMission);
+        $oCollection = cEloquentORM::pluck($oBuilder, tblID::NAME);
+        $aMatchedNames = $oCollection->toArray();
 
         // Check for invalid sample type names
         $aInvalidNames = array_diff($aLowerNames, $aMatchedNames);
@@ -130,10 +130,10 @@ class tblID extends tblModel {
         }
 
         // Get the IDs of the valid sample types
-        $aIDs = static::whereIn(tblID::NAME, $aMatchedNames)
-            ->where(cMissionColumns::MISSION_ID, $piMission)
-            ->pluck(tblID::ID)
-            ->toArray();
+        $oBuilder = static::whereIn(tblID::NAME, $aMatchedNames)
+            ->where(cMissionColumns::MISSION_ID, $piMission);
+        $oCollection = cEloquentORM::pluck($oBuilder, tblID::ID);
+        $aIDs = $oCollection->toArray();
 
         //cTracing::leave();
         return $aIDs;
@@ -147,10 +147,10 @@ class tblInstruments extends tblID {
     static function get_matching(int $piMission, string $psPattern) {
         cTracing::enter();
 
-        $aMatchingIDs = static::where(cMissionColumns::MISSION_ID, $piMission)
-            ->where(self::NAME, 'LIKE', $psPattern)
-            ->pluck(self::ID)
-            ->toArray();
+        $oBuilder = static::where(cMissionColumns::MISSION_ID, $piMission)
+            ->where(self::NAME, 'LIKE', $psPattern);
+        $oCollection = cEloquentORM::pluck($oBuilder, self::ID);
+        $aMatchingIDs = $oCollection->toArray();
         cDebug::extra_debug("matching instruments:" . count($aMatchingIDs));
         return $aMatchingIDs;
 
@@ -223,7 +223,7 @@ class tblProducts extends tblModel {
             $oBuilder = $oBuilder->where(tblProducts::INSTRUMENT_ID, $piInstrument);
 
         /** @var Collection $oCollection */
-        $oCollection = $oBuilder->get();
+        $oCollection = cEloquentORM::get($oBuilder);
         cTracing::leave();
         return $oCollection;
     }
