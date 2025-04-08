@@ -24,15 +24,6 @@ require_once cAppGlobals::$spaceInc . "/manifest/utils.php";
 //################################################################################
 class cMSLManifestOrmUtils {
 
-    static function map_product_collection(Collection $poCollection) {
-        $aResults = $poCollection->map(
-            function (tblProducts $poItem) {
-                return self::map_product($poItem);
-            }
-        )->toArray();
-        return $aResults;
-    }
-
     //************************************************************************************************
     /**
      * searches for product
@@ -46,22 +37,12 @@ class cMSLManifestOrmUtils {
 
         //get data from database
         $aSampleTypeIds = tblSampleType::get_matching_ids($iMission, ["full", "subframe"]);
-        $oCollection = cSpaceManifestUtils::search_product($iMission, $psPartial, $aSampleTypeIds);
-        if ($oCollection == null)
+        $aProducts = cSpaceManifestUtils::search_product($iMission, $psPartial, $aSampleTypeIds);
+        if ($aProducts == null)
             return null;
 
-        $aResults = self::map_product_collection($oCollection);
-
-        //map to cSpaceProductData
-        $aRow = $aResults[0];
-        $oOut = new cSpaceProductData; {
-            $oOut->sol = $aRow[cOutputColumns::SOL];
-            $oOut->product = $aRow[cOutputColumns::PRODUCT];
-            $oOut->instr = $aRow[cOutputColumns::INSTRUMENT];
-            $oOut->image_url = $aRow[cOutputColumns::URL];
-        }
         cTracing::leave();
-        return $oOut;
+        return $aProducts;
     }
 
     //************************************************************************************************
@@ -74,13 +55,28 @@ class cMSLManifestOrmUtils {
             cDebug::error("no matching instruments");
 
         //from the products table get number of products
-        /** @var Collection $oCollection */
-        $oCollection = cSpaceManifestUtils::get_random_images($iMission, $aInstruments, $piHowmany);
+        /** @var cSpaceProductData[] $aProducts */
+        $aProducts = cSpaceManifestUtils::get_random_images($iMission, $aInstruments, $piHowmany);
 
-        //map data to what curiosity browser expects
-        $aResults = self::map_product_collection($oCollection);
+        //map the data to output format
+        $aOutput = self::map_to_output($aProducts);
 
         cTracing::leave();
+        return $aOutput;
+    }
+
+    /**
+     * 
+     * @param cSpaceProductData[] $paData 
+     * @return mixed 
+     */
+    static function map_to_output(array $paData) {
+        $aResults = array_map(
+            function (cSpaceProductData $poData) {
+                return self::pr__map_to_output($poData);
+            },
+            $paData
+        );
         return $aResults;
     }
 
@@ -88,23 +84,18 @@ class cMSLManifestOrmUtils {
     /**
      * Maps generic product to what the curiosity browser expects
      * @param tblProducts $poItem 
+     * @return array<string, mixed> An associative array
      */
-    public static function map_product(tblProducts $poItem) {
-        $sProduct = $poItem[tblProducts::PRODUCT];
-        $sAbbreviated = $poItem[tblProducts::IMAGE_URL];
-        $sFull = cMSLImageURLUtil::expand_image_url($sAbbreviated, $sProduct);
-
-        $sFullInstrument = $poItem->instrument[tblID::NAME];
-        $sAbbrInstrument = cCuriosityInstrument::getInstrumentAbbr($sFullInstrument);
+    private static function pr__map_to_output(cSpaceProductData $poData) {
         $oList =  [
-            cOutputColumns::SOL => $poItem[cMissionColumns::SOL],
-            cOutputColumns::URL => $sFull,
-            cOutputColumns::PRODUCT => $sProduct,
-            cOutputColumns::DATE => $poItem[tblProducts::UTC_DATE],
-            cOutputColumns::FULL_INSTRUMENT => $sFullInstrument,
-            cOutputColumns::INSTRUMENT => $sAbbrInstrument,
-            cOutputColumns::MISSION => $poItem->mission[tblID::NAME],
-            cOutputColumns::SAMPLETYPE => $poItem->sampleType[tblID::NAME]
+            cOutputColumns::SOL => $poData->sol,
+            cOutputColumns::URL => $poData->image_url,
+            cOutputColumns::PRODUCT => $poData->product,
+            cOutputColumns::DATE => $poData->utc_date,
+            cOutputColumns::FULL_INSTRUMENT => $poData->full_instr,
+            cOutputColumns::INSTRUMENT => $poData->instr,
+            cOutputColumns::MISSION => $poData->mission,
+            cOutputColumns::SAMPLETYPE => $poData->sample_type
         ];
         return $oList;
     }

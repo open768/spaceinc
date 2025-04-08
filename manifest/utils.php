@@ -15,6 +15,7 @@ For licenses that allow for commercial use please contact cluck@chickenkatsu.co.
 use Illuminate\Database\Eloquent\Collection;
 
 require_once cAppGlobals::$spaceInc . "/db/mission-manifest.php";
+require_once cAppGlobals::$spaceInc . "/misc/constants.php";
 
 class cSpaceManifestUtilsException  extends Exception {
 }
@@ -23,6 +24,44 @@ class cSpaceManifestUtilsException  extends Exception {
  * mission agnostic routines to get information from a manifest database
  */
 class cSpaceManifestUtils {
+    /**
+     * @return cSpaceProductData[]
+     */
+    static function map_collection(Collection $poCollection) {
+        cTracing::enter();
+        $aResults = $poCollection->map(
+            function (tblProducts $poItem) {
+                return self::pr__map_to_spaceproduct($poItem);
+            }
+        )->toArray();
+        cTracing::leave();
+        return $aResults;
+    }
+
+    /**
+     * 
+     * @param tblProducts $poItem 
+     * @return cSpaceProductData
+     */
+    private static function pr__map_to_spaceproduct(tblProducts $poItem) {
+        $sProduct = $poItem[tblProducts::PRODUCT];
+        $sAbbreviated = $poItem[tblProducts::IMAGE_URL];
+        $sFull = cMSLImageURLUtil::expand_image_url($sAbbreviated, $sProduct);
+
+        $sFullInstrument = $poItem->instrument[tblID::NAME];
+        $sAbbrInstrument = cCuriosityInstrument::getInstrumentAbbr($sFullInstrument);
+        $oProduct = new cSpaceProductData(); {
+            $oProduct->sol = $poItem[cMissionColumns::SOL];
+            $oProduct->image_url = $sFull;
+            $oProduct->product = $sProduct;
+            $oProduct->utc_date = $poItem[tblProducts::UTC_DATE];
+            $oProduct->full_instr = $sFullInstrument;
+            $oProduct->instr = $sAbbrInstrument;
+            $oProduct->mission = $poItem->mission[tblID::NAME];
+            $oProduct->sample_type = $poItem->sampleType[tblID::NAME];
+        }
+        return $oProduct;
+    }
 
     //*******************************************************************************
     //*
@@ -56,7 +95,7 @@ class cSpaceManifestUtils {
      * @param int $piMission  MIssion ID
      * @param array $aInstrumentIDs list of instruments for products
      * @param int $iLimit How many rows to return
-     * @return Collection 
+     * @return cSpaceProductData[] 
      */
     public static function get_random_images(int $piMission, array $paInstrumentIDs, int $piLimit = 10) {
         cTracing::enter();
@@ -70,17 +109,22 @@ class cSpaceManifestUtils {
             ->limit($piLimit);
         $oCollection = cEloquentORM::get($oBuilder);
 
+        /** map the collection to cSpaceProductData */
+        $aOutput = self::map_collection($oCollection);
+
+
         cTracing::leave();
 
-        return $oCollection;
+        return $aOutput;
     }
+
     //*******************************************************************************
     /**
      * 
      * @param int $piMission  MIssion ID
      * @param string 
      * @param int $iLimit How many rows to return
-     * @return Collection 
+     * @return cSpaceProductData[] 
      */
     public static function search_product(int $piMission, string $psSearch, array $paSampleTypeIDs) {
         cTracing::enter();
@@ -92,8 +136,9 @@ class cSpaceManifestUtils {
             cDebug::extra_debug("no products found for $psSearch");
             return null;
         }
+        $aOutput = self::map_collection($oCollection);
 
         cTracing::leave();
-        return $oCollection;
+        return $aOutput;
     }
 }

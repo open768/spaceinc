@@ -28,9 +28,10 @@ class cSpaceProductData {
     public string $mission;
     public string $sol;
     public string $instr;
+    public string $full_instr;
     public ?string $product = null;
     public ?string $image_url = null;
-    public int $utc_date;
+    public string $utc_date;
     public ?string $sample_type = null;
     public int $rowid;
     public ?array $data = null;
