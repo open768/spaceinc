@@ -46,11 +46,11 @@ class cMSLManifestOrmUtils {
     }
 
     //************************************************************************************************
-    static function get_random_images(string $psPattern, int $piHowmany) {
+    static function get_random_images(string $psInstrumentPattern, int $piHowmany) {
         cTracing::enter();
         $iMission = cCuriosityORMManifest::$mission_id;
         //get instruments
-        $aInstruments = tblInstruments::get_matching($iMission, $psPattern);
+        $aInstruments = tblInstruments::get_matching($iMission, $psInstrumentPattern);
         if (count($aInstruments) == 0)
             cDebug::error("no matching instruments");
 

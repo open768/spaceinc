@@ -72,7 +72,7 @@ class cCuriosityORMManifest {
         $oCollection =  tblProducts::get_all_data(self::$mission_id, $piSol, $iInstrument, $piSampleTypeChooser, $iThumbSampleType);
 
         //map to our format
-        $aResults = cMSLManifestOrmUtils::map_product_collection($oCollection);
+        $aResults = cSpaceManifestUtils::map_collection($oCollection);
 
         cTracing::leave();
         return $aResults;
