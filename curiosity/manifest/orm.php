@@ -58,7 +58,7 @@ class cCuriosityORMManifest {
 
     //***************************************************************************
     //* TODO: work in progress
-    static function get_all_sol_data(int $piSol, ?string $psInstrument = null, ?eSpaceSampleTypes $piSampleTypeChooser = eSpaceSampleTypes::SAMPLE_ALL): array {
+    static function get_all_sol_data(int $piSol, ?string $psInstrument = null, ?eSpaceSampleTypes $piSampleTypeChooser = eSpaceSampleTypes::SAMPLE_ALL): cManifestSolData {
         cTracing::enter();
 
         cCuriosityORMManifestIndexer::reindex_if_needed($piSol);
@@ -74,8 +74,13 @@ class cCuriosityORMManifest {
         //map to our format
         $aResults = cSpaceManifestUtils::map_collection($oCollection);
 
+        //and convert to cManifestSolData
+        $oData = new cManifestSolData();
+        $oData->sol = $piSol;
+        $oData->data = $aResults;
+
         cTracing::leave();
-        return $aResults;
+        return $oData;
     }
 }
 cCuriosityORMManifest::init();
