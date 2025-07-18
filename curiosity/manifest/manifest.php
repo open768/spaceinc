@@ -155,7 +155,7 @@ class   cCuriosityManifestUtils {
 
         $oInstruments = cCuriosityInstrument::getInstrumentList();
         /** @var cManifestSolData $oData */
-        $oData = cCuriosityManifestIndex::get_all_sol_data($psSol, null, eSpaceSampleTypes::SAMPLE_NONTHUMBS);
+        $oData = cCuriosityORMManifest::get_all_sol_data($psSol, null, eSpaceSampleTypes::SAMPLE_NONTHUMBS);
         $aManData = $oData->data;
 
         $oData = (object) [
@@ -238,7 +238,7 @@ class   cCuriosityManifestUtils {
     static function get_products(string $psSol, ?string $psInstr = null): array {
         // read the img files for the products
         cTracing::enter();
-        $oRawData = cCuriosityManifestIndex::get_all_sol_data($psSol, $psInstr, eSpaceSampleTypes::SAMPLE_NONTHUMBS);
+        $oRawData = cCuriosityORMManifest::get_all_sol_data($psSol, $psInstr, eSpaceSampleTypes::SAMPLE_NONTHUMBS);
         $aProducts = [];
         foreach ($oRawData->data as $oItem)
             $aProducts[] = $oItem->product;

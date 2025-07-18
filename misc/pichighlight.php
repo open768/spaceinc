@@ -150,27 +150,26 @@ class cSpaceImageHighlight {
     //****************************************************************
     static function get(string $psSol, string $psInstrument, string $psProduct, bool $pbGetImgUrl = false): cSpaceProductData {
         cTracing::enter();
+
         cDebug::extra_debug("s:$psSol, i:$psInstrument, p:$psProduct");
+        //--------get highlight data 
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
         $sFile = self::pr_get_filename($psSol, $psInstrument, $psProduct);
-        $aData = $oDB->get($sFile);
+        $aHighlightData = $oDB->get($sFile);
 
-        $oOut = new cSpaceProductData; {
-            $oOut->mission = cSpaceMissions::CURIOSITY;
-            $oOut->sol = $psSol;
-            $oOut->instr = $psInstrument;
-            $oOut->product = $psProduct;
-            $oOut->data = $aData;
-        }
+        //--------get product 
+        $aProducts = cMSLManifestOrmUtils::search_for_product($psProduct);
+        if (sizeof($aProducts) != 1)
+            cDebug::error("couldnt find product");
 
-        if ($pbGetImgUrl) {
-            $oProduct = cMSLManifestOrmUtils::search_for_product($psProduct);
-            $oOut->image_url = $oProduct->image_url;
-        }
+        //--------update product with highlight data 
+        $oProduct = $aProducts[0];
+        $oProduct->data = $aHighlightData;
+        cDebug::vardump($oProduct);
 
         cTracing::leave();
-        return $oOut;
+        return $oProduct;
     }
 
     //****************************************************************

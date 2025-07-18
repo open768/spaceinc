@@ -244,7 +244,7 @@ class cCuriosityImages implements iMissionImages {
         $sInstrument = $psInstrument;
         if ($sInstrument ===  cCuriosityConstants::ALL_INSTRUMENTS) $sInstrument = null;
 
-        $oAllSolThumbs = cCuriosityManifestIndex::get_all_sol_data($psSol, $sInstrument, eSpaceSampleTypes::SAMPLE_THUMBS);
+        $oAllSolThumbs = cCuriosityORMManifest::get_all_sol_data($psSol, $sInstrument, eSpaceSampleTypes::SAMPLE_THUMBS);
         $oResult = self::pr_match_thumbs($psSol, null, $oAllSolThumbs);
 
         cTracing::leave();

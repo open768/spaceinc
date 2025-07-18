@@ -28,7 +28,7 @@ class cMSLManifestOrmUtils {
     /**
      * searches for product
      * @param string $psPartial 
-     * @return null|cSpaceProductData 
+     * @return null|array 
      */
     static function search_for_product(string $psPartial) {
         cTracing::enter();
