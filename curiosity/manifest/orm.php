@@ -57,7 +57,6 @@ class cCuriosityORMManifest {
     }
 
     //***************************************************************************
-    //* TODO: work in progress
     static function get_all_sol_data(int $piSol, ?string $psInstrument = null, ?eSpaceSampleTypes $piSampleTypeChooser = eSpaceSampleTypes::SAMPLE_ALL): cManifestSolData {
         cTracing::enter();
 
@@ -81,6 +80,21 @@ class cCuriosityORMManifest {
 
         cTracing::leave();
         return $oData;
+    }
+
+    //***************************************************************************
+    static function get_instruments_for_sol($psSol): array {
+        cTracing::enter();
+
+        cCuriosityORMManifestIndexer::reindex_if_needed($psSol);
+        tbl
+
+        cDebug::write("Getting instrument list for sol " . $psSol);
+
+        $aData = cCuriosityManifestUtils::get_instruments_for_sol($psSol);
+
+        cTracing::leave();
+        return $aData;
     }
 }
 cCuriosityORMManifest::init();

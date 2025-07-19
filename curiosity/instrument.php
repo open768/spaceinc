@@ -66,6 +66,7 @@ class cCuriosityInstrument {
 
     //*****************************************************************************
     public static function getInstrumentList() {
+        cTracing::enter();
         if (!self::$Instruments) {
             // build instrument list
             self::$Instruments = cCuriosityConstants::$Instruments;
@@ -77,6 +78,7 @@ class cCuriosityInstrument {
                 self::$instrument_map[$oInstr["abbr"]] = $oInstr;
             }
         }
+        cTracing::leave();
         return self::$Instruments;
     }
 

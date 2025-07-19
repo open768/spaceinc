@@ -40,20 +40,6 @@ abstract class tblModel extends Model {
     }
 }
 
-//#############################################################################################
-class tblSols extends tblModel {
-    const LAST_UPDATED = 'last_updated';
-    const CATALOG_URL = 'catalog_url';
-
-    static function create_table(Blueprint $poTable) {
-        $poTable->increments(cMissionColumns::ID);
-        $poTable->integer(cMissionColumns::SOL)->index();
-        $poTable->date(self::LAST_UPDATED);
-        $poTable->integer(self::CATALOG_URL);
-
-        $poTable->unique([cMissionColumns::SOL]);
-    }
-}
 
 //#############################################################################################
 class tblID extends tblModel {
@@ -370,7 +356,6 @@ class cMissionManifest {
 
     static $bAddedConnection = false;
     static $models = [
-        tblSols::class,
         tblProducts::class,
         tblInstruments::class,
         tblSampleType::class,
