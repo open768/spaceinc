@@ -22,6 +22,7 @@ interface iMission {
     static function search_product($psSearch);
     static function getSolInstrumentList($piSol);
     static function getProductDetails($psSol, $psInstrument, $psProduct);
+    static function deleteSolData($psSol);
 }
 
 interface iMissionImages {

@@ -175,6 +175,13 @@ class cCuriosity implements iMission {
         cTracing::leave();
         return $aOutput;
     }
+
+    //*****************************************************************************
+    static function deleteSolData($piSol) {
+        cTracing::enter();
+        cCuriosityORMManifestIndexer::delete_sol_index($piSol);
+        cTracing::leave();
+    }
 }
 cMissions::add_mission(cCuriosity::class);
 

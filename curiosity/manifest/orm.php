@@ -87,9 +87,9 @@ class cCuriosityORMManifest {
         cTracing::enter();
 
         cCuriosityORMManifestIndexer::reindex_if_needed($psSol);
-        tbl
 
         cDebug::write("Getting instrument list for sol " . $psSol);
+        tblProducts::
 
         $aData = cCuriosityManifestUtils::get_instruments_for_sol($psSol);
 

@@ -83,6 +83,7 @@ class   cCuriosityManifestUtils {
 
     //********************************************************
     static function get_calendar(string $psSol) {
+        cTracing::enter();
         cDebug::write("getting instruments");
 
         $oInstruments = cCuriosityInstrument::getInstrumentList();
@@ -106,12 +107,20 @@ class   cCuriosityManifestUtils {
 
             //Get instruments
             $sInstr = $oItem->instr;
-            $sInstrAbbr = cCuriosityInstrument::getInstrumentAbbr($sInstr);
+            if ($sInstr == null)
+                cDebug::error("no instrument");
+
 
             //work out the date
             $epoch = $oItem->utc_date;
-            $dDate = new DateTime("@$epoch");
+            try {
+                $dDate = new DateTime("@$epoch");
+            } catch (Exception $e) {
+                //try and parse the date anyway
+                $dDate = new DateTime($epoch);
+            }
             $sDate = $dDate->format("d-m-y");
+
             if (!array_key_exists($sDate, $aCal)) $aCal[$sDate] = [];
 
             //work out the time key
@@ -129,10 +138,11 @@ class   cCuriosityManifestUtils {
 
             //add the entry to the array
             if (!array_key_exists($sTimeKey, $aCal[$sDate])) $aCal[$sDate][$sTimeKey] = [];
-            $aCal[$sDate][$sTimeKey][] = (object)["i" => $sInstrAbbr, "d" => $epoch, "p" => $oItem->product];
+            $aCal[$sDate][$sTimeKey][] = (object)["i" => $sInstr, "d" => $epoch, "p" => $oItem->product];
         }
         $oData->cal = $aCal;
 
+        cTracing::leave();
         return $oData;
     }
 

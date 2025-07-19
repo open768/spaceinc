@@ -31,7 +31,7 @@ abstract class tblModel extends Model {
     abstract static function create_table(Blueprint $poTable);
 
     static function add_mission_column(Blueprint $poTable) {
-        $sTableName = static::get_table_name();
+        $sTableName = self::get_table_name();
         $sMissionTable = tblMissions::get_table_name();
         if ($sTableName !== $sMissionTable) {
             $poTable->integer(cMissionColumns::MISSION_ID)->index();
@@ -57,7 +57,7 @@ class tblID extends tblModel {
         if (isset(self::$cache[$sCacheKey])) {
             $iRowID = self::$cache[$sCacheKey];
         } else {
-            $oRow = static::where(self::NAME, $lower)->first();
+            $oRow = self::where(self::NAME, $lower)->first();
             if ($oRow !== null)
                 $iRowID = $oRow->id;
             else {
@@ -78,18 +78,18 @@ class tblID extends tblModel {
     }
 
     static function create_table(Blueprint $poTable) {
-        $sTableName = static::get_table_name();
+        $sTableName = self::get_table_name();
         cDebug::extra_debug("creating table $sTableName");
 
         $poTable->increments(self::ID);
         $poTable->string(self::NAME);
         $poTable->unique([self::NAME]);
 
-        static::add_mission_column($poTable);
+        self::add_mission_column($poTable);
     }
 
     public static function get_all_ids(int $piMission) {
-        $oBuilder =  static::where(cMissionColumns::MISSION_ID, $piMission);
+        $oBuilder =  self::where(cMissionColumns::MISSION_ID, $piMission);
         $oCollection = cEloquentORM::pluck($oBuilder, tblID::ID);
         $aIDs = $oCollection->toArray();
         return $aIDs;
@@ -102,7 +102,7 @@ class tblID extends tblModel {
         $aLowerNames = array_map('strtolower', $paNames);
 
         // Get the valid sample type names from the database
-        $oBuilder = static::whereIn(tblID::NAME, $aLowerNames)
+        $oBuilder = self::whereIn(tblID::NAME, $aLowerNames)
             ->where(cMissionColumns::MISSION_ID, $piMission);
         $oCollection = cEloquentORM::pluck($oBuilder, tblID::NAME);
         $aMatchedNames = $oCollection->toArray();
@@ -116,7 +116,7 @@ class tblID extends tblModel {
         }
 
         // Get the IDs of the valid sample types
-        $oBuilder = static::whereIn(tblID::NAME, $aMatchedNames)
+        $oBuilder = self::whereIn(tblID::NAME, $aMatchedNames)
             ->where(cMissionColumns::MISSION_ID, $piMission);
         $oCollection = cEloquentORM::pluck($oBuilder, tblID::ID);
         $aIDs = $oCollection->toArray();
@@ -133,7 +133,7 @@ class tblInstruments extends tblID {
     static function get_matching(int $piMission, string $psPattern) {
         cTracing::enter();
 
-        $oBuilder = static::where(cMissionColumns::MISSION_ID, $piMission)
+        $oBuilder = self::where(cMissionColumns::MISSION_ID, $piMission)
             ->where(self::NAME, 'LIKE', $psPattern);
         $oCollection = cEloquentORM::pluck($oBuilder, self::ID);
         $aMatchingIDs = $oCollection->toArray();
@@ -195,23 +195,44 @@ class tblProducts extends tblModel {
 
         /** @var Builder $oBuilder */
         $oBuilder =
-            tblProducts::where(cMissionColumns::MISSION_ID, $piMission)
+            self::where(cMissionColumns::MISSION_ID, $piMission)
             ->where(cMissionColumns::SOL, $piSol);
 
         switch ($piSampleTypeChooser) {
             case eSpaceSampleTypes::SAMPLE_NONTHUMBS:
-                $oBuilder = $oBuilder->whereNot(tblProducts::SAMPLE_TYPE_ID, $piThumbSampleType);
+                $oBuilder = $oBuilder->whereNot(self::SAMPLE_TYPE_ID, $piThumbSampleType);
                 break;
             case eSpaceSampleTypes::SAMPLE_THUMBS:
-                $oBuilder = $oBuilder->where(tblProducts::SAMPLE_TYPE_ID, $piThumbSampleType);
+                $oBuilder = $oBuilder->where(self::SAMPLE_TYPE_ID, $piThumbSampleType);
         }
         if ($piInstrument !== null)
-            $oBuilder = $oBuilder->where(tblProducts::INSTRUMENT_ID, $piInstrument);
+            $oBuilder = $oBuilder->where(self::INSTRUMENT_ID, $piInstrument);
 
         /** @var Collection $oCollection */
         $oCollection = cEloquentORM::get($oBuilder);
         cTracing::leave();
         return $oCollection;
+    }
+
+    //*******************************************************************************
+    public static function get_sol_instruments(int $piMission, int $piSol) {
+        cTracing::enter();
+        $oBuilder = self::where(cMissionColumns::MISSION_ID, $piMission)
+            ->where(cMissionColumns::SOL, $piSol)
+            ->join(
+                tblInstruments::get_table_name(),
+                self::INSTRUMENT_ID,
+                '=',
+                tblInstruments::get_table_name() . '.' . cMissionColumns::ID
+            )
+            ->select(
+                tblInstruments::get_table_name() . '.' . tblInstruments::ID . ' as id',
+                tblInstruments::get_table_name() . '.' . tblInstruments::NAME . ' as name'
+            )
+            ->distinct()
+            ->orderBy('name');
+
+        cTracing::leave();
     }
 
     //*******************************************************************************
@@ -231,7 +252,7 @@ class tblProducts extends tblModel {
 
         //delete the IDs from product table
         cDebug::extra_debug("deleting products with instruments");
-        static::whereIn(tblProducts::INSTRUMENT_ID, $aDiff)
+        self::whereIn(self::INSTRUMENT_ID, $aDiff)
             ->where(cMissionColumns::MISSION_ID, $piMission)
             ->delete();
 
@@ -252,7 +273,7 @@ class tblProducts extends tblModel {
      */
     public static function get_builder(int $piMission) {
         $oBuilder =
-            static::where(cMissionColumns::MISSION_ID, $piMission)
+            self::where(cMissionColumns::MISSION_ID, $piMission)
             ->with(
                 [
                     cTableRelationships::RELATION_INSTRUMENT,
@@ -282,7 +303,7 @@ class tblProducts extends tblModel {
 
         $oBuilder = self::get_builder($piMission);
         $oBuilder = $oBuilder
-            ->whereIn(tblProducts::SAMPLE_TYPE_ID, $paSampleTypeIDs)
+            ->whereIn(self::SAMPLE_TYPE_ID, $paSampleTypeIDs)
             ->where(
                 function (Builder $poQuery) use ($psSearch) {
                     $poQuery->where(self::PRODUCT, $psSearch)
@@ -309,11 +330,11 @@ class tblSolStatus extends tblModel {
         $poTable->date(self::LAST_INGESTED);
 
         $poTable->unique([cMissionColumns::SOL]);
-        static::add_mission_column($poTable);
+        self::add_mission_column($poTable);
     }
 
     static function get_last_updated(int $piMissionID, int $piSol): ?DateTime {
-        $row = static::where(cMissionColumns::MISSION_ID, $piMissionID)
+        $row = self::where(cMissionColumns::MISSION_ID, $piMissionID)
             ->where(cMissionColumns::SOL, $piSol)
             ->first();
 
@@ -335,7 +356,7 @@ class tblSolStatus extends tblModel {
         $sDate = $convertedDate->format(cSqlLite::SQLITE_DATE_FORMAT);
         cDebug::write("mission:$piMissionID, sol:$piSol, date:" . $sDate);
 
-        static::updateOrCreate(
+        self::updateOrCreate(
             [
                 cMissionColumns::MISSION_ID => $piMissionID,
                 cMissionColumns::SOL => $piSol
