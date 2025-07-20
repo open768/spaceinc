@@ -83,15 +83,15 @@ class cCuriosityORMManifest {
     }
 
     //***************************************************************************
-    static function get_instruments_for_sol($psSol): array {
+    static function get_instruments_for_sol(int $piSol): array {
         cTracing::enter();
 
-        cCuriosityORMManifestIndexer::reindex_if_needed($psSol);
+        cCuriosityORMManifestIndexer::reindex_if_needed($piSol);
 
-        cDebug::write("Getting instrument list for sol " . $psSol);
-        tblProducts::
-
-        $aData = cCuriosityManifestUtils::get_instruments_for_sol($psSol);
+        cDebug::write("Getting instrument list for sol " . $piSol);
+        /** @var array $aData */
+        $aData = tblProducts::get_sol_instruments(self::$mission_id, $piSol);
+        //$aData = cCuriosityManifestUtils::get_instruments_for_sol($psSol);
 
         cTracing::leave();
         return $aData;

@@ -49,6 +49,7 @@ class tblID extends tblModel {
     static $cache = [];
     protected $fillable = [self::NAME];
 
+    //*********************************************************************
     static function get_id($piMissionID, $psName) {
         $iRowID = null;
         $lower = strtolower($psName);
@@ -77,6 +78,7 @@ class tblID extends tblModel {
         return $iRowID;
     }
 
+    //*********************************************************************
     static function create_table(Blueprint $poTable) {
         $sTableName = self::get_table_name();
         cDebug::extra_debug("creating table $sTableName");
@@ -88,6 +90,7 @@ class tblID extends tblModel {
         self::add_mission_column($poTable);
     }
 
+    //*********************************************************************
     public static function get_all_ids(int $piMission) {
         $oBuilder =  self::where(cMissionColumns::MISSION_ID, $piMission);
         $oCollection = cEloquentORM::pluck($oBuilder, tblID::ID);
@@ -95,6 +98,7 @@ class tblID extends tblModel {
         return $aIDs;
     }
 
+    //*********************************************************************
     public static function get_matching_ids(int $piMission, array $paNames) {
         //cTracing::enter();
 
@@ -124,29 +128,55 @@ class tblID extends tblModel {
         //cTracing::leave();
         return $aIDs;
     }
-}
 
-class tblMissions extends tblID {
-}
+    //*********************************************************************
+    public static function get_matching_rows_by_ids(int $piMission, array $paNames) {
+        cTracing::enter();
 
-class tblInstruments extends tblID {
-    static function get_matching(int $piMission, string $psPattern) {
+        $oBuilder = self::where(cMissionColumns::MISSION_ID, $piMission)
+            ->whereIn(self::ID, $paNames);
+        $oCollection = cEloquentORM::get($oBuilder, [self::ID, self::NAME, self::]);
+
+        cTracing::leave();
+        return $oCollection;
+    }
+
+    //*********************************************************************
+    static function get_matching_ids_from_pattern(int $piMission, string $psPattern) {
         cTracing::enter();
 
         $oBuilder = self::where(cMissionColumns::MISSION_ID, $piMission)
             ->where(self::NAME, 'LIKE', $psPattern);
         $oCollection = cEloquentORM::pluck($oBuilder, self::ID);
         $aMatchingIDs = $oCollection->toArray();
-        cDebug::extra_debug("matching instruments:" . count($aMatchingIDs));
+        cDebug::extra_debug("matching IDs:" . count($aMatchingIDs));
         return $aMatchingIDs;
 
         cTracing::leave();
     }
 }
 
+//#####################################################################################
+//#
+//#####################################################################################
+class tblMissions extends tblID {
+}
+
+//#####################################################################################
+//#
+//#####################################################################################
+class tblInstruments extends tblID {
+}
+
+//#####################################################################################
+//#
+//#####################################################################################
 class tblSampleType extends tblID {
 }
 
+//#####################################################################################
+//#
+//#####################################################################################
 class cTableRelationships {
     const RELATION_INSTRUMENT = 'instrument';
     const RELATION_SAMPLE_TYPE = 'sampleType';
@@ -189,14 +219,11 @@ class tblProducts extends tblModel {
     }
 
     //*******************************************************************************
-    // TODO: work in progress
     public static function get_all_data(int $piMission, int $piSol, ?int $piInstrument = null, ?eSpaceSampleTypes $piSampleTypeChooser = eSpaceSampleTypes::SAMPLE_NONTHUMBS, ?int $piThumbSampleType = null): Collection {
         cTracing::enter();
 
         /** @var Builder $oBuilder */
-        $oBuilder =
-            self::where(cMissionColumns::MISSION_ID, $piMission)
-            ->where(cMissionColumns::SOL, $piSol);
+        $oBuilder = self::get_builder($piMission)->where(cMissionColumns::SOL, $piSol);
 
         switch ($piSampleTypeChooser) {
             case eSpaceSampleTypes::SAMPLE_NONTHUMBS:
@@ -215,24 +242,28 @@ class tblProducts extends tblModel {
     }
 
     //*******************************************************************************
-    public static function get_sol_instruments(int $piMission, int $piSol) {
+    public static function get_sol_instruments(int $piMission, int $piSol): array {
         cTracing::enter();
-        $oBuilder = self::where(cMissionColumns::MISSION_ID, $piMission)
-            ->where(cMissionColumns::SOL, $piSol)
-            ->join(
-                tblInstruments::get_table_name(),
-                self::INSTRUMENT_ID,
-                '=',
-                tblInstruments::get_table_name() . '.' . cMissionColumns::ID
-            )
-            ->select(
-                tblInstruments::get_table_name() . '.' . tblInstruments::ID . ' as id',
-                tblInstruments::get_table_name() . '.' . tblInstruments::NAME . ' as name'
-            )
-            ->distinct()
-            ->orderBy('name');
+
+        //---get the distinct list of instrument IDs
+        $oBuilder = self::get_builder($piMission);
+        $oBuilder = $oBuilder->where(cMissionColumns::SOL, $piSol)
+            ->select(self::INSTRUMENT_ID)
+            ->distinct();
+
+        $oInstruments = cEloquentORM::pluck($oBuilder, self::INSTRUMENT_ID);
+        $aIds = $oInstruments->toArray();
+        cDebug::extra_debug("instrument IDs are:");
+        cDebug::vardump($aIds);
+
+        //----- lookup instruments
+        $oRows = tblInstruments::get_matching_rows_by_ids($piMission, $aIds); //only gets name and ID
+        $aData = $oRows->toArray();
+        cDebug::extra_debug("instrument rows:");
+        cDebug::vardump($aData);
 
         cTracing::leave();
+        return $aData;
     }
 
     //*******************************************************************************

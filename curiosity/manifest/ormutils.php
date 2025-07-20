@@ -50,7 +50,7 @@ class cMSLManifestOrmUtils {
         cTracing::enter();
         $iMission = cCuriosityORMManifest::$mission_id;
         //get instruments
-        $aInstruments = tblInstruments::get_matching($iMission, $psInstrumentPattern);
+        $aInstruments = tblInstruments::get_matching_ids_from_pattern($iMission, $psInstrumentPattern);
         if (count($aInstruments) == 0)
             cDebug::error("no matching instruments");
 
