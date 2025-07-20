@@ -223,7 +223,8 @@ class tblProducts extends tblModel {
         cTracing::enter();
 
         /** @var Builder $oBuilder */
-        $oBuilder = self::get_builder($piMission)->where(cMissionColumns::SOL, $piSol);
+        $oBuilder = self::get_builder($piMission)
+            ->where(cMissionColumns::SOL, $piSol);
 
         switch ($piSampleTypeChooser) {
             case eSpaceSampleTypes::SAMPLE_NONTHUMBS:
