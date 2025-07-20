@@ -129,15 +129,17 @@ class cCuriosity implements iMission {
     }
 
     //*****************************************************************************
+    /**returns a list of matching instrument names */
     public static function getSolInstrumentList($piSol) {
         cTracing::enter();
 
         cDebug::write("Getting instrument list for sol " . $piSol);
 
-        $aData = cCuriosityORMManifest::get_instruments_for_sol($piSol);
+        $aInstrumentNames = cCuriosityORMManifest::get_instruments_for_sol($piSol);
+        $aFull = cCuriosityInstrument::get_matching($aInstrumentNames);
 
         cTracing::leave();
-        return $aData;
+        return $aFull;
     }
 
     //*****************************************************************************

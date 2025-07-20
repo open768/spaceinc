@@ -74,8 +74,11 @@ class cCuriosityInstrument {
             // build associative array
             self::$instrument_map = [];
             foreach (self::$Instruments as $oInstr) {
-                self::$instrument_map[$oInstr["name"]] = $oInstr;
-                self::$instrument_map[$oInstr["abbr"]] = $oInstr;
+                $sName  =  strtolower($oInstr["name"]);
+                self::$instrument_map[$sName] = $oInstr;
+
+                $sAbbr = strtolower($oInstr["abbr"]);
+                self::$instrument_map[$sAbbr] = $oInstr;
             }
         }
         cTracing::leave();
@@ -99,9 +102,23 @@ class cCuriosityInstrument {
     //*****************************************************************************
     public static function getInstrumentName($psInstrument) {
         self::getInstrumentList();
-        if (array_key_exists($psInstrument, self::$instrument_map))
-            return  self::$instrument_map[$psInstrument]["name"];
+        $sLower = strtolower($psInstrument);
+        if (array_key_exists($sLower, self::$instrument_map))
+            return  self::$instrument_map[$sLower]["name"];
         else
             cDebug::error("unknown instrument: $psInstrument");
     }
+
+    //*****************************************************************************
+    /** returns a list of instrument objs where the name contains either the instrument name or abbreviation */
+    public static function get_matching(array $paNames) {
+        $aOut = [];
+        foreach ($paNames as $sName) {
+            $sLower = strtolower($sName);
+            if (array_key_exists($sLower, self::$instrument_map))
+                $aOut[] = self::$instrument_map[$sLower];
+        }
+        return $aOut;
+    }
 }
+cCuriosityInstrument::getInstrumentList();

@@ -135,7 +135,7 @@ class tblID extends tblModel {
 
         $oBuilder = self::where(cMissionColumns::MISSION_ID, $piMission)
             ->whereIn(self::ID, $paNames);
-        $oCollection = cEloquentORM::get($oBuilder, [self::ID, self::NAME, self::]);
+        $oCollection = cEloquentORM::get($oBuilder, [self::ID, self::NAME]);
 
         cTracing::leave();
         return $oCollection;
@@ -149,7 +149,7 @@ class tblID extends tblModel {
             ->where(self::NAME, 'LIKE', $psPattern);
         $oCollection = cEloquentORM::pluck($oBuilder, self::ID);
         $aMatchingIDs = $oCollection->toArray();
-        cDebug::extra_debug("matching IDs:" . count($aMatchingIDs));
+        //cDebug::extra_debug("matching IDs:" . count($aMatchingIDs));
         return $aMatchingIDs;
 
         cTracing::leave();

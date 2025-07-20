@@ -146,36 +146,6 @@ class   cCuriosityManifestUtils {
         return $oData;
     }
 
-    //********************************************************
-    static function get_instruments_for_sol($psSol): array {
-        cTracing::enter();
-
-        cCuriosityORMManifestIndexer::reindex_if_needed($psSol);
-
-        // build SQL
-        $sSQL = "SELECT DISTINCT :instr_col from `:table` WHERE :mission_col=:mission  AND :sol_col=:sol ORDER BY :instr_col";
-        $sSQL = cCuriosityManifestIndex::replace_sql_params($sSQL);
-
-        //build stmt
-        $oBinds = new cSqlBinds; {
-            $oBinds->add_bind(":mission", cSpaceMissions::CURIOSITY);
-            $oBinds->add_bind(":sol", $psSol);
-        }
-
-        $oSqlDB = cCuriosityManifestIndex::get_db();
-        $aSQLData = $oSqlDB->prep_exec_fetch($sSQL, $oBinds);
-
-        //process results
-        $aData = [];
-        foreach ($aSQLData as $oItem) {
-            $aItem = (array) $oItem;
-            $aData[] = $aItem[cCuriosityManifestIndex::COL_INSTR];
-        }
-
-        cTracing::leave();
-        return $aData;
-    }
-
     //*********************************************************************
     static function get_products(string $psSol, ?string $psInstr = null): array {
         // read the img files for the products

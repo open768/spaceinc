@@ -90,11 +90,16 @@ class cCuriosityORMManifest {
 
         cDebug::write("Getting instrument list for sol " . $piSol);
         /** @var array $aData */
-        $aData = tblProducts::get_sol_instruments(self::$mission_id, $piSol);
-        //$aData = cCuriosityManifestUtils::get_instruments_for_sol($psSol);
+        $aOut = [];
+        $aRows = tblProducts::get_sol_instruments(self::$mission_id, $piSol); //this gets ID and name(abbr) columns
+        foreach ($aRows as $oRow) {
+            $abbr = $oRow[tblInstruments::NAME];
+            $full = cCuriosityInstrument::getInstrumentName($abbr);
+            $aOut[] = $full;
+        }
 
         cTracing::leave();
-        return $aData;
+        return $aOut;
     }
 }
 cCuriosityORMManifest::init();
