@@ -273,7 +273,7 @@ class cCuriosityImages implements iMissionImages {
         cDebug::write("Found $iThumbCount thumbnails: ");
 
         //-------get the products
-        $aProducts = cCuriosityManifestUtils::get_products($psSol, $psInstrument);
+        $aProducts = cMSLManifestOrmUtils::get_products($psSol, $psInstrument);
 
         //try to match up thumbmnails to full products or delete
         for ($i = $iThumbCount - 1; $i >= 0; $i--) {

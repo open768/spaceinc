@@ -146,53 +146,7 @@ class   cCuriosityManifestUtils {
         return $oData;
     }
 
-    //*********************************************************************
-    static function get_products(string $psSol, ?string $psInstr = null): array {
-        // read the img files for the products
-        cTracing::enter();
-        $oRawData = cCuriosityORMManifest::get_all_sol_data($psSol, $psInstr, eSpaceSampleTypes::SAMPLE_NONTHUMBS);
-        $aProducts = [];
-        foreach ($oRawData->data as $oItem)
-            $aProducts[] = $oItem->product;
-        cTracing::leave();
-        return $aProducts;
-    }
 
-    //*********************************************************************
-    static function count_products_in_sol($psSol, ?string $psInstr, $piSampleType): int {
-        cTracing::enter();
-
-        //-----------------------build SQL
-        $sSQL = "SELECT count(*) as count from `:table` WHERE :mission_col=:mission AND :sol_col=:sol";
-        switch ($piSampleType) {
-            case eSpaceSampleTypes::SAMPLE_NONTHUMBS:
-                $sSQL = "$sSQL AND :sample_col != :sample_type";
-                break;
-            case eSpaceSampleTypes::SAMPLE_THUMBS:
-                $sSQL = "$sSQL AND :sample_col = :sample_type";
-        }
-
-        $sSQL = cCuriosityManifestIndex::replace_sql_params($sSQL);
-
-        //-----------------------execute SQL
-        $oBinds = new cSqlBinds; {
-            $oBinds->add_bind(":mission", cSpaceMissions::CURIOSITY);
-            $oBinds->add_bind(":sol", $psSol);
-            $oBinds->add_bind(":sample_type", cCuriosityProduct::THUMB_SAMPLE_TYPE);
-        }
-
-        //-----------------------execute SQL
-        $oSqlDB = cCuriosityManifestIndex::get_db();
-        $aResults = $oSqlDB->prep_exec_fetch($sSQL, $oBinds);
-        if ($aResults == null)
-            cDebug::error("no products found");
-        $aRow = $aResults[0];
-        $iCount = $aRow["count"];
-        //cDebug::write("there are $iCount matching rows");
-
-        cTracing::leave();
-        return $iCount;
-    }
 
     //*********************************************************************
     static function get_product_index(string $psProduct): cSpaceProductData {

@@ -45,6 +45,19 @@ class cMSLManifestOrmUtils {
         return $aProducts;
     }
 
+    //*********************************************************************
+    static function get_products(string $psSol, ?string $psInstr = null): array {
+        // read the img files for the products
+        cTracing::enter();
+        $oRawData = cCuriosityORMManifest::get_all_sol_data($psSol, $psInstr, eSpaceSampleTypes::SAMPLE_NONTHUMBS);
+        $aProducts = [];
+        foreach ($oRawData->data as $oItem)
+            $aProducts[] = $oItem->product;
+        cTracing::leave();
+        return $aProducts;
+    }
+
+
     //************************************************************************************************
     static function get_random_images(string $psInstrumentPattern, int $piHowmany) {
         cTracing::enter();
