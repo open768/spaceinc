@@ -212,20 +212,6 @@ class   cCuriosityManifestUtils {
         cTracing::leave();
         return $oProduct;
     }
-
-    //*************************************************************************
-    /**
-     * this function attempts to find the next or previous product for a particular instrument
-     * its similar to find_time_sequential_product() but more challenging as adjacent sols may not have the same instrument.
-     * 
-     * @param string $psSol 
-     * @param string $psInstr 
-     * @param string $psProduct 
-     * @param string $psDirection 
-     * @return void 
-     */
-    static function find_instr_sequential_product(string $psSol, string $psInstr, string $psProduct, string $psDirection) {
-    }
 }
 
 //###############################################################################
