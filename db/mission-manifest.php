@@ -219,6 +219,53 @@ class tblProducts extends tblModel {
     }
 
     //*******************************************************************************
+    public static function find_sequential_product(int $piMission, string $psProduct, string $psDirection, ?bool $pbKeepInstrument = true): Collection {
+        cTracing::enter();
+
+        // choose operators and operands
+        $sOperator = null;
+        $sDateOrder = null;
+
+        switch ($psDirection) {
+            case cSpaceConstants::DIRECTION_PREVIOUS:
+                $sOperator = "<";
+                $sDateOrder = "desc";
+                break;
+            case cSpaceConstants::DIRECTION_NEXT:
+                $sOperator = ">";
+                $sDateOrder = "asc";
+                break;
+            default:
+                cDebug::error("unknown direction $psDirection");
+        }
+
+        //build builder
+        $oBuilder = self::get_builder($piMission);
+
+        if ($pbKeepInstrument) {
+            /** @var Collection $oTempCollection */
+            $oTempCollection = self::search_product($piMission, $psProduct);
+            if ($oTempCollection->count() == 0)
+                cDebug::error("product $psProduct not found");
+            $oRow = $oTempCollection->first();
+            $iInstrument = $oRow[self::INSTRUMENT_ID];
+
+            $oBuilder = $oBuilder->where(self::INSTRUMENT_ID, $iInstrument);
+        }
+
+        $oBuilder = $oBuilder
+            ->where(self::PRODUCT, $sOperator, $psProduct)
+            ->orderBy(self::UTC_DATE, $sDateOrder)
+            ->limit(1);
+
+        //query
+        $oCollection = cEloquentORM::get($oBuilder);
+
+        cTracing::leave();
+        return $oCollection;
+    }
+
+    //*******************************************************************************
     public static function get_all_data(int $piMission, int $piSol, ?int $piInstrument = null, ?eSpaceSampleTypes $piSampleTypeChooser = eSpaceSampleTypes::SAMPLE_NONTHUMBS, ?int $piThumbSampleType = null): Collection {
         cTracing::enter();
 

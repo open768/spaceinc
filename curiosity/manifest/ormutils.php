@@ -58,6 +58,15 @@ class cMSLManifestOrmUtils {
         return $aProducts;
     }
 
+    static function find_sequential_product(string $psProduct, string $psDirection, ?bool $pbSameInstrument = true): cSpaceProductData {
+        cTracing::enter();
+        $iMission = cCuriosityORMManifest::$mission_id;
+        $oCollection = tblProducts::find_sequential_product($iMission, $psProduct, $psDirection, $pbSameInstrument);
+        $aOutput = cSpaceManifestUtils::map_collection($oCollection);
+        cTracing::leave();
+        return $aOutput[0];
+    }
+
 
     //************************************************************************************************
     static function get_random_images(string $psInstrumentPattern, int $piHowmany) {
