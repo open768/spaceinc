@@ -143,6 +143,12 @@ class cCuriosity implements iMission {
     }
 
     //*****************************************************************************
+    /**
+     * gets PDS details 
+     * @param mixed $psSol 
+     * @param mixed $psInstrument 
+     * @param mixed $psProduct 
+     */
     public static function getProductDetails($psSol, $psInstrument, $psProduct) {
         cTracing::enter();
 
@@ -236,6 +242,7 @@ class cCuriosityImages implements iMissionImages {
         //if nothing found
 
         if ($oDetails == null) {
+            cDebug::write("no instrument data found for $psProduct");
             $oResult = null;
         } else
             $oResult = ["d" => $oDetails, "max" => $iCount, "item" => $i + 1];
