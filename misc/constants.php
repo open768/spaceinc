@@ -15,6 +15,7 @@ class cSpaceUrlParams {
 
     const PDS_VOLUME = "v";
     const EDR_INDEX = "i";
+    const SITE = "site";
 }
 
 enum eSpaceSampleTypes {
