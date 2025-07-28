@@ -38,7 +38,7 @@ class cCuriosityJPLManifest {
     //*****************************************************************************
     static function getManifest() {
         $oResult = null;
-        cTracing::enter();
+        //cTracing::enter();
 
         $oResult = self::$cached_manifest;
         if ($oResult == null) {
@@ -48,13 +48,13 @@ class cCuriosityJPLManifest {
             }
             self::$cached_manifest = $oResult;
         }
-        cTracing::leave();
+        //cTracing::leave();
         return $oResult;
     }
 
     //*****************************************************************************
     static function getSolEntry(string $psSol) {
-        cTracing::enter();
+        //cTracing::enter();
         //---- get the manifest
         $oManifest = self::getManifest();
         $aSols = $oManifest->sols;
@@ -74,18 +74,18 @@ class cCuriosityJPLManifest {
         }
 
         if ($oMatched == null) cDebug::write("unable to find the SOL entry");
-        cTracing::leave();
+        //cTracing::leave();
         return $oMatched;
     }
 
     //*****************************************************************************
     static function getSolJsonUrl($psSol) {
-        cTracing::enter();
+        //cTracing::enter();
 
         $oSol = self::getSolEntry($psSol);
         $sUrl = $oSol->catalog_url;
 
-        cTracing::leave();
+        //cTracing::leave();
         return $sUrl;
     }
 

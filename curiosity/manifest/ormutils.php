@@ -61,7 +61,8 @@ class cMSLManifestOrmUtils {
     static function find_sequential_product(string $psProduct, string $psDirection, ?bool $pbSameInstrument = true): cSpaceProductData {
         cTracing::enter();
         $iMission = cCuriosityORMManifest::$mission_id;
-        $oCollection = tblProducts::find_sequential_product($iMission, $psProduct, $psDirection, $pbSameInstrument);
+        $iThumbSampleType = tblSampleType::get_id($iMission, "thumbnail");
+        $oCollection = tblProducts::find_sequential_product($iMission, $psProduct, $psDirection, $iThumbSampleType, $pbSameInstrument);
         $aOutput = cSpaceManifestUtils::map_collection($oCollection);
         cTracing::leave();
         return $aOutput[0];

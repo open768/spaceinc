@@ -50,9 +50,9 @@ class cCuriosityORMManifest {
 
     //***************************************************************************
     static function is_sol_in_index(int $piSol): bool {
-        cTracing::enter();
-        $slastUpdated = tblSolStatus::get_last_updated(cCuriosityORMManifest::$mission_id, $piSol);
-        cTracing::leave();
+        //cTracing::enter();
+        $slastUpdated = tblSolStatus::get_last_updated(self::$mission_id, $piSol);
+        //cTracing::leave();
         return ($slastUpdated !== null);
     }
 

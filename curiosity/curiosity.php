@@ -157,8 +157,9 @@ class cCuriosity implements iMission {
         $aOutput = ["s" => $psSol, "i" => $sInstr, "p" => $psProduct, "d" => null, "max" => null, "item" => null, "migrate" => null];
 
         //get the data
-        $oInstrumentData = self::getSolRawData($psSol, $sInstr); //using raw details is fine as it does need raw data
-        $aInstrumentImages = $oInstrumentData->data;
+        $oRawData = self::getSolRawData($psSol, $sInstr); //using raw details is fine as it does need raw data
+        // if ($oInstrumentData != null) cDebug::vardump($oInstrumentData);
+        $aInstrumentImages = $oRawData->data;
         $oDetails = cCuriosityImages::getInstrumentImageDetails($aInstrumentImages, $psProduct);
 
 
@@ -228,24 +229,30 @@ class cCuriosityImages implements iMissionImages {
         $oDetails = null;
         $oResult = null;
         cTracing::enter();
+        $aNotFound = [];
 
+        $iFoundIndex = -1;
         cDebug::write("looking for $psProduct");
-        $iCount = count($paInstrumentImages);
-        for ($i = 0; $i < $iCount; $i++) {
-            $aItem = $paInstrumentImages[$i];
-            if ($aItem["p"] === $psProduct) {
+        foreach ($paInstrumentImages as $iItemIndex => $aItem) {
+            $sItemProduct = $aItem["p"];
+            if ($sItemProduct === $psProduct) {
                 $oDetails = $aItem;
+                $iFoundIndex = $iItemIndex;
                 cDebug::write("found $psProduct");
+
                 break;
-            }
+            } else
+                $aNotFound[] = $sItemProduct;
         }
         //if nothing found
-
         if ($oDetails == null) {
-            cDebug::write("no instrument data found for $psProduct");
+            $sList = join(", ", $aNotFound);
+            cDebug::write("no instrument data found for $psProduct in [$sList]");
             $oResult = null;
-        } else
-            $oResult = ["d" => $oDetails, "max" => $iCount, "item" => $i + 1];
+        } else {
+            $iCount = count($paInstrumentImages);
+            $oResult = ["d" => $oDetails, "max" => $iCount, "item" => $iFoundIndex + 1];
+        }
 
         cTracing::leave();
         return $oResult;

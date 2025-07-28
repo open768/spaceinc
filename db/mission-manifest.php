@@ -219,7 +219,7 @@ class tblProducts extends tblModel {
     }
 
     //*******************************************************************************
-    public static function find_sequential_product(int $piMission, string $psProduct, string $psDirection, ?bool $pbKeepInstrument = true): Collection {
+    public static function find_sequential_product(int $piMission, string $psProduct, string $psDirection, int $piThumbSampleType, ?bool $pbKeepInstrument = true): Collection {
         cTracing::enter();
 
         // choose operators and operands
@@ -252,6 +252,8 @@ class tblProducts extends tblModel {
 
             $oBuilder = $oBuilder->where(self::INSTRUMENT_ID, $iInstrument);
         }
+
+        $oBuilder = $oBuilder->whereNot(self::SAMPLE_TYPE_ID, $piThumbSampleType);
 
         $oBuilder = $oBuilder
             ->where(self::PRODUCT, $sOperator, $psProduct)
