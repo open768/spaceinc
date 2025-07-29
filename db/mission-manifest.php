@@ -208,7 +208,7 @@ class tblProducts extends tblModel {
         $poTable->integer(self::SITE)->index();
         $poTable->text(self::IMAGE_URL);
         $poTable->text(self::PRODUCT)->index();
-        $poTable->dateTime(self::UTC_DATE);
+        $poTable->dateTime(self::UTC_DATE)->index();
         $poTable->integer(self::DRIVE)->index();
 
         //add relationships
@@ -226,6 +226,18 @@ class tblProducts extends tblModel {
         $sOperator = null;
         $sDateOrder = null;
 
+        //get the original product details
+        /** @var Collection  $oProduct */
+        $oProduct = self::get_exact_product($piMission, $psProduct);
+        $oRow = $oProduct->first();
+        $dUTC = $oRow[self::UTC_DATE];
+        $iInstrID = $oRow[self::INSTRUMENT_ID];
+        if ($dUTC === null) {
+            cDebug::error("product $psProduct not found");
+        }
+        cDebug::extra_debug("product date is $dUTC, instrument is $iInstrID");
+
+        //----------
         switch ($psDirection) {
             case cSpaceConstants::DIRECTION_PREVIOUS:
                 $sOperator = "<";
@@ -244,19 +256,13 @@ class tblProducts extends tblModel {
 
         if ($pbKeepInstrument) {
             /** @var Collection $oTempCollection */
-            $oTempCollection = self::search_product($piMission, $psProduct);
-            if ($oTempCollection->count() == 0)
-                cDebug::error("product $psProduct not found");
-            $oRow = $oTempCollection->first();
-            $iInstrument = $oRow[self::INSTRUMENT_ID];
-
-            $oBuilder = $oBuilder->where(self::INSTRUMENT_ID, $iInstrument);
+            $oBuilder = $oBuilder->where(self::INSTRUMENT_ID, $iInstrID);
         }
 
         $oBuilder = $oBuilder->whereNot(self::SAMPLE_TYPE_ID, $piThumbSampleType);
 
         $oBuilder = $oBuilder
-            ->where(self::PRODUCT, $sOperator, $psProduct)
+            ->where(self::UTC_DATE, $sOperator, $dUTC)
             ->orderBy(self::UTC_DATE, $sDateOrder)
             ->limit(1);
 
@@ -365,6 +371,19 @@ class tblProducts extends tblModel {
         return $oBuilder;
     }
 
+
+    //*******************************************************************************
+    public static function get_exact_product(int $piMission, string $psProduct): Collection {
+        cTracing::enter();
+
+        $oBuilder = self::get_builder($piMission)
+            ->where(self::PRODUCT, $psProduct);
+
+        $oCollection = cEloquentORM::get($oBuilder);
+
+        cTracing::leave();
+        return $oCollection;
+    }
 
     //*******************************************************************************
     public static function search_product(int $piMission, string $psSearch, ?array $paSampleTypeIDs = null) {

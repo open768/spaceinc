@@ -28,13 +28,13 @@ class cSpaceManifestUtils {
      * @return cSpaceProductData[]
      */
     static function map_collection(Collection $poCollection) {
-        cTracing::enter();
+        //cTracing::enter();
         $aResults = $poCollection->map(
             function (tblProducts $poItem) {
                 return self::pr__map_to_spaceproduct($poItem);
             }
         )->toArray();
-        cTracing::leave();
+        //cTracing::leave();
         return $aResults;
     }
 
