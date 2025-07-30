@@ -89,7 +89,7 @@ class cSpaceImageMosaic {
     }
 
     //**********************************************************************
-    //@TODO convert to using blobber
+    //TODO: convert to using blobber
     static function get_sol_high_mosaic($psSol): ?cBlobData {
         cTracing::enter();
 

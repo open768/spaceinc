@@ -348,7 +348,7 @@ class cCuriosityImages implements iMissionImages {
         }
 
 
-        //TBD
+        //TODO:
         //store the final version of the data			
         $aValues = array_values($aThumbData);
         $poAllSolThumbs->data = $aValues;

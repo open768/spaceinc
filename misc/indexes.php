@@ -106,7 +106,7 @@ class cSpaceIndex {
     //######################################################################
     static function update_indexes($psSol, $psInstrument, $psProduct, $poData, $psSuffix) {
         cTracing::enter();
-        //@todo check for valid product
+        //TODO: check for valid product
         self::update_instr_index($psSol, $psInstrument, $psProduct, $poData, $psSuffix);
         self::update_sol_index($psSol, $psInstrument, $psProduct, $psSuffix);
         self::update_top_sol_index($psSol, $psSuffix);

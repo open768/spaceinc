@@ -72,8 +72,8 @@ class cPDS_Reader {
         cHash::$CACHE_EXPIRY = cHash::FOREVER;        //cache forever
         //cHash::$show_filenames = true;
 
-        $sHashUrl = cHash::hash($psUrl);
-        $sHashLBL = cHash::hash("PDSOBJ-$psUrl");
+        $sHashUrl = cHasher::hash($psUrl);
+        $sHashLBL = cHasher::hash("PDSOBJ-$psUrl");
 
         if (self::$force_delete) {
             cDebug::write("deleting cached file for $psUrl");
@@ -155,7 +155,7 @@ class cPDS_Reader {
 
         for ($i = 0; $i <= $iCount; $i++) {
             $sFolder = self::TAB_ID . $psInstr . $i;
-            $sHash = cHash::hash($sFolder);
+            $sHash = cHasher::hash($sFolder);
             cHash::delete_hash($sHash);
         }
         /** @var cObjStoreDB $oDB **/
@@ -214,7 +214,7 @@ class cPDS_Reader {
     private  function pr__write_TAB_columns($psVolume, $piTabIndex, $paData) {
         $sFolder = self::TAB_ID . $psVolume . $piTabIndex;
         cDebug::write("writing out tab file $sFolder");
-        $sHash = cHash::hash($sFolder);
+        $sHash = cHasher::hash($sFolder);
         cHash::pr__put_obj($sHash, $paData, true);
     }
 
@@ -316,7 +316,7 @@ class cPDS_Reader {
     //**********************************************************************
     private  static function pr__get_tab_col_file($psInstr, $piIndex) {
         $sFolder = self::TAB_ID . $psInstr . $piIndex;
-        $sHash = cHash::hash($sFolder);
+        $sHash = cHasher::hash($sFolder);
         return cHash::pr__get_obj($sHash);
     }
 }
