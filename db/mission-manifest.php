@@ -493,9 +493,13 @@ class cMissionManifest {
         foreach (self::$models as $oModelClass) {
             $oInstance = (new $oModelClass);
             $sTableName = $oInstance->getTable();
-            cEloquentORM::create_table(self::DBNAME, $sTableName, function ($poTable) use ($oModelClass) {
-                $oModelClass::create_table($poTable);
-            });
+            cEloquentORM::create_table(
+                self::DBNAME,
+                $sTableName,
+                function ($poTable) use ($oModelClass) {
+                    $oModelClass::create_table($poTable);
+                }
+            );
         }
 
         cTracing::leave();
