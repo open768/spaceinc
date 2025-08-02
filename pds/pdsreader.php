@@ -82,7 +82,7 @@ class cPDS_Reader {
         }
 
 
-        if (!cHash::exists($sHashLBL)) {
+        if (!chash::exists_old_style($sHashLBL)) {
             //--- fetch the raw LBL file
             $sFolder = cHash::make_hash_folder($sHashUrl);
             $sUrlFilename = cHash::getPath($sHashUrl);
