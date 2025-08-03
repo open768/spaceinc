@@ -65,7 +65,7 @@ class cSpice {
 
         $sURL = self::NAIF_URL . "/" . self::$sMission . "/kernels/$psFamily/$psKernel";
         $oCache = new cCachedHttp();
-        $sFile = $oCache->getCachedUrltoFile($sURL);
+        $sFile = $oCache->getHugeCachedUrltoFile($sURL);
         cDebug::write("Url is in File: $sFile");
     }
 

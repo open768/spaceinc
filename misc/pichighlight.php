@@ -160,8 +160,8 @@ class cSpaceImageHighlight {
 
         //--------get product 
         $aProducts = cMSLManifestOrmUtils::search_for_product($psProduct);
-        if (sizeof($aProducts) != 1)
-            cDebug::error("couldnt find product");
+        if ($aProducts == null  || sizeof($aProducts) != 1)
+            cDebug::error("couldnt find product $psProduct");
 
         //--------update product with highlight data 
         $oProduct = $aProducts[0];
