@@ -185,7 +185,11 @@ class cPDS_Reader {
 
                 if (!isset($aData[$sSol])) $aData[$sSol] = [];
                 if (!isset($aData[$sSol][$sInstr])) $aData[$sSol][$sInstr] = [];
-                $aData[$sSol][$sInstr][$sProduct] = ["v" => $psVolume, "p" => $sPath, "f" => $sFile];
+                $aData[$sSol][$sInstr][$sProduct] = [
+                    "v" => $psVolume,
+                    "p" => $sPath,
+                    "f" => $sFile
+                ];
             }
 
             //write out the files at the end of reading all the data

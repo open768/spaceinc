@@ -154,7 +154,15 @@ class cCuriosity implements iMission {
 
         //check if the instrument might be an abbreviation
         $sInstr = cCuriosityInstrument::getInstrumentName($psInstrument);
-        $aOutput = ["s" => $psSol, "i" => $sInstr, "p" => $psProduct, "d" => null, "max" => null, "item" => null, "migrate" => null];
+        $aOutput = [
+            cSpaceUrlParams::SOL => $psSol,
+            cSpaceUrlParams::INSTRUMENT => $sInstr,
+            cSpaceUrlParams::PRODUCT => $psProduct,
+            cSpaceUrlParams::DATA => null,
+            "max" => null,
+            "item" => null,
+            "migrate" => null
+        ];
 
         //get the data
         $oRawData = self::getSolRawData($psSol, $sInstr); //using raw details is fine as it does need raw data
@@ -194,7 +202,25 @@ class cCuriosity implements iMission {
 }
 cMissions::add_mission(cCuriosity::class);
 
+//##########################################################################
+//#
+//##########################################################################
+class cCuriosityThumbtUtil {
+    public static function bodge_I1_D(string $psProduct) {
+        //this is a bodge to correct an unrecognised product id 
+        $sProduct = str_replace("I1_D", "E1_D", $psProduct);
+        return $sProduct;
+    }
 
+    public static function get_partial_regex($psProduct) {
+        $sRegex = str_replace("EDR_T", "EDR_.", $psProduct);    // a bodge to correct an unrecognised product id 
+        $sRegex  = "/" . $sRegex . "/";
+        return $sRegex;
+    }
+}
+//##########################################################################
+//#
+//##########################################################################
 class cCuriosityImages implements iMissionImages {
     const LOCAL_THUMB_FOLDER = "images/[thumbs]";
     const THUMBNAIL_QUALITY = 90;
@@ -289,16 +315,14 @@ class cCuriosityImages implements iMissionImages {
         //-------get the products
         $aProducts = cMSLManifestOrmUtils::get_products($psSol, $psInstrument);
 
-        //try to match up thumbmnails to full products or delete
+        //try to match up thumbnails to full products or delete
         for ($i = $iThumbCount - 1; $i >= 0; $i--) {
             $aTItem = $aThumbData[$i];
             $sTProduct = $aTItem->product;
-            cDebug::write("0.. Looking for product: $sTProduct");
-
-            //this is a bodge to correct an unrecognised product id 
-            $sIProduct = str_replace("I1_D", "E1_D", $sTProduct);
 
             //-------------------check if this product is contained in $aProducts
+            cDebug::write("🔎 Looking for product: $sTProduct");
+            $sIProduct = cCuriosityThumbtUtil::bodge_I1_D($sTProduct);
             if (in_array($sIProduct, $aProducts)) {
                 cDebug::write("1.. product found for $sIProduct");
                 $aTItem->product = $sIProduct;
@@ -306,15 +330,15 @@ class cCuriosityImages implements iMissionImages {
                 continue;
             }
 
-            //-------------------check for a partial match (using regex)-----------------
-            $sRegex = str_replace("EDR_T", "EDR_.", $sTProduct);    // a bodge to correct an unrecognised product id 
-            $sRegex  = "/" . $sRegex . "/";
+            //-------------------check for a partial match (using regex)-----------------          
+            $sRegex = cCuriosityThumbtUtil::get_partial_regex($sTProduct);    // a bodge to correct an unrecognised product id 
+            cDebug::write("2.. trying regex $sRegex");
             $aMatches = preg_grep($sRegex, $aProducts); //search array for a match
             if ($aMatches) {
                 $sMatch = array_values($aMatches)[0];
                 $aTItem->product = $sMatch;
                 $aThumbData[$i] = $aTItem;
-                cDebug::write("2.. product found for $sIProduct");
+                cDebug::write("2.. product found for $sIProduct= $sMatch");
                 continue;
             }
 
@@ -322,7 +346,7 @@ class cCuriosityImages implements iMissionImages {
             try {
                 $aProduct = cCuriosityPDS::explode_productID($sTProduct);
             } catch (Exception $e) {
-                cDebug::write("3.. not a known product ID:" . $sIProduct);
+                cDebug::write(" 3.. ❌ not a known explodable product ID:" . $sIProduct);
                 continue;
             }
 
@@ -354,7 +378,7 @@ class cCuriosityImages implements iMissionImages {
         $poAllSolThumbs->data = $aValues;
 
         cTracing::leave();
-        return ["s" => $psSol, "i" => $psInstrument, "d" => $poAllSolThumbs];
+        return [cSpaceUrlParams::SOL => $psSol, cSpaceUrlParams::INSTRUMENT => $psInstrument, cSpaceUrlParams::DATA => $poAllSolThumbs];
     }
 }
 

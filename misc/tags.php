@@ -250,7 +250,10 @@ class cSpaceTags {
         $aData = self::get_sol_tags($psSol);
         if (!$aData) $aData = [];
         if (!isset($aData[$psInstrument])) $aData[$psInstrument] = [];
-        $aData[$psInstrument][] = ["p" => $psProduct, "t" => $psTag];
+        $aData[$psInstrument][] = [
+            cSpaceUrlParams::PRODUCT => $psProduct,
+            "t" => $psTag
+        ];
         $oDB = self::$objstoreDB;
         $oDB->put("$psSol/" . self::SOL_TAG_FILE, $aData);
 

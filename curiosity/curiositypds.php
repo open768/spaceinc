@@ -183,13 +183,23 @@ class cCuriosityPDS {
             if ($bIsRegex) {
                 if (preg_match($sPDSRegex, $sKey)) {
                     cDebug::write("got a match with $sKey");
-                    $oMatch = ["p" => $sKey, "s" => $psSol, "i" => $psInstrument, "d" => $oData];
+                    $oMatch = [
+                        cSpaceUrlParams::PRODUCT => $sKey,
+                        cSpaceUrlParams::SOL => $psSol,
+                        cSpaceUrlParams::INSTRUMENT => $psInstrument,
+                        cSpaceUrlParams::DATA => $oData
+                    ];
                     break;
                 }
             } else {
                 if ($sKey === $psProduct || $sKey === $sI01Product) {
                     cDebug::write("found matching product $sKey");
-                    $oMatch = ["p" => $psProduct, "s" => $psSol, "i" => $psInstrument, "d" => $oData];
+                    $oMatch = [
+                        cSpaceUrlParams::PRODUCT => $psProduct,
+                        cSpaceUrlParams::SOL => $psSol,
+                        cSpaceUrlParams::INSTRUMENT => $psInstrument,
+                        cSpaceUrlParams::DATA => $oData
+                    ];
                     break;
                 }
             }

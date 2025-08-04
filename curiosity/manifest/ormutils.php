@@ -181,7 +181,11 @@ class cMSLManifestOrmUtils {
 
             //add the entry to the array
             if (!array_key_exists($sTimeKey, $aCal[$sDate])) $aCal[$sDate][$sTimeKey] = [];
-            $aCal[$sDate][$sTimeKey][] = (object)["i" => $sInstr, "d" => $epoch, "p" => $oItem->product];
+            $aCal[$sDate][$sTimeKey][] = (object)[
+                cSpaceUrlParams::INSTRUMENT => $sInstr,
+                cSpaceUrlParams::DATA => $epoch,
+                cSpaceUrlParams::PRODUCT => $oItem->product
+            ];
         }
         $oData->cal = $aCal;
 

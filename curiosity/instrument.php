@@ -51,7 +51,7 @@ class cCuriosityInstrument {
                 "du" => $poCuriosityData->utc,
                 "dm" => $poCuriosityData->lmst,
                 "i" => $poCuriosityData->urlList,
-                "p" => $poCuriosityData->itemName,
+                cSpaceUrlParams::PRODUCT => $poCuriosityData->itemName,
                 "data" => $poCuriosityData
             ];
             if (isset($poCuriosityData->pdsLabelUrl))
