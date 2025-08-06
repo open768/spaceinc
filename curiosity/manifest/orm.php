@@ -57,13 +57,20 @@ class cCuriosityORMManifest {
     }
 
     //***************************************************************************
+    /**
+     * Get all data for a given sol, optionally filtered by instrument and sample type. 
+     * @param int $piSol
+     * @param string|null $psInstrument
+     * @param eSpaceSampleTypes|null $piSampleTypeChooser
+     * @return cManifestSolData
+     */
     static function get_all_sol_data(int $piSol, ?string $psInstrument = null, ?eSpaceSampleTypes $piSampleTypeChooser = eSpaceSampleTypes::SAMPLE_ALL): cManifestSolData {
         cTracing::enter();
 
         cCuriosityORMManifestIndexer::reindex_if_needed($piSol);
         // get instrument ID
         $iInstrument = null;
-        if ($psInstrument !== null)
+        if ($psInstrument !== null and $psInstrument !== cCuriosityConstants::ALL_INSTRUMENTS)
             $iInstrument = tblInstruments::get_id(self::$mission_id, $psInstrument);
 
         //get thumbnail sampletypeid as its not known to generic tblproducts
@@ -125,22 +132,17 @@ class    cCuriosityORMManifestIndexer {
         } elseif ($slastUpdated < $sManifestUtc) {
             cDebug::write("sol $piSol needs to be reindexed");
             $bIndexIt = true;
-        } else
-            cDebug::write("sol $piSol no reindexing needed");
+        }
 
         return $bIndexIt;
     }
 
     //********************************************************************************************
     static function reindex_if_needed(int $piSol) {
-        cTracing::enter();
+        cDebug::write("checking Sol $piSol for reindexing into the Manifest");
 
-        cDebug::write("checking Sol $piSol");
-
-        $bIndexIt = self::is_reindex_needed($piSol);
-        if ($bIndexIt)
+        if (self::is_reindex_needed($piSol))
             self::index_sol($piSol, true);
-        cTracing::leave();
     }
 
     //********************************************************************************************
