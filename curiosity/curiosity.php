@@ -206,16 +206,15 @@ cMissions::add_mission(cCuriosity::class);
 //#
 //##########################################################################
 class cCuriosityThumbtUtil {
-    public static function bodge_I1_D(string $psProduct) {
+    public static function bodge_EI_I1_D(string $psProduct) {
         //this is a bodge to correct an unrecognised product id 
-        $sProduct = str_replace("I1_D", "E1_D", $psProduct);
+        $sProduct = str_replace("E1_D", "I1_D", $psProduct);
         return $sProduct;
     }
 
-    public static function get_partial_regex($psProduct) {
-        $sRegex = str_replace("EDR_T", "EDR_.", $psProduct);    // a bodge to correct an unrecognised product id 
-        $sRegex  = "/" . $sRegex . "/";
-        return $sRegex;
+    public static function get_EDR_regex($psProduct) {
+        $sRegex = preg_replace("/EDR_\w/", "EDR_.", $psProduct);    // a bodge to correct an unrecognised product id 
+        return "/$sRegex/";
     }
 }
 //##########################################################################
@@ -283,102 +282,101 @@ class cCuriosityImages implements iMissionImages {
         cTracing::leave();
         return $oResult;
     }
-    //*****************************************************************************
-    public static function getThumbnails($psSol, $psInstrument) {
-        cTracing::enter();
-        $oResult = null;
-
-        //get the thumbnails and the non thumbnails
-        $sInstrument = $psInstrument;
-        if ($sInstrument ===  cCuriosityConstants::ALL_INSTRUMENTS) $sInstrument = null;
-
-        $oAllSolThumbs = cCuriosityORMManifest::get_all_sol_data($psSol, $sInstrument, eSpaceSampleTypes::SAMPLE_THUMBS);
-        $oResult = self::pr_match_thumbs($psSol, null, $oAllSolThumbs);
-
-        cTracing::leave();
-        return $oResult;
-    }
 
     //*****************************************************************************
-    private static function pr_match_thumbs($psSol, $psInstrument, cManifestSolData $poAllSolThumbs) {
-        cTracing::enter();
+    private static function _matchThumbnails(cManifestSolData $poProdData, cManifestSolData $poThumbData) {
+        /** @var  cSpaceProductData[] $aThumbData */
+        $aThumbData = $poThumbData->data;
+        $aThumbAssoc = [];
+        foreach ($aThumbData as $oThumb)
+            $aThumbAssoc[$oThumb->product] = $oThumb;
+        $aThumbAssocKeys = array_keys($aThumbAssoc);
 
-        //----------check that there are thumbnails
-        $aThumbData = $poAllSolThumbs->data;
-        $iThumbCount = count($aThumbData);
-        if ($iThumbCount == 0) {
-            cDebug::write("no thumbnails provided");
-            return null;
-        }
-        cDebug::write("Found $iThumbCount thumbnails: ");
+        /** @var  cSpaceProductData[] $aProdData */
+        $aProdData = $poProdData->data;
 
-        //-------get the products
-        $aProducts = cMSLManifestOrmUtils::get_products($psSol, $psInstrument);
+        //go through the product array and try and match it up with a thumbnail
+        /** @var cSpaceProductData $oProd */
+        foreach ($aProdData as $oProd) {
+            $sProduct = $oProd->product;
 
-        //try to match up thumbnails to full products or delete
-        for ($i = $iThumbCount - 1; $i >= 0; $i--) {
-            $aTItem = $aThumbData[$i];
-            $sTProduct = $aTItem->product;
-
-            //-------------------check if this product is contained in $aProducts
-            cDebug::write("🔎 Looking for product: $sTProduct");
-            $sIProduct = cCuriosityThumbtUtil::bodge_I1_D($sTProduct);
-            if (in_array($sIProduct, $aProducts)) {
-                cDebug::write("1.. product found for $sIProduct");
-                $aTItem->product = $sIProduct;
-                $aThumbData[$i] = $aTItem;
+            //-------------------check if this product is contained in thumbnails
+            cDebug::write("🔎 Looking for product: $sProduct");
+            $sBodgeProduct = cCuriosityThumbtUtil::bodge_EI_I1_D($sProduct);
+            if (in_array($sBodgeProduct, $aThumbAssocKeys)) {
+                cDebug::write("1.. thumb  found for $sProduct");
+                $oThumbProduct = $aThumbAssoc[$sBodgeProduct];
+                $oProd->thumb_url = $oThumbProduct->image_url;
                 continue;
             }
 
             //-------------------check for a partial match (using regex)-----------------          
-            $sRegex = cCuriosityThumbtUtil::get_partial_regex($sTProduct);    // a bodge to correct an unrecognised product id 
-            cDebug::write("2.. trying regex $sRegex");
-            $aMatches = preg_grep($sRegex, $aProducts); //search array for a match
-            if ($aMatches) {
-                $sMatch = array_values($aMatches)[0];
-                $aTItem->product = $sMatch;
-                $aThumbData[$i] = $aTItem;
-                cDebug::write("2.. product found for $sIProduct= $sMatch");
-                continue;
+            if (stristr($sProduct, "EDR_") !== false) {
+                $sRegex = cCuriosityThumbtUtil::get_EDR_regex($sProduct);    // a bodge to correct an unrecognised product id 
+                cDebug::write("2.. trying regex $sRegex");
+                $aMatches = preg_grep($sRegex, $aThumbAssocKeys); //search array for a match
+                if ($aMatches) {
+                    $sMatch = array_values($aMatches)[0];
+                    $oThumbProduct = $aThumbAssoc[$sMatch];
+                    $oProd->thumb_url = $oThumbProduct->image_url;
+                    cDebug::write("2.. product found for $sProduct= $sMatch");
+                    continue;
+                }
             }
 
             //---------------------break the productID into its parts
             try {
-                $aProduct = cCuriosityPDS::explode_productID($sTProduct);
+                $aProduct = cCuriosityPDS::explode_productID($sProduct);
             } catch (Exception $e) {
-                cDebug::write(" 3.. ❌ not a known explodable product ID:" . $sIProduct);
+                cDebug::write(" 3.. ❌ not a known explodable product ID:" . $sProduct);
                 continue;
             }
 
             //----------------one last throw of the dice, create a product string and look for it again
             $sPartial = sprintf("/%04d%s%06d%03d/", $aProduct["sol"], $aProduct["instrument"], $aProduct["seqid"], $aProduct["seq line"], $aProduct["CDPID"]);
-            $aMatches = preg_grep($sPartial, $aProducts);
+            $aMatches = preg_grep($sPartial, $aThumbAssocKeys); //search array for a match
             if (count($aMatches) > 0) {
-                $aValues = array_values($aMatches);
-                cDebug::write("4.. thumbnail $sTProduct matches " . $aValues[0]);
-                $aTItem->product = $aValues[0];
-                $aThumbData[$i] = $aTItem;
+                $sMatch = array_values($aMatches)[0];
+                cDebug::write("4.. thumbnail $sProduct matches $sMatch");
+                $oThumbProduct = $aThumbAssoc[$sMatch];
+                $oProd->thumb_url = $oThumbProduct->image_url;
                 continue;
             }
 
             //give up
-            cDebug::write("5.. Thumbnail didnt match $sTProduct");
-            unset($aThumbData[$i]); //delete the thumbnail
+            cDebug::write("5.. Thumbnail didnt match $sProduct");
         }
 
-        if (count($aThumbData) == 0) {
-            cDebug::write("5.. no thumbnails matched");
+        return $aProdData;
+    }
+
+    //*****************************************************************************
+    public static function getThumbnails($psSol, $psInstrument) {
+        cTracing::enter();
+
+        $sMissionID = cCuriosity::get_mission_id();
+
+        //----------check that there are thumbnails
+        /** @var cManifestSolData $oThumbData */
+        $oThumbData = cCuriosityORMManifest::get_all_sol_data($psSol, $psInstrument, eSpaceSampleTypes::SAMPLE_THUMBS);
+        if (count($oThumbData->data) == 0) {
+            cDebug::write("no thumbnails found");
             return null;
         }
 
+        //----------check that there are products
+        /** @var cManifestSolData $oProdData */
+        $oProdData = cCuriosityORMManifest::get_all_sol_data($psSol, $psInstrument, eSpaceSampleTypes::SAMPLE_NONTHUMBS);
+        if (count($oProdData->data) == 0) {
+            cDebug::write("no products found");
+            return null;
+        }
 
-        //TODO:
-        //store the final version of the data			
-        $aValues = array_values($aThumbData);
-        $poAllSolThumbs->data = $aValues;
+        //---------try to match up products with thumbnails
+        $_ = self::_matchThumbnails($oProdData, $oThumbData);
 
         cTracing::leave();
-        return [cSpaceUrlParams::SOL => $psSol, cSpaceUrlParams::INSTRUMENT => $psInstrument, cSpaceUrlParams::DATA => $poAllSolThumbs];
+        return $oProdData;
     }
 }
 

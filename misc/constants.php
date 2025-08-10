@@ -36,6 +36,7 @@ class cSpaceProductData {
     public ?string $sample_type = null;
     public int $rowid;
     public ?array $data = null;
+    public ?string $thumb_url = null;
 
     public function get_abbreviated_data() {
         $aOut = []; {
@@ -47,5 +48,10 @@ class cSpaceProductData {
             $aOut[cSpaceUrlParams::DATA] = $this->data;
         }
         return (object)$aOut;
+    }
+
+    function __construct($psMission, $psSol) {
+        $this->mission = $psMission;
+        $this->sol = $psSol;
     }
 }

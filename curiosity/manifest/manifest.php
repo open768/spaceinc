@@ -18,8 +18,14 @@ require_once cAppGlobals::$spaceInc . "/misc/constants.php";
 
 
 class cManifestSolData {
+    public $mission;
     public string $sol;
     public array  $data = [];
+
+    function __construct($psMission, string $psSol = "") {
+        $this->mission = $psMission;
+        $this->sol = $psSol;
+    }
 }
 
 

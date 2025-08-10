@@ -50,14 +50,12 @@ class cSpaceManifestUtils {
 
         $sFullInstrument = $poItem->instrument[tblID::NAME];
         $sAbbrInstrument = cCuriosityInstrument::getInstrumentAbbr($sFullInstrument);
-        $oProduct = new cSpaceProductData(); {
-            $oProduct->sol = $poItem[cMissionColumns::SOL];
+        $oProduct = new cSpaceProductData($poItem->mission[tblID::NAME], $poItem[cMissionColumns::SOL]); {
             $oProduct->image_url = $sFull;
             $oProduct->product = $sProduct;
             $oProduct->utc_date = $poItem[tblProducts::UTC_DATE];
             $oProduct->full_instr = $sFullInstrument;
             $oProduct->instr = $sAbbrInstrument;
-            $oProduct->mission = $poItem->mission[tblID::NAME];
             $oProduct->sample_type = $poItem->sampleType[tblID::NAME];
         }
         return $oProduct;

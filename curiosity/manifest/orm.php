@@ -81,8 +81,7 @@ class cCuriosityORMManifest {
         $aResults = cSpaceManifestUtils::map_collection($oCollection);
 
         //and convert to cManifestSolData
-        $oData = new cManifestSolData();
-        $oData->sol = $piSol;
+        $oData = new cManifestSolData(self::$mission_id, $piSol);
         $oData->data = $aResults;
 
         cTracing::leave();
