@@ -28,9 +28,11 @@ class cPDS_Reader {
     public $PDS_URL = "";
     private $COLUMN_NAMES = ["PATH_NAME", "FILE_NAME", "INSTRUMENT_ID", "PLANET_DAY_NUMBER", "PRODUCT_ID", "IMAGE_TIME"];
 
+
     const MAX_TAB_LINES = "10000";
     const TAB_FOLDER = "[PDSTAB]";
     const TAB_ID = "[PDSTAB]"; #
+    const HASH_FOLDER = "[cache]/[PDS]";
 
     private static $objstoreDB = null;
 
@@ -69,23 +71,22 @@ class cPDS_Reader {
     public static function fetch_lbl($psUrl) {
 
         //create a unique hash for the 
-        cHash::$CACHE_EXPIRY = cHash::FOREVER;        //cache forever
-        //cHash::$show_filenames = true;
+        cFileHasher::$CACHE_EXPIRY = cFileHasher::FOREVER;        //cache forever
 
         $sHashUrl = cHasher::hash($psUrl);
         $sHashLBL = cHasher::hash("PDSOBJ-$psUrl");
 
         if (self::$force_delete) {
             cDebug::write("deleting cached file for $psUrl");
-            cHash::delete_hash($sHashLBL);
+            cFileHasher::delete_hash($sHashLBL, self::HASH_FOLDER);
             self::$force_delete = false;
         }
 
 
-        if (!chash::exists_old_style($sHashLBL)) {
+        if (!cFileHasher::exists_hash($sHashLBL, self::HASH_FOLDER)) {
             //--- fetch the raw LBL file
-            $sFolder = cHash::make_hash_folder($sHashUrl);
-            $sUrlFilename = cHash::getPath($sHashUrl);
+            $sFolder = cFileHasher::make_hash_folder($sHashUrl, self::HASH_FOLDER);
+            $sUrlFilename = cFileHasher::getPath($sHashUrl, self::HASH_FOLDER);
             $oHttp = new cHttp();
             $oHttp->fetch_to_file($psUrl, $sUrlFilename, false);
 
@@ -95,13 +96,13 @@ class cPDS_Reader {
             $oLBL->parseFile($sUrlFilename);
 
             //--- store LBL obj
-            cHash::pr__put_obj($sHashLBL, $oLBL);
+            cFileHasher::put_hash($sHashLBL, $oLBL, false, self::HASH_FOLDER);
 
             //--- delete url hash
             unlink($sUrlFilename);
         } else {
             cDebug::write("file exists on disk $sHashLBL");
-            $oLBL = cHash::pr__get_obj($sHashLBL);
+            $oLBL = cFileHasher::get($sHashLBL, self::HASH_FOLDER);
         }
         //$oLBL->__dump();
         return $oLBL;
@@ -156,7 +157,7 @@ class cPDS_Reader {
         for ($i = 0; $i <= $iCount; $i++) {
             $sFolder = self::TAB_ID . $psInstr . $i;
             $sHash = cHasher::hash($sFolder);
-            cHash::delete_hash($sHash);
+            cFileHasher::delete_hash($sHash);
         }
         /** @var cObjStoreDB $oDB **/
         $oDB = self::$objstoreDB;
@@ -219,7 +220,7 @@ class cPDS_Reader {
         $sFolder = self::TAB_ID . $psVolume . $piTabIndex;
         cDebug::write("writing out tab file $sFolder");
         $sHash = cHasher::hash($sFolder);
-        cHash::pr__put_obj($sHash, $paData, true);
+        cFileHasher::put_hash($sHash, $paData, false, self::HASH_FOLDER);
     }
 
     //**********************************************************************
@@ -321,7 +322,7 @@ class cPDS_Reader {
     private  static function pr__get_tab_col_file($psInstr, $piIndex) {
         $sFolder = self::TAB_ID . $psInstr . $piIndex;
         $sHash = cHasher::hash($sFolder);
-        return cHash::pr__get_obj($sHash);
+        return cFileHasher::get_hash($sHash, self::HASH_FOLDER);
     }
 }
 cPDS_Reader::init_obj_store_db();
