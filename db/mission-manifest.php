@@ -523,5 +523,13 @@ class cMissionManifest {
             self::check_tables();
         }
     }
+
+    static function close_db() {
+        try {
+            cEloquentORM::remove_connection(self::DBNAME);
+        } catch (Exception $e) {
+            cDebug::error("could not close connection " . self::DBNAME);
+        }
+    }
 }
 cMissionManifest::init();
