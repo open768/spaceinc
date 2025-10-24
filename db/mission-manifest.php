@@ -471,7 +471,7 @@ class tblSolStatus extends tblModel {
 
 //#############################################################################################
 /** 
- * creates tables need to store manifest data
+ * creates tables need to store manifest data - this is independent of the specific mission
  */
 class cMissionManifest {
     const DBNAME = "manifest_orm.db";
@@ -515,7 +515,7 @@ class cMissionManifest {
     }
 
     static function init() {
-        if (!self::$bAddedConnection) {
+        if (!cAppStatus::$site_down && !self::$bAddedConnection) {
             cEloquentORM::add_connection(self::DBNAME);
             self::$bAddedConnection = true;
 

@@ -33,6 +33,11 @@ class cCuriosityORMManifest {
 
     //***************************************************************************
     static function init() {
+        if (cAppStatus::$site_down) {
+            cDebug::write("site is down, not initialising MSL manifest");
+            return null;
+        }
+
         self::$mission_id = tblMissions::get_id(null, cCuriosityConstants::MISSION_ID);
     }
 
